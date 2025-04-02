@@ -1,326 +1,237 @@
 -- Serviços
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local VirtualUser = game:GetService("VirtualUser")
+local CoreGui = game:GetService("CoreGui")
 
--- Key System UI
-local KeyUI = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local UICorner = Instance.new("UICorner")
+-- Variáveis
+local Player = Players.LocalPlayer
+local Mouse = Player:GetMouse()
+
+-- Remove GUIs antigas se existirem
+local oldGui = CoreGui:FindFirstChild("THEUS_HUB")
+if oldGui then oldGui:Destroy() end
+
+-- Interface Principal
+local THEUS_HUB = Instance.new("ScreenGui")
+local Main = Instance.new("Frame")
+local UICorner_Main = Instance.new("UICorner")
+local Shadow = Instance.new("ImageLabel")
+local TopBar = Instance.new("Frame")
+local UICorner_Top = Instance.new("UICorner")
 local Title = Instance.new("TextLabel")
-local KeyBox = Instance.new("TextBox")
-local Enter = Instance.new("TextButton")
-local Status = Instance.new("TextLabel")
+local Minimize = Instance.new("TextButton")
+local TabHolder = Instance.new("Frame")
+local UICorner_Tab = Instance.new("UICorner")
+local TabList = Instance.new("ScrollingFrame")
+local UIListLayout = Instance.new("UIListLayout")
+local UIPadding = Instance.new("UIPadding")
+local ContentContainer = Instance.new("Frame")
 
--- UI Setup
-KeyUI.Name = "KeyUI"
-KeyUI.Parent = game.CoreGui
-KeyUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+-- Propriedades GUI
+THEUS_HUB.Name = "THEUS_HUB"
+THEUS_HUB.Parent = CoreGui
+THEUS_HUB.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = KeyUI
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
-MainFrame.Size = UDim2.new(0, 300, 0, 200)
+Main.Name = "Main"
+Main.Parent = THEUS_HUB
+Main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Main.BorderSizePixel = 0
+Main.Position = UDim2.new(0.5, -300, 0.5, -200)
+Main.Size = UDim2.new(0, 600, 0, 400)
+Main.ClipsDescendants = true
+Main.Active = true
+Main.Draggable = true
 
-UICorner.Parent = MainFrame
-UICorner.CornerRadius = UDim.new(0, 10)
+Shadow.Name = "Shadow"
+Shadow.Parent = Main
+Shadow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Shadow.BackgroundTransparency = 1
+Shadow.Position = UDim2.new(0, -15, 0, -15)
+Shadow.Size = UDim2.new(1, 30, 1, 30)
+Shadow.Image = "rbxassetid://6015897843"
+Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+Shadow.ImageTransparency = 0.5
+Shadow.ScaleType = Enum.ScaleType.Slice
+Shadow.SliceCenter = Rect.new(49, 49, 450, 450)
+
+TopBar.Name = "TopBar"
+TopBar.Parent = Main
+TopBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+TopBar.Size = UDim2.new(1, 0, 0, 35)
 
 Title.Name = "Title"
-Title.Parent = MainFrame
+Title.Parent = TopBar
 Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0, 0, 0, 10)
-Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Position = UDim2.new(0, 15, 0, 0)
+Title.Size = UDim2.new(0, 200, 1, 0)
 Title.Font = Enum.Font.GothamBold
 Title.Text = "THEUS HUB PREMIUM"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 20
+Title.TextSize = 14
+Title.TextXAlignment = Enum.TextXAlignment.Left
 
-KeyBox.Name = "KeyBox"
-KeyBox.Parent = MainFrame
-KeyBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-KeyBox.Position = UDim2.new(0.5, -125, 0.5, -20)
-KeyBox.Size = UDim2.new(0, 250, 0, 40)
-KeyBox.Font = Enum.Font.Gotham
-KeyBox.PlaceholderText = "Enter Key..."
-KeyBox.Text = ""
-KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-KeyBox.TextSize = 14
+Minimize.Name = "Minimize"
+Minimize.Parent = TopBar
+Minimize.BackgroundTransparency = 1
+Minimize.Position = UDim2.new(1, -30, 0, 5)
+Minimize.Size = UDim2.new(0, 25, 0, 25)
+Minimize.Font = Enum.Font.GothamBold
+Minimize.Text = "-"
+Minimize.TextColor3 = Color3.fromRGB(255, 255, 255)
+Minimize.TextSize = 20
 
-Enter.Name = "Enter"
-Enter.Parent = MainFrame
-Enter.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-Enter.Position = UDim2.new(0.5, -60, 0.5, 40)
-Enter.Size = UDim2.new(0, 120, 0, 35)
-Enter.Font = Enum.Font.GothamBold
-Enter.Text = "LOGIN"
-Enter.TextColor3 = Color3.fromRGB(255, 255, 255)
-Enter.TextSize = 14
+TabHolder.Name = "TabHolder"
+TabHolder.Parent = Main
+TabHolder.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+TabHolder.Position = UDim2.new(0, 10, 0, 45)
+TabHolder.Size = UDim2.new(0, 130, 1, -55)
 
-Status.Name = "Status"
-Status.Parent = MainFrame
-Status.BackgroundTransparency = 1
-Status.Position = UDim2.new(0, 0, 1, -40)
-Status.Size = UDim2.new(1, 0, 0, 30)
-Status.Font = Enum.Font.Gotham
-Status.Text = ""
-Status.TextColor3 = Color3.fromRGB(255, 255, 255)
-Status.TextSize = 14
+TabList.Name = "TabList"
+TabList.Parent = TabHolder
+TabList.Active = true
+TabList.BackgroundTransparency = 1
+TabList.Size = UDim2.new(1, 0, 1, 0)
+TabList.ScrollBarThickness = 0
 
-local CorrectKey = "THEUSHUB2025"
+UIListLayout.Parent = TabList
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 5)
 
--- Main Script Function
-local function loadScript()
-    KeyUI:Destroy()
+UIPadding.Parent = TabList
+UIPadding.PaddingTop = UDim.new(0, 5)
+UIPadding.PaddingLeft = UDim.new(0, 5)
+UIPadding.PaddingRight = UDim.new(0, 5)
+
+ContentContainer.Name = "ContentContainer"
+ContentContainer.Parent = Main
+ContentContainer.BackgroundTransparency = 1
+ContentContainer.Position = UDim2.new(0, 150, 0, 45)
+ContentContainer.Size = UDim2.new(1, -160, 1, -55)
+
+-- Funções da Interface
+local Library = {}
+Library.Tabs = {}
+Library.CurrentTab = nil
+
+function Library:CreateTab(name, icon)
+    local Tab = Instance.new("TextButton")
+    local TabContent = Instance.new("ScrollingFrame")
+    local ContentLayout = Instance.new("UIListLayout")
+    local ContentPadding = Instance.new("UIPadding")
     
-    -- Variáveis Principais
-    local Player = Players.LocalPlayer
-    local Character = Player.Character or Player.CharacterAdded:Wait()
-    local Root = Character:WaitForChild("HumanoidRootPart")
-    local Humanoid = Character:WaitForChild("Humanoid")
-
-    -- Interface Principal
-    local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-    local Window = Library.CreateLib("THEUS HUB PREMIUM", "Ocean")
-
-    -- Botão Minimizar
-    local MinimizeButton = Instance.new("TextButton")
-    MinimizeButton.Name = "MinimizeButton"
-    MinimizeButton.Parent = game.CoreGui
-    MinimizeButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    MinimizeButton.Position = UDim2.new(0, 10, 0.5, 0)
-    MinimizeButton.Size = UDim2.new(0, 40, 0, 40)
-    MinimizeButton.Font = Enum.Font.GothamBold
-    MinimizeButton.Text = "T"
-    MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    MinimizeButton.TextSize = 20
-    MinimizeButton.Draggable = true
-
+    Tab.Name = name
+    Tab.Parent = TabList
+    Tab.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    Tab.Size = UDim2.new(1, 0, 0, 32)
+    Tab.Font = Enum.Font.GothamSemibold
+    Tab.Text = name
+    Tab.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Tab.TextSize = 12
+    Tab.AutoButtonColor = false
+    
     local UICorner = Instance.new("UICorner")
-    UICorner.Parent = MinimizeButton
-    UICorner.CornerRadius = UDim.new(0, 10)
-
-    local WindowVisible = true
-    MinimizeButton.MouseButton1Click:Connect(function()
-        WindowVisible = not WindowVisible
-        for _, ui in pairs(game.CoreGui:GetChildren()) do
-            if ui.Name == "KavoUI" then
-                ui.Enabled = WindowVisible
-            end
-        end
-    end)
-
-    -- Anti-AFK
-    Player.Idled:Connect(function()
-        VirtualUser:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-        wait(1)
-        VirtualUser:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-    end)
-
-    -- Proteções
-    local oldindex = nil 
-    oldindex = hookmetamethod(game, "__index", function(self, Index)
-        if self == Humanoid and Index == "WalkSpeed" then 
-            return 16
-        end
-        return oldindex(self, Index)
-    end)
-
-    -- Funções de Quest
-    local function getCurrentLevel()
-        return Player.Level.Value
-    end
-
-    local function getQuestForLevel(level)
-        -- Adicione aqui a lógica para pegar a quest apropriada para cada level
-        local questData = {
-            [1] = {name = "BeginnerQuest", npc = "QuestNPC1"},
-            [10] = {name = "IntermediateQuest", npc = "QuestNPC2"},
-            [20] = {name = "AdvancedQuest", npc = "QuestNPC3"},
-            -- Adicione mais quests conforme necessário
-        }
-        
-        for questLevel, data in pairs(questData) do
-            if level >= questLevel then
-                return data
-            end
-        end
-        return questData[1]
-    end
-    -- Funções de Farm Melhoradas
-    local function getNearestMob()
-        local closest = nil
-        local maxDist = math.huge
-        
-        for _, v in pairs(workspace:GetChildren()) do
-            if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
-                -- Verifica se é um mob e não um player
-                if not Players:GetPlayerFromCharacter(v) then
-                    local dist = (Root.Position - v.HumanoidRootPart.Position).Magnitude
-                    if dist < maxDist then
-                        maxDist = dist
-                        closest = v
-                    end
-                end
-            end
-        end
-        return closest
-    end
-
-    -- Tabs Melhorados
-    local MainTab = Window:NewTab("Main")
-    local FarmTab = Window:NewTab("Farm")
-    local QuestTab = Window:NewTab("Quests")
-    local PlayerTab = Window:NewTab("Player")
-    local CombatTab = Window:NewTab("Combat")
-    local TeleportTab = Window:NewTab("Teleport")
-    local MiscTab = Window:NewTab("Misc")
-
-    -- Seções
-    local MainSection = MainTab:NewSection("Main Features")
-    local FarmSection = FarmTab:NewSection("Auto Farm")
-    local QuestSection = QuestTab:NewSection("Auto Quest")
-    local PlayerSection = PlayerTab:NewSection("Player Mods")
-    local CombatSection = CombatTab:NewSection("Combat Features")
-    local TeleportSection = TeleportTab:NewSection("Locations")
-    local MiscSection = MiscTab:NewSection("Misc Features")
-
-    -- Quest System
-    _G.AutoQuest = false
-    QuestSection:NewToggle("Auto Quest", "Automatically accepts and completes quests", function(state)
-        _G.AutoQuest = state
-        while _G.AutoQuest and wait() do
-            pcall(function()
-                local currentLevel = getCurrentLevel()
-                local questData = getQuestForLevel(currentLevel)
-                
-                -- Lógica para aceitar e completar quests
-                local questNPC = workspace:FindFirstChild(questData.npc)
-                if questNPC then
-                    Root.CFrame = questNPC.HumanoidRootPart.CFrame
-                    wait(0.5)
-                    -- Aqui você deve adicionar o evento específico do jogo para aceitar/completar quests
-                    -- ReplicatedStorage.Remotes.Quest:FireServer("Accept", questData.name)
-                end
-            end)
-        end
-    end)
-
-    -- Farm System Melhorado
-    _G.AutoFarm = false
-    FarmSection:NewToggle("Auto Farm Mobs", "Automatically farms mobs based on your level", function(state)
-        _G.AutoFarm = state
-        while _G.AutoFarm and wait() do
-            pcall(function()
-                local mob = getNearestMob()
-                if mob then
-                    -- Teleporte suave usando TweenService
-                    local tweenInfo = TweenInfo.new(
-                        0.3, -- Tempo
-                        Enum.EasingStyle.Linear,
-                        Enum.EasingDirection.Out
-                    )
-                    
-                    local tween = TweenService:Create(Root, tweenInfo, {
-                        CFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0, 7, 0)
-                    })
-                    tween:Play()
-                    
-                    -- Sistema de ataque
-                    local args = {
-                        [1] = mob.Humanoid
-                    }
-                    ReplicatedStorage.Remotes.Combat:FireServer(unpack(args))
-                end
-            end)
-        end
-    end)
-
-    -- Teleport System
-    local function addTeleport(name, position)
-        TeleportSection:NewButton(name, "Teleport to " .. name, function()
-            Root.CFrame = position
-        end)
-    end
-
-    -- Adicione seus locais de teleporte aqui
-    addTeleport("Safe Zone", CFrame.new(0, 100, 0))
-    addTeleport("Quest Area", CFrame.new(100, 100, 100))
-    -- Adicione mais locais conforme necessário
-
-    -- Player Features Melhoradas
-    PlayerSection:NewSlider("Walk Speed", "Changes walk speed", 500, 16, function(s)
-        Humanoid.WalkSpeed = s
-    end)
-
-    PlayerSection:NewSlider("Jump Power", "Changes jump power", 500, 50, function(s)
-        Humanoid.JumpPower = s
-    end)
-
-    PlayerSection:NewToggle("Infinite Jump", "Allows you to jump infinitely", function(state)
-        _G.InfiniteJump = state
-        game:GetService("UserInputService").JumpRequest:connect(function()
-            if _G.InfiniteJump then
-                Humanoid:ChangeState("Jumping")
-            end
-        end)
-    end)
-
-    -- Combat Features
-    _G.KillAura = false
-    CombatSection:NewToggle("Kill Aura", "Automatically attacks nearby mobs", function(state)
-        _G.KillAura = state
-        while _G.KillAura and wait() do
-            pcall(function()
-                for _, v in pairs(workspace:GetChildren()) do
-                    if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
-                        if not Players:GetPlayerFromCharacter(v) then -- Verifica se não é um player
-                            if (Root.Position - v.HumanoidRootPart.Position).Magnitude < 50 then
-                                local args = {
-                                    [1] = v.Humanoid
-                                }
-                                ReplicatedStorage.Remotes.Combat:FireServer(unpack(args))
-                            end
-                        end
-                    end
-                end
-            end)
-        end
-    end)
-
-    -- Misc Features
-    MiscSection:NewButton("Remove Fog", "Removes fog from the game", function()
-        game.Lighting.FogEnd = 1000000
-        game.Lighting.FogStart = 0
-        game.Lighting.ClockTime = 14
-        game.Lighting.Brightness = 2
-        game.Lighting.GlobalShadows = false
-    end)
-
-    -- ESP System
-    local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/zeroisswag/universal-esp/main/esp.lua"))()
+    UICorner.CornerRadius = UDim.new(0, 6)
+    UICorner.Parent = Tab
     
-    MiscSection:NewToggle("ESP", "Shows ESP for players and mobs", function(state)
-        ESP:Toggle(state)
+    TabContent.Name = name.."Content"
+    TabContent.Parent = ContentContainer
+    TabContent.BackgroundTransparency = 1
+    TabContent.Size = UDim2.new(1, 0, 1, 0)
+    TabContent.ScrollBarThickness = 2
+    TabContent.Visible = false
+    
+    ContentLayout.Parent = TabContent
+    ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    ContentLayout.Padding = UDim.new(0, 5)
+    
+    ContentPadding.Parent = TabContent
+    ContentPadding.PaddingTop = UDim.new(0, 5)
+    ContentPadding.PaddingLeft = UDim.new(0, 5)
+    ContentPadding.PaddingRight = UDim.new(0, 5)
+    
+    Tab.MouseButton1Click:Connect(function()
+        if Library.CurrentTab then
+            Library.CurrentTab.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            Library.CurrentTab.Content.Visible = false
+        end
+        Library.CurrentTab = {Button = Tab, Content = TabContent}
+        Tab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+        TabContent.Visible = true
     end)
-
-    -- Notificação de Inicialização
-    Library:Notify("Script Loaded Successfully!", "Welcome to THEUS HUB PREMIUM")
+    
+    local TabFunctions = {}
+    
+    function TabFunctions:CreateToggle(name, callback)
+        local Toggle = Instance.new("Frame")
+        local ToggleButton = Instance.new("TextButton")
+        local ToggleTitle = Instance.new("TextLabel")
+        local ToggleIndicator = Instance.new("Frame")
+        local UICorner = Instance.new("UICorner")
+        
+        Toggle.Name = "Toggle"
+        Toggle.Parent = TabContent
+        Toggle.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+        Toggle.Size = UDim2.new(1, 0, 0, 35)
+        
+        UICorner.CornerRadius = UDim.new(0, 6)
+        UICorner.Parent = Toggle
+        
+        ToggleTitle.Name = "Title"
+        ToggleTitle.Parent = Toggle
+        ToggleTitle.BackgroundTransparency = 1
+        ToggleTitle.Position = UDim2.new(0, 10, 0, 0)
+        ToggleTitle.Size = UDim2.new(1, -60, 1, 0)
+        ToggleTitle.Font = Enum.Font.Gotham
+        ToggleTitle.Text = name
+        ToggleTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+        ToggleTitle.TextSize = 14
+        ToggleTitle.TextXAlignment = Enum.TextXAlignment.Left
+        
+        ToggleIndicator.Name = "Indicator"
+        ToggleIndicator.Parent = Toggle
+        ToggleIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        ToggleIndicator.Position = UDim2.new(1, -40, 0.5, -10)
+        ToggleIndicator.Size = UDim2.new(0, 20, 0, 20)
+        
+        local IndicatorCorner = Instance.new("UICorner")
+        IndicatorCorner.CornerRadius = UDim.new(0, 4)
+        IndicatorCorner.Parent = ToggleIndicator
+        
+        local enabled = false
+        Toggle.MouseButton1Click:Connect(function()
+            enabled = not enabled
+            ToggleIndicator.BackgroundColor3 = enabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+            callback(enabled)
+        end)
+    end
+    
+    return TabFunctions
 end
 
--- Key System Handler
-Enter.MouseButton1Click:Connect(function()
-    if KeyBox.Text == CorrectKey then
-        Status.Text = "Correct Key! Loading..."
-        Status.TextColor3 = Color3.fromRGB(0, 255, 0)
-        wait(1)
-        loadScript()
+-- Criação das Tabs
+local MainTab = Library:CreateTab("Main")
+local FarmTab = Library:CreateTab("Farm")
+local CombatTab = Library:CreateTab("Combat")
+local TeleportTab = Library:CreateTab("Teleport")
+local SettingsTab = Library:CreateTab("Settings")
+
+-- Minimizar
+local minimized = false
+Minimize.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        Main:TweenSize(UDim2.new(0, 600, 0, 35), "Out", "Quad", 0.3, true)
     else
-        Status.Text = "Invalid Key!"
-        Status.TextColor3 = Color3.fromRGB(255, 0, 0)
-        wait(1)
-        Status.Text = ""
+        Main:TweenSize(UDim2.new(0, 600, 0, 400), "Out", "Quad", 0.3, true)
     end
 end)
+
+-- Seleciona a primeira tab por padrão
+local firstTab = TabList:FindFirstChildWhichIsA("TextButton")
+if firstTab then
+    firstTab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    ContentContainer:FindFirstChild(firstTab.Name.."Content").Visible = true
+    Library.CurrentTab = {Button = firstTab, Content = ContentContainer:FindFirstChild(firstTab.Name.."Content")}
+end
+
+return Library
