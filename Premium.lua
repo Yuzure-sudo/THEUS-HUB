@@ -1,31 +1,49 @@
--- THEUS HUB DEVELOPER | KING LEGACY
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Player = game:GetService("Players").LocalPlayer
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local VirtualUser = game:GetService("VirtualUser")
 
--- Sistema de Login
+-- Anti Detection
+local oldNamecall
+oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local args = {...}
+    local method = getnamecallmethod()
+    
+    if method == "FireServer" or method == "InvokeServer" then
+        if tostring(self):find("Report") or tostring(self):find("Analytics") then
+            return wait(9e9)
+        end
+    end
+    return oldNamecall(self, ...)
+end)
+
+-- Window Setup
 local Window = OrionLib:MakeWindow({
-    Name = "THEUS HUB DEVELOPER",
+    Name = "THEUS HUB PREMIUM",
     HidePremium = false,
     SaveConfig = true,
-    IntroText = "THEUS HUB",
-    IntroIcon = "rbxassetid://14476196659",
-    Icon = "rbxassetid://14476196659"
+    IntroText = "THEUS PREMIUM",
+    ConfigFolder = "THEUSHUB"
 })
 
 -- Key System
-_G.Key = "THEUSDEV"
+_G.Key = "THEUSPREMIUM2025"
 _G.KeyInput = "string"
+_G.FriendsList = {
+    "Friend1",
+    "Friend2",
+    "Friend3"
+}
 
 local KeyTab = Window:MakeTab({
-    Name = "🔑 Key System",
-    Icon = "rbxassetid://14476196659",
-    PremiumOnly = false
+    Name = "🔐 Login",
+    Icon = "rbxassetid://14476196659"
 })
 
 KeyTab:AddTextbox({
-    Name = "Digite sua Key",
+    Name = "Enter Key",
     Default = "",
     TextDisappear = true,
     Callback = function(Value)
@@ -34,22 +52,22 @@ KeyTab:AddTextbox({
 })
 
 KeyTab:AddButton({
-    Name = "Verificar Key",
+    Name = "Login",
     Callback = function()
-        if _G.KeyInput == _G.Key then
+        if _G.KeyInput == _G.Key or table.find(_G.FriendsList, Player.Name) then
             OrionLib:MakeNotification({
                 Name = "THEUS HUB",
-                Content = "Key Correta! Carregando...",
+                Content = "Access Granted! Loading...",
                 Image = "rbxassetid://14476196659",
                 Time = 5
             })
-            wait(2)
+            wait(1)
             KeyTab:Destroy()
             loadMain()
         else
             OrionLib:MakeNotification({
                 Name = "THEUS HUB",
-                Content = "Key Incorreta!",
+                Content = "Invalid Key!",
                 Image = "rbxassetid://14476196659",
                 Time = 5
             })
@@ -57,217 +75,182 @@ KeyTab:AddButton({
     end    
 })
 
--- Função Principal
 function loadMain()
-    -- Main Farm Tab
+    -- Farm Tab
     local FarmTab = Window:MakeTab({
-        Name = "🌟 Auto Farm",
-        Icon = "rbxassetid://14476196659",
-        PremiumOnly = false
+        Name = "⚔️ Farm",
+        Icon = "rbxassetid://14476196659"
     })
 
-    local MainSection = FarmTab:AddSection({
-        Name = "Farm Principal"
-    })
-
-    -- Configurações do Farm
     _G.AutoFarm = false
-    _G.FarmMethod = "Above" -- Above, Behind, Front
-    _G.FarmDistance = 5
-    _G.AutoAttack = false
-    _G.TargetMob = "All" -- Nome do mob ou "All"
+    _G.InstantKill = false
+    _G.AutoQuest = false
+    _G.FarmAll = false
+    _G.BossRaid = false
 
-    -- Funções de Farm
     local function getNearestMob()
-        local nearestMob = nil
-        local shortestDistance = math.huge
-
+        local nearest = nil
+        local minDist = math.huge
+        
         for _, mob in pairs(workspace:GetChildren()) do
-            if mob:IsA("Model") and mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
-                if _G.TargetMob == "All" or mob.Name == _G.TargetMob then
-                    local distance = (mob.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).magnitude
-                    if distance < shortestDistance then
-                        shortestDistance = distance
-                        nearestMob = mob
-                    end
+            if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
+                local dist = (Player.Character.HumanoidRootPart.Position - mob.HumanoidRootPart.Position).magnitude
+                if dist < minDist then
+                    minDist = dist
+                    nearest = mob
                 end
             end
         end
-        return nearestMob
+        return nearest
     end
 
-    local function attackMob()
-        if _G.AutoAttack then
-            local args = {
-                [1] = "M1",
-                [2] = {
-                    ["Type"] = "Normal",
-                    ["Damage"] = 99999
-                }
-            }
-            ReplicatedStorage.Remotes.Combat:FireServer(unpack(args))
-        end
-    end
-
-    -- Toggle Auto Farm
-    MainSection:AddToggle({
+    FarmTab:AddToggle({
         Name = "Auto Farm",
         Default = false,
         Callback = function(Value)
             _G.AutoFarm = Value
-            
             while _G.AutoFarm and wait() do
                 pcall(function()
                     local mob = getNearestMob()
                     if mob then
-                        local mobCFrame = mob.HumanoidRootPart.CFrame
-                        local farmPosition = mobCFrame
-                        
-                        if _G.FarmMethod == "Above" then
-                            farmPosition = mobCFrame * CFrame.new(0, _G.FarmDistance, 0)
-                        elseif _G.FarmMethod == "Behind" then
-                            farmPosition = mobCFrame * CFrame.new(0, 0, _G.FarmDistance)
-                        elseif _G.FarmMethod == "Front" then
-                            farmPosition = mobCFrame * CFrame.new(0, 0, -_G.FarmDistance)
-                        end
-                        
-                        Player.Character.HumanoidRootPart.CFrame = farmPosition
-                        attackMob()
+                        Player.Character.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0,7,0)
+                        local args = {
+                            [1] = mob.Humanoid,
+                            [2] = {
+                                ["Type"] = "Normal",
+                                ["Damage"] = 999999
+                            }
+                        }
+                        ReplicatedStorage.Remotes.Combat:FireServer(unpack(args))
                     end
                 end)
             end
         end    
     })
 
-    -- Farm Settings
-    MainSection:AddDropdown({
-        Name = "Farm Method",
-        Default = "Above",
-        Options = {"Above", "Behind", "Front"},
-        Callback = function(Value)
-            _G.FarmMethod = Value
-        end    
-    })
-
-    MainSection:AddSlider({
-        Name = "Farm Distance",
-        Min = 3,
-        Max = 10,
-        Default = 5,
-        Color = Color3.fromRGB(255,255,255),
-        Increment = 1,
-        ValueName = "Distance",
-        Callback = function(Value)
-            _G.FarmDistance = Value
-        end    
-    })
-
-    MainSection:AddToggle({
-        Name = "Auto Attack",
+    FarmTab:AddToggle({
+        Name = "Instant Kill",
         Default = false,
         Callback = function(Value)
-            _G.AutoAttack = Value
+            _G.InstantKill = Value
+            while _G.InstantKill and wait() do
+                pcall(function()
+                    for _, mob in pairs(workspace:GetChildren()) do
+                        if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") then
+                            mob.Humanoid.Health = 0
+                        end
+                    end
+                end)
+            end
         end    
     })
 
     -- Combat Tab
     local CombatTab = Window:MakeTab({
-        Name = "⚔️ Combat",
-        Icon = "rbxassetid://14476196659",
-        PremiumOnly = false
+        Name = "🗡️ Combat",
+        Icon = "rbxassetid://14476196659"
     })
 
-    local CombatSection = CombatTab:AddSection({
-        Name = "Combat Settings"
-    })
+    _G.GodMode = false
+    _G.InfiniteStamina = false
+    _G.OneShot = false
+    _G.AutoSkills = false
 
-    -- Kill Aura
-    _G.KillAura = false
-    _G.KillAuraRange = 10
-
-    CombatSection:AddToggle({
-        Name = "Kill Aura",
+    CombatTab:AddToggle({
+        Name = "God Mode",
         Default = false,
         Callback = function(Value)
-            _G.KillAura = Value
-            
-            while _G.KillAura and wait() do
+            _G.GodMode = Value
+            while _G.GodMode and wait() do
                 pcall(function()
-                    for _, mob in pairs(workspace:GetChildren()) do
-                        if mob:IsA("Model") and mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChild("Humanoid") then
-                            local distance = (mob.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).magnitude
-                            if distance <= _G.KillAuraRange and mob.Humanoid.Health > 0 then
-                                local args = {
-                                    [1] = mob.Humanoid,
-                                    [2] = {
-                                        ["Type"] = "Normal",
-                                        ["Damage"] = 99999
-                                    }
-                                }
-                                ReplicatedStorage.Remotes.Combat:FireServer(unpack(args))
-                            end
-                        end
-                    end
+                    Player.Character.Humanoid.Health = Player.Character.Humanoid.MaxHealth
                 end)
             end
         end    
     })
 
-    CombatSection:AddSlider({
-        Name = "Kill Aura Range",
-        Min = 5,
-        Max = 20,
-        Default = 10,
-        Color = Color3.fromRGB(255,255,255),
-        Increment = 1,
-        ValueName = "Range",
+    CombatTab:AddToggle({
+        Name = "One Shot Kill",
+        Default = false,
         Callback = function(Value)
-            _G.KillAuraRange = Value
+            _G.OneShot = Value
         end    
     })
 
     -- Player Tab
     local PlayerTab = Window:MakeTab({
         Name = "👤 Player",
-        Icon = "rbxassetid://14476196659",
-        PremiumOnly = false
+        Icon = "rbxassetid://14476196659"
     })
 
-    local PlayerSection = PlayerTab:AddSection({
-        Name = "Player Mods"
-    })
-
-    -- Player Speed
-    PlayerSection:AddSlider({
+    PlayerTab:AddSlider({
         Name = "Walk Speed",
         Min = 16,
-        Max = 500,
+        Max = 1000,
         Default = 16,
-        Color = Color3.fromRGB(255,255,255),
         Increment = 1,
-        ValueName = "Speed",
         Callback = function(Value)
             Player.Character.Humanoid.WalkSpeed = Value
         end    
     })
 
-    -- Jump Power
-    PlayerSection:AddSlider({
+    PlayerTab:AddSlider({
         Name = "Jump Power",
         Min = 50,
-        Max = 500,
+        Max = 1000,
         Default = 50,
-        Color = Color3.fromRGB(255,255,255),
         Increment = 1,
-        ValueName = "Power",
         Callback = function(Value)
             Player.Character.Humanoid.JumpPower = Value
         end    
     })
 
+    -- Misc Tab
+    local MiscTab = Window:MakeTab({
+        Name = "🎮 Misc",
+        Icon = "rbxassetid://14476196659"
+    })
+
+    _G.AutoChest = false
+    _G.CollectDrops = false
+    _G.AutoRaid = false
+
+    MiscTab:AddToggle({
+        Name = "Auto Collect Chests",
+        Default = false,
+        Callback = function(Value)
+            _G.AutoChest = Value
+            while _G.AutoChest and wait() do
+                pcall(function()
+                    for _, chest in pairs(workspace:GetChildren()) do
+                        if chest.Name:find("Chest") then
+                            chest:Destroy()
+                        end
+                    end
+                end)
+            end
+        end    
+    })
+
+    MiscTab:AddToggle({
+        Name = "Auto Collect Drops",
+        Default = false,
+        Callback = function(Value)
+            _G.CollectDrops = Value
+            while _G.CollectDrops and wait() do
+                pcall(function()
+                    for _, drop in pairs(workspace:GetChildren()) do
+                        if drop:IsA("BasePart") and drop.Name:find("Drop") then
+                            drop.CFrame = Player.Character.HumanoidRootPart.CFrame
+                        end
+                    end
+                end)
+            end
+        end    
+    })
+
     -- Anti AFK
-    local VirtualUser = game:GetService('VirtualUser')
-    Player.Idled:connect(function()
+    Player.Idled:Connect(function()
         VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
         wait(1)
         VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
