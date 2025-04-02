@@ -1,73 +1,60 @@
 --[[
     THEUS HUB PREMIUM | KING LEGACY
-    Parte 1: Sistema Base e Funcionalidades Principais
+    Versão: 2.0
+    Anti-Ban & Full Features
 ]]
 
--- Serviços
+-- Serviços Principais
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
-local VirtualUser = game:GetService("VirtualUser")
-local HttpService = game:GetService("HttpService")
 
--- Variáveis Principais
+-- Variáveis Locais
 local Player = Players.LocalPlayer
 local Character = Player.Character or Player.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid")
 local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+local Mouse = Player:GetMouse()
 
--- Interface
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-
--- Sistema Anti-Detecção
+-- Anti-Detection & Bypass
 local OldNameCall = nil
-OldNameCall = hookmetamethod(game, "__namecall", function(...)
+OldNameCall = hookmetamethod(game, "__namecall", function(self, ...)
     local Args = {...}
-    local Self = Args[1]
-    local NamecallMethod = getnamecallmethod()
+    local Method = getnamecallmethod()
     
-    if not checkcaller() then
-        if typeof(Self) == "Instance" then
-            if NamecallMethod == "FireServer" or NamecallMethod == "InvokeServer" then
-                if Self.Name:match("Report") or Self.Name:match("Analytics") then
-                    return wait(9e9)
-                end
-            end
+    if Method == "FireServer" or Method == "InvokeServer" then
+        if tostring(self):find("Report") or tostring(self):find("Ban") or tostring(self):find("Analytics") then
+            return wait(9e9)
         end
     end
     
-    return OldNameCall(...)
+    return OldNameCall(self, ...)
 end)
 
--- Window Principal
+-- Interface Setup
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+
 local Window = OrionLib:MakeWindow({
     Name = "THEUS HUB PREMIUM V2",
     HidePremium = false,
     SaveConfig = true,
     IntroText = "THEUS PREMIUM",
-    IntroIcon = "rbxassetid://14476196659",
-    Icon = "rbxassetid://14476196659",
-    ConfigFolder = "THEUSHUB_PREMIUM"
+    ConfigFolder = "THEUSHUB"
 })
 
--- Sistema de Login
-_G.Key = "THEUSPREMIUMV2"
+-- Key System
+_G.Key = "THEUSHUBPREMIUM"
 _G.KeyInput = "string"
-_G.VIP = {
-    "Player1",
-    "Player2",
-    "Player3"
-}
 
 local KeyTab = Window:MakeTab({
-    Name = "🔐 Authentication",
-    Icon = "rbxassetid://14476196659",
-    PremiumOnly = false
+    Name = "🔑 Key System",
+    Icon = "rbxassetid://14476196659"
 })
 
 KeyTab:AddTextbox({
-    Name = "Enter Premium Key",
+    Name = "Enter Key",
     Default = "",
     TextDisappear = true,
     Callback = function(Value)
@@ -76,22 +63,21 @@ KeyTab:AddTextbox({
 })
 
 KeyTab:AddButton({
-    Name = "Login System",
+    Name = "Check Key",
     Callback = function()
-        if _G.KeyInput == _G.Key or table.find(_G.VIP, Player.Name) then
+        if _G.KeyInput == _G.Key then
+            KeyTab:Destroy()
+            loadMainScript()
             OrionLib:MakeNotification({
-                Name = "THEUS PREMIUM",
-                Content = "Access Granted! Loading Premium Features...",
+                Name = "THEUS HUB",
+                Content = "Premium Access Granted!",
                 Image = "rbxassetid://14476196659",
                 Time = 5
             })
-            wait(2)
-            KeyTab:Destroy()
-            loadPremiumFeatures()
         else
             OrionLib:MakeNotification({
-                Name = "THEUS PREMIUM",
-                Content = "Invalid Key! Please Try Again.",
+                Name = "THEUS HUB",
+                Content = "Invalid Key!",
                 Image = "rbxassetid://14476196659",
                 Time = 5
             })
@@ -99,89 +85,89 @@ KeyTab:AddButton({
     end    
 })
 
--- Funções Principais
-function loadPremiumFeatures()
+-- Main Script Function
+function loadMainScript()
+    -- Combat Variables
+    _G.AutoFarm = false
+    _G.InstantKill = false
+    _G.KillAura = false
+    _G.AutoRaid = false
+    _G.FastAttack = false
+    _G.GodMode = false
+    _G.NoClip = false
+    _G.AutoQuest = false
+    _G.MobAura = false
+    _G.BringMob = false
+
+    -- Combat Functions
+    local function getNearestMob()
+        local nearestMob = nil
+        local shortestDistance = math.huge
+        
+        for _, v in pairs(workspace:GetChildren()) do
+            if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+                if v.Name:find("Mob") or v.Name:find("Boss") then
+                    local distance = (HumanoidRootPart.Position - v.HumanoidRootPart.Position).magnitude
+                    if distance < shortestDistance then
+                        shortestDistance = distance
+                        nearestMob = v
+                    end
+                end
+            end
+        end
+        return nearestMob
+    end
+
+    local function attackMob()
+        local args = {
+            [1] = "Combat",
+            [2] = {
+                ["Type"] = "Normal",
+                ["Damage"] = 9999999
+            }
+        }
+        ReplicatedStorage.Remotes.Combat:FireServer(unpack(args))
+    end
+
     -- Combat Tab
     local CombatTab = Window:MakeTab({
         Name = "⚔️ Combat",
         Icon = "rbxassetid://14476196659"
     })
 
-    local CombatSection = CombatTab:AddSection({
-        Name = "Combat Features"
-    })
-
-    -- Combat Variables
-    _G.AutoFarm = false
-    _G.InstantKill = false
-    _G.KillAura = false
-    _G.GodMode = false
-    _G.AutoSkill = false
-    _G.FastAttack = false
-
-    -- Combat Functions
-    local function getNearestMob()
-        local nearest = nil
-        local minDistance = math.huge
-        
-        for _, mob in pairs(workspace:GetChildren()) do
-            if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
-                local distance = (HumanoidRootPart.Position - mob.HumanoidRootPart.Position).magnitude
-                if distance < minDistance then
-                    minDistance = distance
-                    nearest = mob
-                end
-            end
-        end
-        return nearest
-    end
-
-    local function attackMob(mob)
-        local args = {
-            [1] = mob.Humanoid,
-            [2] = {
-                ["Type"] = "Normal",
-                ["Damage"] = 999999
-            }
-        }
-        ReplicatedStorage.Remotes.Combat:FireServer(unpack(args))
-    end
-
-    -- Combat Toggles
-    CombatSection:AddToggle({
+    CombatTab:AddToggle({
         Name = "Auto Farm",
         Default = false,
         Callback = function(Value)
             _G.AutoFarm = Value
-            while _G.AutoFarm and wait() do
+            while _G.AutoFarm and task.wait() do
                 pcall(function()
                     local mob = getNearestMob()
                     if mob then
                         local targetPosition = mob.HumanoidRootPart.Position + Vector3.new(0, 7, 0)
-                        local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Linear)
+                        local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Linear)
                         local tween = TweenService:Create(HumanoidRootPart, tweenInfo, {
                             CFrame = CFrame.new(targetPosition, mob.HumanoidRootPart.Position)
                         })
                         tween:Play()
-                        attackMob(mob)
+                        attackMob()
                     end
                 end)
             end
         end    
     })
 
-    CombatSection:AddToggle({
+    CombatTab:AddToggle({
         Name = "Kill Aura",
         Default = false,
         Callback = function(Value)
             _G.KillAura = Value
-            while _G.KillAura and wait() do
+            while _G.KillAura and task.wait() do
                 pcall(function()
                     for _, mob in pairs(workspace:GetChildren()) do
                         if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") then
-                            local distance = (HumanoidRootPart.Position - mob.HumanoidRootPart.Position).magnitude
-                            if distance <= 50 and mob.Humanoid.Health > 0 then
-                                attackMob(mob)
+                            if (HumanoidRootPart.Position - mob.HumanoidRootPart.Position).magnitude <= 50 then
+                                attackMob()
                             end
                         end
                     end
@@ -190,12 +176,12 @@ function loadPremiumFeatures()
         end    
     })
 
-    CombatSection:AddToggle({
+    CombatTab:AddToggle({
         Name = "God Mode",
         Default = false,
         Callback = function(Value)
             _G.GodMode = Value
-            while _G.GodMode and wait() do
+            while _G.GodMode and task.wait() do
                 pcall(function()
                     Humanoid.Health = Humanoid.MaxHealth
                 end)
@@ -209,16 +195,11 @@ function loadPremiumFeatures()
         Icon = "rbxassetid://14476196659"
     })
 
-    local PlayerSection = PlayerTab:AddSection({
-        Name = "Player Modifications"
-    })
-
-    PlayerSection:AddSlider({
+    PlayerTab:AddSlider({
         Name = "Walk Speed",
         Min = 16,
         Max = 500,
         Default = 16,
-        Color = Color3.fromRGB(255,255,255),
         Increment = 1,
         ValueName = "Speed",
         Callback = function(Value)
@@ -226,12 +207,11 @@ function loadPremiumFeatures()
         end    
     })
 
-    PlayerSection:AddSlider({
+    PlayerTab:AddSlider({
         Name = "Jump Power",
         Min = 50,
         Max = 500,
         Default = 50,
-        Color = Color3.fromRGB(255,255,255),
         Increment = 1,
         ValueName = "Power",
         Callback = function(Value)
@@ -239,120 +219,56 @@ function loadPremiumFeatures()
         end    
     })
 
-    -- Anti AFK
-    Player.Idled:Connect(function()
-        VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-        wait(1)
-        VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    PlayerTab:AddToggle({
+        Name = "Noclip",
+        Default = false,
+        Callback = function(Value)
+            _G.NoClip = Value
+        end    
+    })
+
+    RunService.Stepped:Connect(function()
+        if _G.NoClip then
+            for _, part in pairs(Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
     end)
-end
-
-OrionLib:Init()--[[
-    THEUS HUB PREMIUM | KING LEGACY
-    Parte 2: Sistemas Avançados e Recursos Premium
-]]
-
--- Continuação das Funcionalidades Premium
-function loadPremiumFeatures()
-    -- Farm Tab Avançado
+    -- Farm Tab
     local FarmTab = Window:MakeTab({
-        Name = "🌟 Premium Farm",
+        Name = "🌟 Farm",
         Icon = "rbxassetid://14476196659"
     })
 
-    -- Variáveis de Farm
+    -- Farm Variables
     _G.AutoQuest = false
-    _G.BossFarm = false
-    _G.AutoRaid = false
-    _G.AutoChest = false
-    _G.LootFarm = false
-    _G.SelectedBoss = "All"
+    _G.QuestMob = "None"
+    _G.BringMob = false
     _G.FarmMethod = "Above"
     _G.FarmDistance = 5
 
-    -- Seção de Farm Principal
-    local MainFarmSection = FarmTab:AddSection({
-        Name = "Advanced Farming"
-    })
-
-    MainFarmSection:AddDropdown({
+    FarmTab:AddDropdown({
         Name = "Farm Method",
         Default = "Above",
-        Options = {"Above", "Below", "Behind", "Front"},
+        Options = {"Above", "Below", "Behind"},
         Callback = function(Value)
             _G.FarmMethod = Value
         end    
     })
 
-    MainFarmSection:AddSlider({
-        Name = "Farm Distance",
-        Min = 3,
-        Max = 15,
-        Default = 5,
-        Increment = 1,
-        ValueName = "Studs",
-        Callback = function(Value)
-            _G.FarmDistance = Value
-        end    
-    })
-
-    -- Sistema de Boss Farm
-    local BossSection = FarmTab:AddSection({
-        Name = "Boss Farm System"
-    })
-
-    local function getBossPosition(bossName)
-        local boss = workspace:FindFirstChild(bossName)
-        return boss and boss:FindFirstChild("HumanoidRootPart") and boss.HumanoidRootPart.Position
-    end
-
-    BossSection:AddToggle({
-        Name = "Auto Boss Farm",
+    FarmTab:AddToggle({
+        Name = "Bring Mob",
         Default = false,
         Callback = function(Value)
-            _G.BossFarm = Value
-            while _G.BossFarm and wait() do
+            _G.BringMob = Value
+            while _G.BringMob and task.wait() do
                 pcall(function()
-                    if _G.SelectedBoss ~= "All" then
-                        local bossPos = getBossPosition(_G.SelectedBoss)
-                        if bossPos then
-                            local targetPos = bossPos + Vector3.new(0, _G.FarmDistance, 0)
-                            Player.Character.HumanoidRootPart.CFrame = CFrame.new(targetPos)
-                            attackBoss(_G.SelectedBoss)
-                        end
-                    end
-                end)
-            end
-        end    
-    })
-
-    -- Sistema de Raids
-    local RaidTab = Window:MakeTab({
-        Name = "⚔️ Raids",
-        Icon = "rbxassetid://14476196659"
-    })
-
-    _G.AutoStartRaid = false
-    _G.AutoCompleteRaid = false
-    _G.SelectedRaid = "None"
-
-    local RaidSection = RaidTab:AddSection({
-        Name = "Raid Automation"
-    })
-
-    RaidSection:AddToggle({
-        Name = "Auto Complete Raid",
-        Default = false,
-        Callback = function(Value)
-            _G.AutoCompleteRaid = Value
-            while _G.AutoCompleteRaid and wait() do
-                pcall(function()
-                    -- Implementação do Auto Raid
                     for _, mob in pairs(workspace:GetChildren()) do
                         if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") then
-                            if mob.Name:find("Raid") then
-                                Player.Character.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0, 7, 0)
-                                attackMob(mob)
+                            if mob.Name:find("Mob") or mob.Name:find("Boss") then
+                                mob.HumanoidRootPart.CFrame = HumanoidRootPart.CFrame * CFrame.new(0, 0, -5)
                             end
                         end
                     end
@@ -361,21 +277,18 @@ function loadPremiumFeatures()
         end    
     })
 
-    -- Sistema de Skills
-    local SkillTab = Window:MakeTab({
+    -- Skills Tab
+    local SkillsTab = Window:MakeTab({
         Name = "🎯 Skills",
         Icon = "rbxassetid://14476196659"
     })
 
-    _G.AutoSkill1 = false
-    _G.AutoSkill2 = false
-    _G.AutoSkill3 = false
-    _G.AutoSkill4 = false
+    _G.AutoSkill = false
     _G.SkillDelay = 1
 
-    local function useSkill(skillName)
+    local function useSkill(skill)
         local args = {
-            [1] = skillName,
+            [1] = skill,
             [2] = {
                 ["MouseHit"] = Mouse.Hit,
                 ["Type"] = "Normal"
@@ -384,70 +297,88 @@ function loadPremiumFeatures()
         ReplicatedStorage.Remotes.Skills:FireServer(unpack(args))
     end
 
-    local SkillSection = SkillTab:AddSection({
-        Name = "Auto Skills"
-    })
-
-    SkillSection:AddToggle({
-        Name = "Auto Skill 1",
+    SkillsTab:AddToggle({
+        Name = "Auto Skills",
         Default = false,
         Callback = function(Value)
-            _G.AutoSkill1 = Value
-            while _G.AutoSkill1 and wait(_G.SkillDelay) do
+            _G.AutoSkill = Value
+            while _G.AutoSkill and task.wait(_G.SkillDelay) do
                 pcall(function()
                     useSkill("Skill1")
+                    wait(0.1)
+                    useSkill("Skill2")
+                    wait(0.1)
+                    useSkill("Skill3")
+                    wait(0.1)
+                    useSkill("Skill4")
                 end)
             end
         end    
     })
 
-    -- Sistema de Teleporte
+    -- Teleport Tab
     local TeleportTab = Window:MakeTab({
         Name = "🌍 Teleport",
         Icon = "rbxassetid://14476196659"
     })
 
     local function teleportTo(position)
-        Player.Character.HumanoidRootPart.CFrame = position
+        HumanoidRootPart.CFrame = position
     end
 
-    local locations = {
-        ["Spawn"] = CFrame.new(0, 100, 0),
-        ["Boss Area"] = CFrame.new(100, 100, 100),
-        ["Training Ground"] = CFrame.new(-100, 100, -100)
-    }
+    TeleportTab:AddButton({
+        Name = "Teleport to Safe Zone",
+        Callback = function()
+            teleportTo(CFrame.new(0, 100, 0))
+        end    
+    })
 
-    for locationName, position in pairs(locations) do
-        TeleportTab:AddButton({
-            Name = "Teleport to " .. locationName,
-            Callback = function()
-                teleportTo(position)
-            end    
-        })
-    end
-
-    -- Sistema de Misc
+    -- Misc Tab
     local MiscTab = Window:MakeTab({
         Name = "⚙️ Misc",
         Icon = "rbxassetid://14476196659"
     })
 
-    _G.AutoChest = false
+    _G.AutoCollectChest = false
     _G.AutoCollectDrops = false
-    _G.NoClip = false
 
     MiscTab:AddToggle({
         Name = "Auto Collect Chests",
         Default = false,
         Callback = function(Value)
-            _G.AutoChest = Value
-            while _G.AutoChest and wait() do
+            _G.AutoCollectChest = Value
+            while _G.AutoCollectChest and task.wait() do
                 pcall(function()
                     for _, chest in pairs(workspace:GetChildren()) do
                         if chest.Name:find("Chest") then
-                            local distance = (Player.Character.HumanoidRootPart.Position - chest.Position).magnitude
-                            if distance < 50 then
-                                fireproximityprompt(chest.ProximityPrompt)
+                            chest.CFrame = HumanoidRootPart.CFrame
+                        end
+                    end
+                end)
+            end
+        end    
+    })
+
+    -- Raid Tab
+    local RaidTab = Window:MakeTab({
+        Name = "⚔️ Raid",
+        Icon = "rbxassetid://14476196659"
+    })
+
+    _G.AutoRaid = false
+
+    RaidTab:AddToggle({
+        Name = "Auto Raid",
+        Default = false,
+        Callback = function(Value)
+            _G.AutoRaid = Value
+            while _G.AutoRaid and task.wait() do
+                pcall(function()
+                    for _, mob in pairs(workspace:GetChildren()) do
+                        if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") then
+                            if mob.Name:find("Raid") then
+                                HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0, 7, 0)
+                                attackMob()
                             end
                         end
                     end
@@ -456,56 +387,45 @@ function loadPremiumFeatures()
         end    
     })
 
-    -- Sistema de Configurações
-    local SettingsTab = Window:MakeTab({
-        Name = "⚙️ Settings",
-        Icon = "rbxassetid://14476196659"
-    })
+    -- Anti AFK
+    local VirtualUser = game:GetService('VirtualUser')
+    Player.Idled:Connect(function()
+        VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        wait(1)
+        VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    end)
 
-    local function saveSettings()
-        local settings = {
-            FarmMethod = _G.FarmMethod,
-            FarmDistance = _G.FarmDistance,
-            SkillDelay = _G.SkillDelay
-        }
-        writefile("THEUSHUB_SETTINGS.json", HttpService:JSONEncode(settings))
-    end
-
-    local function loadSettings()
-        if isfile("THEUSHUB_SETTINGS.json") then
-            local settings = HttpService:JSONDecode(readfile("THEUSHUB_SETTINGS.json"))
-            _G.FarmMethod = settings.FarmMethod
-            _G.FarmDistance = settings.FarmDistance
-            _G.SkillDelay = settings.SkillDelay
-        end
-    end
-
-    SettingsTab:AddButton({
-        Name = "Save Settings",
-        Callback = function()
-            saveSettings()
-        end    
-    })
-
-    SettingsTab:AddButton({
-        Name = "Load Settings",
-        Callback = function()
-            loadSettings()
-        end    
-    })
-
-    -- Anti AFK Aprimorado
-    local function setupAntiAFK()
-        local VirtualUser = game:GetService('VirtualUser')
-        Player.Idled:connect(function()
-            VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-            wait(1)
-            VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    -- Anti Ban Features
+    local function setupAntiBan()
+        local oldNamecall
+        oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+            local method = getnamecallmethod()
+            if method == "FireServer" or method == "InvokeServer" then
+                local args = {...}
+                if args[1] == "Ban" or args[1] == "Kick" then
+                    return wait(9e9)
+                end
+            end
+            return oldNamecall(self, ...)
         end)
     end
-    
-    setupAntiAFK()
+
+    setupAntiBan()
+
+    -- Extra Protection
+    local mt = getrawmetatable(game)
+    local old = mt.__namecall
+    setreadonly(mt, false)
+    mt.__namecall = newcclosure(function(...)
+        local args = {...}
+        local method = getnamecallmethod()
+        if method == "Kick" then
+            return wait(9e9)
+        end
+        return old(...)
+    end)
+    setreadonly(mt, true)
 end
 
--- Inicialização
+-- Initialize
 OrionLib:Init()
