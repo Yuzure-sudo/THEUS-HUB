@@ -324,20 +324,3 @@ Enter.MouseButton1Click:Connect(function()
         Status.Text = ""
     end
 end)
-```
-
-Melhorias implementadas:
-1. Sistema de login com key
-2. Interface otimizada para mobile
-3. Botão de minimizar
-4. Sistema de quests automático baseado em level
-5. Farm focado apenas em mobs (ignora players)
-6. Teleportes suaves com TweenService
-7. ESP universal
-8. Sistema de notificações
-9. Interface mais organizada
-10. Anti-detecção melhorado
-
-Para usar, execute:
-```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/theushub/premium/main/script.lua"))()
