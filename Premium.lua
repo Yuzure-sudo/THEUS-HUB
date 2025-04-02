@@ -1,36 +1,31 @@
--- THEUS HUB DEVELOPER
+-- THEUS HUB DEVELOPER | KING LEGACY
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Player = game:GetService("Players").LocalPlayer
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Interface de Login Elegante
-local LoginWindow = OrionLib:MakeWindow({
-    Name = "THEUS HUB | DEVELOPER",
+-- Sistema de Login
+local Window = OrionLib:MakeWindow({
+    Name = "THEUS HUB DEVELOPER",
     HidePremium = false,
     SaveConfig = true,
-    ConfigFolder = "THEUSHUB_DEV",
-    IntroEnabled = true,
-    IntroText = "THEUS HUB DEVELOPER",
+    IntroText = "THEUS HUB",
     IntroIcon = "rbxassetid://14476196659",
     Icon = "rbxassetid://14476196659"
 })
 
--- Sistema de Key Aprimorado
+-- Key System
 _G.Key = "THEUSDEV"
-_G.KeyInput = ""
-_G.CheckKey = false
+_G.KeyInput = "string"
 
-local KeyTab = LoginWindow:MakeTab({
-    Name = "🔒 Autenticação",
+local KeyTab = Window:MakeTab({
+    Name = "🔑 Key System",
     Icon = "rbxassetid://14476196659",
     PremiumOnly = false
 })
 
-local Section = KeyTab:AddSection({
-    Name = "💎 Sistema de Login Premium"
-})
-
 KeyTab:AddTextbox({
-    Name = "🔑 Insira sua Key",
+    Name = "Digite sua Key",
     Default = "",
     TextDisappear = true,
     Callback = function(Value)
@@ -39,21 +34,22 @@ KeyTab:AddTextbox({
 })
 
 KeyTab:AddButton({
-    Name = "✨ Verificar Key",
+    Name = "Verificar Key",
     Callback = function()
         if _G.KeyInput == _G.Key then
-            LoginWindow:Destroy()
-            loadMainHub()
             OrionLib:MakeNotification({
-                Name = "THEUS HUB DEVELOPER",
-                Content = "Login realizado com sucesso! Bem-vindo desenvolvedor!",
+                Name = "THEUS HUB",
+                Content = "Key Correta! Carregando...",
                 Image = "rbxassetid://14476196659",
                 Time = 5
             })
+            wait(2)
+            KeyTab:Destroy()
+            loadMain()
         else
             OrionLib:MakeNotification({
-                Name = "THEUS HUB DEVELOPER",
-                Content = "Key inválida! Tente novamente.",
+                Name = "THEUS HUB",
+                Content = "Key Incorreta!",
                 Image = "rbxassetid://14476196659",
                 Time = 5
             })
@@ -61,163 +57,189 @@ KeyTab:AddButton({
     end    
 })
 
-KeyTab:AddLabel("📱 Otimizado para Mobile")
-KeyTab:AddLabel("⭐ Developer Build")
-
--- Função Principal do Hub
-function loadMainHub()
-    local Window = OrionLib:MakeWindow({
-        Name = "THEUS HUB DEVELOPER",
-        HidePremium = false,
-        SaveConfig = true,
-        ConfigFolder = "THEUSHUB_DEV",
-        IntroEnabled = false
-    })
-
-    -- Tabs Principais
+-- Função Principal
+function loadMain()
+    -- Main Farm Tab
     local FarmTab = Window:MakeTab({
-        Name = "🌟 Farm",
+        Name = "🌟 Auto Farm",
         Icon = "rbxassetid://14476196659",
         PremiumOnly = false
     })
 
+    local MainSection = FarmTab:AddSection({
+        Name = "Farm Principal"
+    })
+
+    -- Configurações do Farm
+    _G.AutoFarm = false
+    _G.FarmMethod = "Above" -- Above, Behind, Front
+    _G.FarmDistance = 5
+    _G.AutoAttack = false
+    _G.TargetMob = "All" -- Nome do mob ou "All"
+
+    -- Funções de Farm
+    local function getNearestMob()
+        local nearestMob = nil
+        local shortestDistance = math.huge
+
+        for _, mob in pairs(workspace:GetChildren()) do
+            if mob:IsA("Model") and mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+                if _G.TargetMob == "All" or mob.Name == _G.TargetMob then
+                    local distance = (mob.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).magnitude
+                    if distance < shortestDistance then
+                        shortestDistance = distance
+                        nearestMob = mob
+                    end
+                end
+            end
+        end
+        return nearestMob
+    end
+
+    local function attackMob()
+        if _G.AutoAttack then
+            local args = {
+                [1] = "M1",
+                [2] = {
+                    ["Type"] = "Normal",
+                    ["Damage"] = 99999
+                }
+            }
+            ReplicatedStorage.Remotes.Combat:FireServer(unpack(args))
+        end
+    end
+
+    -- Toggle Auto Farm
+    MainSection:AddToggle({
+        Name = "Auto Farm",
+        Default = false,
+        Callback = function(Value)
+            _G.AutoFarm = Value
+            
+            while _G.AutoFarm and wait() do
+                pcall(function()
+                    local mob = getNearestMob()
+                    if mob then
+                        local mobCFrame = mob.HumanoidRootPart.CFrame
+                        local farmPosition = mobCFrame
+                        
+                        if _G.FarmMethod == "Above" then
+                            farmPosition = mobCFrame * CFrame.new(0, _G.FarmDistance, 0)
+                        elseif _G.FarmMethod == "Behind" then
+                            farmPosition = mobCFrame * CFrame.new(0, 0, _G.FarmDistance)
+                        elseif _G.FarmMethod == "Front" then
+                            farmPosition = mobCFrame * CFrame.new(0, 0, -_G.FarmDistance)
+                        end
+                        
+                        Player.Character.HumanoidRootPart.CFrame = farmPosition
+                        attackMob()
+                    end
+                end)
+            end
+        end    
+    })
+
+    -- Farm Settings
+    MainSection:AddDropdown({
+        Name = "Farm Method",
+        Default = "Above",
+        Options = {"Above", "Behind", "Front"},
+        Callback = function(Value)
+            _G.FarmMethod = Value
+        end    
+    })
+
+    MainSection:AddSlider({
+        Name = "Farm Distance",
+        Min = 3,
+        Max = 10,
+        Default = 5,
+        Color = Color3.fromRGB(255,255,255),
+        Increment = 1,
+        ValueName = "Distance",
+        Callback = function(Value)
+            _G.FarmDistance = Value
+        end    
+    })
+
+    MainSection:AddToggle({
+        Name = "Auto Attack",
+        Default = false,
+        Callback = function(Value)
+            _G.AutoAttack = Value
+        end    
+    })
+
+    -- Combat Tab
     local CombatTab = Window:MakeTab({
         Name = "⚔️ Combat",
         Icon = "rbxassetid://14476196659",
         PremiumOnly = false
     })
 
-    local TeleportTab = Window:MakeTab({
-        Name = "🌐 Teleport",
-        Icon = "rbxassetid://14476196659",
-        PremiumOnly = false
+    local CombatSection = CombatTab:AddSection({
+        Name = "Combat Settings"
     })
 
+    -- Kill Aura
+    _G.KillAura = false
+    _G.KillAuraRange = 10
+
+    CombatSection:AddToggle({
+        Name = "Kill Aura",
+        Default = false,
+        Callback = function(Value)
+            _G.KillAura = Value
+            
+            while _G.KillAura and wait() do
+                pcall(function()
+                    for _, mob in pairs(workspace:GetChildren()) do
+                        if mob:IsA("Model") and mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChild("Humanoid") then
+                            local distance = (mob.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).magnitude
+                            if distance <= _G.KillAuraRange and mob.Humanoid.Health > 0 then
+                                local args = {
+                                    [1] = mob.Humanoid,
+                                    [2] = {
+                                        ["Type"] = "Normal",
+                                        ["Damage"] = 99999
+                                    }
+                                }
+                                ReplicatedStorage.Remotes.Combat:FireServer(unpack(args))
+                            end
+                        end
+                    end
+                end)
+            end
+        end    
+    })
+
+    CombatSection:AddSlider({
+        Name = "Kill Aura Range",
+        Min = 5,
+        Max = 20,
+        Default = 10,
+        Color = Color3.fromRGB(255,255,255),
+        Increment = 1,
+        ValueName = "Range",
+        Callback = function(Value)
+            _G.KillAuraRange = Value
+        end    
+    })
+
+    -- Player Tab
     local PlayerTab = Window:MakeTab({
         Name = "👤 Player",
         Icon = "rbxassetid://14476196659",
         PremiumOnly = false
     })
 
-    local VisualsTab = Window:MakeTab({
-        Name = "👁️ Visual",
-        Icon = "rbxassetid://14476196659",
-        PremiumOnly = false
-    })
-
-    -- Farm Section
-    local FarmSection = FarmTab:AddSection({
-        Name = "💫 Farm Automático"
-    })
-
-    FarmTab:AddToggle({
-        Name = "🎯 Auto Farm Mobs",
-        Default = false,
-        Callback = function(Value)
-            _G.AutoFarm = Value
-            while _G.AutoFarm do
-                pcall(function()
-                    for _, v in pairs(workspace:GetDescendants()) do
-                        if v:IsA("Model") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
-                            if v.Humanoid.Health > 0 then
-                                repeat
-                                    Player.Character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame * CFrame.new(0, 7, 0)
-                                    local args = {
-                                        [1] = v.Humanoid,
-                                        [2] = {
-                                            ["Type"] = "Normal",
-                                            ["Hit"] = v.HumanoidRootPart,
-                                            ["HitPosition"] = v.HumanoidRootPart.Position,
-                                            ["Damage"] = 99999
-                                        }
-                                    }
-                                    game:GetService("ReplicatedStorage").Remotes.Combat:FireServer(unpack(args))
-                                    wait()
-                                until not v:FindFirstChild("Humanoid") or v.Humanoid.Health <= 0 or not _G.AutoFarm
-                            end
-                        end
-                    end
-                end)
-                wait()
-            end
-        end    
-    })
-
-    FarmTab:AddToggle({
-        Name = "💰 Auto Collect Items",
-        Default = false,
-        Callback = function(Value)
-            _G.AutoCollect = Value
-            while _G.AutoCollect do
-                pcall(function()
-                    for _, v in pairs(workspace:GetDescendants()) do
-                        if v:IsA("TouchTransmitter") then
-                            firetouchinterest(Player.Character.HumanoidRootPart, v.Parent, 0)
-                            wait()
-                            firetouchinterest(Player.Character.HumanoidRootPart, v.Parent, 1)
-                        end
-                    end
-                end)
-                wait()
-            end
-        end    
-    })
-
-    -- Combat Section
-    local CombatSection = CombatTab:AddSection({
-        Name = "⚡ Combate Apelão"
-    })
-
-    CombatTab:AddToggle({
-        Name = "🗡️ Kill Aura Pro",
-        Default = false,
-        Callback = function(Value)
-            _G.KillAura = Value
-            while _G.KillAura do
-                pcall(function()
-                    for _, v in pairs(workspace:GetDescendants()) do
-                        if v:IsA("Model") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
-                            if v.Humanoid.Health > 0 and v.Name ~= Player.Name then
-                                local args = {
-                                    [1] = v.Humanoid,
-                                    [2] = {
-                                        ["Type"] = "Normal",
-                                        ["Hit"] = v.HumanoidRootPart,
-                                        ["HitPosition"] = v.HumanoidRootPart.Position,
-                                        ["Damage"] = 99999
-                                    }
-                                }
-                                game:GetService("ReplicatedStorage").Remotes.Combat:FireServer(unpack(args))
-                            end
-                        end
-                    end
-                end)
-                wait()
-            end
-        end    
-    })
-
-    CombatTab:AddToggle({
-        Name = "🛡️ God Mode",
-        Default = false,
-        Callback = function(Value)
-            _G.GodMode = Value
-            while _G.GodMode do
-                pcall(function()
-                    Player.Character.Humanoid.Health = Player.Character.Humanoid.MaxHealth
-                end)
-                wait()
-            end
-        end    
-    })
-
-    -- Player Section
     local PlayerSection = PlayerTab:AddSection({
-        Name = "🎮 Modificações do Jogador"
+        Name = "Player Mods"
     })
 
-    PlayerTab:AddSlider({
-        Name = "🏃 Velocidade",
+    -- Player Speed
+    PlayerSection:AddSlider({
+        Name = "Walk Speed",
         Min = 16,
         Max = 500,
         Default = 16,
@@ -229,8 +251,9 @@ function loadMainHub()
         end    
     })
 
-    PlayerTab:AddSlider({
-        Name = "⬆️ Força do Pulo",
+    -- Jump Power
+    PlayerSection:AddSlider({
+        Name = "Jump Power",
         Min = 50,
         Max = 500,
         Default = 50,
@@ -242,32 +265,7 @@ function loadMainHub()
         end    
     })
 
-    -- Visuals Section
-    local VisualsSection = VisualsTab:AddSection({
-        Name = "🎨 Visuais"
-    })
-
-    VisualsTab:AddToggle({
-        Name = "🌞 Full Bright",
-        Default = false,
-        Callback = function(Value)
-            if Value then
-                game:GetService("Lighting").Brightness = 2
-                game:GetService("Lighting").ClockTime = 14
-                game:GetService("Lighting").FogEnd = 100000
-                game:GetService("Lighting").GlobalShadows = false
-                game:GetService("Lighting").OutdoorAmbient = Color3.fromRGB(128, 128, 128)
-            else
-                game:GetService("Lighting").Brightness = 1
-                game:GetService("Lighting").ClockTime = 14
-                game:GetService("Lighting").FogEnd = 9000
-                game:GetService("Lighting").GlobalShadows = true
-                game:GetService("Lighting").OutdoorAmbient = Color3.fromRGB(127, 127, 127)
-            end
-        end    
-    })
-
-    -- Anti AFK Aprimorado
+    -- Anti AFK
     local VirtualUser = game:GetService('VirtualUser')
     Player.Idled:connect(function()
         VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
