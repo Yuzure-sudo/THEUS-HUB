@@ -1,239 +1,181 @@
--- Services
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
+-- Script Principal
+local ServicoJogadores = game:GetService("Players")
+local ServicoEntrada = game:GetService("UserInputService")
+local ServicoExecucao = game:GetService("RunService")
+local Câmera = workspace.CurrentCamera
+local JogadorAtual = ServicoJogadores.LocalPlayer
+local Mouse = JogadorAtual:GetMouse()
 
--- Variables
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-local Camera = workspace.CurrentCamera
+-- Círculo de FOV (Campo de Visão)
+local CírculoFOV = Drawing.new("Circle")
+CírculoFOV.Thickness = 2
+CírculoFOV.NumSides = 100
+CírculoFOV.Radius = _G.Settings.Aimbot.FOV
+CírculoFOV.Filled = false
+CírculoFOV.Visible = _G.Settings.Aimbot.ShowFOV
+CírculoFOV.ZIndex = 999
+CírculoFOV.Transparency = 1
+CírculoFOV.Color = Color3.fromRGB(255, 255, 255)
 
--- FOV Circle
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Thickness = 2
-FOVCircle.NumSides = 100
-FOVCircle.Radius = _G.Settings.Aimbot.FOV
-FOVCircle.Filled = false
-FOVCircle.Visible = _G.Settings.Aimbot.ShowFOV
-FOVCircle.ZIndex = 999
-FOVCircle.Transparency = 1
-FOVCircle.Color = Color3.fromRGB(255, 255, 255)
-
--- Functions
-local function GetClosestPlayer()
-    local MaxDist = _G.Settings.Aimbot.FOV
-    local Target = nil
+-- Função para Encontrar o Jogador Mais Próximo
+local function EncontrarJogadorProximo()
+    local DistanciaLimite = _G.Settings.Aimbot.FOV
+    local AlvoEscolhido = nil
     
-    for _, v in pairs(Players:GetPlayers()) do
-        if v ~= LocalPlayer then
-            if v.Character and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 and v.Character:FindFirstChild(_G.Settings.Aimbot.TargetPart) and v.Character:FindFirstChild("HumanoidRootPart") then
-                if _G.Settings.Aimbot.TeamCheck and v.Team == LocalPlayer.Team then continue end
-                
-                local ScreenPoint = Camera:WorldToScreenPoint(v.Character[_G.Settings.Aimbot.TargetPart].Position)
-                local VectorDistance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
-                
-                if VectorDistance < MaxDist then
-                    MaxDist = VectorDistance
-                    Target = v
+    for _, jogador in pairs(ServicoJogadores:GetPlayers()) do
+        if jogador ~= JogadorAtual then
+            if not _G.Settings.Aimbot.TeamCheck or jogador.Team ~= JogadorAtual.Team then
+                if jogador.Character and jogador.Character:FindFirstChild("Humanoid") and jogador.Character:FindFirstChild("HumanoidRootPart") and jogador.Character.Humanoid.Health > 0 then
+                    local PosicaoNaTela, EstaNaTela = Câmera:WorldToScreenPoint(jogador.Character[_G.Settings.Aimbot.TargetPart].Position)
+                    local Distancia = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(PosicaoNaTela.X, PosicaoNaTela.Y)).Magnitude
+                    
+                    if Distancia < DistanciaLimite and EstaNaTela then
+                        DistanciaLimite = Distancia
+                        AlvoEscolhido = jogador
+                    end
                 end
             end
         end
     end
-    
-    return Target
+    return AlvoEscolhido
 end
 
--- ESP Functions
-local function CreateESP(player)
-    local Box = Drawing.new("Square")
-    local Tracer = Drawing.new("Line")
-    local Name = Drawing.new("Text")
+-- Criação de ESP para Jogador
+local function IniciarESP(jogador)
+    local Retangulo = Drawing.new("Square")
+    Retangulo.Visible = false
+    Retangulo.Color = Color3.fromRGB(255, 0, 0)
+    Retangulo.Thickness = 1
+    Retangulo.Transparency = 1
+    Retangulo.Filled = false
     
-    ESPContainer[player] = {
-        Box = Box,
-        Tracer = Tracer,
-        Name = Name
+    local NomeExibido = Drawing.new("Text")
+    NomeExibido.Visible = false
+    NomeExibido.Color = Color3.fromRGB(255, 255, 255)
+    NomeExibido.Size = 14
+    NomeExibido.Center = true
+    NomeExibido.Outline = true
+    
+    ESPContainer[jogador] = {
+        Retangulo = Retangulo,
+        NomeExibido = NomeExibido
     }
 end
 
-local function UpdateESP()
-    for player, drawings in pairs(ESPContainer) do
-        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
-            local Vector, OnScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
-            
-            if OnScreen and (_G.Settings.ESP.TeamCheck == false or player.Team ~= LocalPlayer.Team) then
-                local RootPart = player.Character.HumanoidRootPart
-                local Head = player.Character.Head
-                local RootPosition = RootPart.Position
-                local HeadPosition = Head.Position + Vector3.new(0, 0.5, 0)
-                local LegPosition = RootPosition - Vector3.new(0, 3, 0)
+-- Atualização do ESP
+local function AtualizarESPs()
+    for jogador, elementos in pairs(ESPContainer) do
+        if jogador.Character and jogador.Character:FindFirstChild("HumanoidRootPart") and jogador ~= JogadorAtual then
+            if not _G.Settings.ESP.TeamCheck or jogador.Team ~= JogadorAtual.Team then
+                local PartePrincipal = jogador.Character.HumanoidRootPart
+                local PontoTela, Visível = Câmera:WorldToScreenPoint(PartePrincipal.Position)
                 
-                -- Box ESP
-                local BoxSize = Vector2.new(2000 / Vector.Z, HeadPosition.Y - LegPosition.Y)
-                local BoxPosition = Vector2.new(Vector.X - BoxSize.X / 2, Vector.Y - BoxSize.Y / 2)
-                
-                drawings.Box.Size = BoxSize
-                drawings.Box.Position = BoxPosition
-                drawings.Box.Visible = _G.Settings.ESP.Enabled
-                drawings.Box.Color = Color3.fromRGB(255, 255, 255)
-                drawings.Box.Thickness = 1
-                drawings.Box.Filled = false
-                
-                -- Tracer ESP
-                drawings.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-                drawings.Tracer.To = Vector2.new(Vector.X, Vector.Y)
-                drawings.Tracer.Visible = _G.Settings.ESP.Enabled
-                drawings.Tracer.Color = Color3.fromRGB(255, 255, 255)
-                drawings.Tracer.Thickness = 1
-                
-                -- Name ESP
-                drawings.Name.Text = player.Name
-                drawings.Name.Position = Vector2.new(Vector.X, Vector.Y - BoxSize.Y / 2 - 15)
-                drawings.Name.Visible = _G.Settings.ESP.Enabled
-                drawings.Name.Color = Color3.fromRGB(255, 255, 255)
-                drawings.Name.Size = 14
-                drawings.Name.Center = true
-                drawings.Name.Outline = true
+                if Visível and _G.Settings.ESP.Enabled then
+                    local Cabeça = jogador.Character:FindFirstChild("Head")
+                    local HRP = jogador.Character.HumanoidRootPart
+                    
+                    local TopoTela = Câmera:WorldToScreenPoint(Cabeça.Position + Vector3.new(0, 1, 0))
+                    local BaseTela = Câmera:WorldToScreenPoint(HRP.Position - Vector3.new(0, 3, 0))
+                    
+                    local DimensaoRetangulo = Vector2.new((TopoTela - BaseTela).Y / 2, (TopoTela - BaseTela).Y)
+                    
+                    elementos.Retangulo.Size = DimensaoRetangulo
+                    elementos.Retangulo.Position = Vector2.new(PontoTela.X - DimensaoRetangulo.X / 2, PontoTela.Y - DimensaoRetangulo.Y / 2)
+                    elementos.Retangulo.Visible = true
+                    
+                    elementos.NomeExibido.Position = Vector2.new(PontoTela.X, PontoTela.Y - DimensaoRetangulo.Y / 2 - 15)
+                    elementos.NomeExibido.Text = jogador.Name
+                    elementos.NomeExibido.Visible = true
+                else
+                    elementos.Retangulo.Visible = false
+                    elementos.NomeExibido.Visible = false
+                end
             else
-                drawings.Box.Visible = false
-                drawings.Tracer.Visible = false
-                drawings.Name.Visible = false
+                elementos.Retangulo.Visible = false
+                elementos.NomeExibido.Visible = false
             end
         else
-            drawings.Box.Visible = false
-            drawings.Tracer.Visible = false
-            drawings.Name.Visible = false
+            elementos.Retangulo.Visible = false
+            elementos.NomeExibido.Visible = false
         end
     end
 end
 
--- GUI Functions
-local function CreateToggle(name, parent, default, callback)
-    local ToggleFrame = Instance.new("Frame")
-    local ToggleButton = Instance.new("TextButton")
-    local UICorner = Instance.new("UICorner")
-    local Title = Instance.new("TextLabel")
+-- Aimbot
+local function AtivarAimbot()
+    if _G.Settings.Aimbot.Enabled then
+        local Alvo = EncontrarJogadorProximo()
+        if Alvo and Alvo.Character then
+            local PosicaoAlvo = Alvo.Character[_G.Settings.Aimbot.TargetPart].Position
+            local NivelSuavidade = _G.Settings.Aimbot.Smoothness
+            
+            local CameraPos = Câmera.CFrame.Position
+            local DestinoCFrame = CFrame.new(CameraPos, PosicaoAlvo)
+            
+            Câmera.CFrame = Câmera.CFrame:Lerp(DestinoCFrame, NivelSuavidade)
+        end
+    end
+end
+
+-- Remover Recuo
+if _G.Settings.Aimbot.NoRecoil then
+    local mt = getrawmetatable(game)
+    local metodoOriginal = mt.__index
+    setreadonly(mt, false)
     
-    ToggleFrame.Name = name.."Toggle"
-    ToggleFrame.Parent = parent
-    ToggleFrame.BackgroundTransparency = 1
-    ToggleFrame.Size = UDim2.new(1, 0, 0, 30)
-    
-    ToggleButton.Name = "Button"
-    ToggleButton.Parent = ToggleFrame
-    ToggleButton.BackgroundColor3 = default and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
-    ToggleButton.Position = UDim2.new(1, -40, 0.5, -10)
-    ToggleButton.Size = UDim2.new(0, 20, 0, 20)
-    ToggleButton.Font = Enum.Font.SourceSans
-    ToggleButton.Text = ""
-    
-    UICorner.Parent = ToggleButton
-    UICorner.CornerRadius = UDim.new(0, 4)
-    
-    Title.Name = "Title"
-    Title.Parent = ToggleFrame
-    Title.BackgroundTransparency = 1
-    Title.Position = UDim2.new(0, 10, 0, 0)
-    Title.Size = UDim2.new(1, -60, 1, 0)
-    Title.Font = Enum.Font.Gotham
-    Title.Text = name
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.TextSize = 14
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-    
-    local toggled = default
-    
-    ToggleButton.MouseButton1Click:Connect(function()
-        toggled = not toggled
-        ToggleButton.BackgroundColor3 = toggled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
-        callback(toggled)
+    mt.__index = newcclosure(function(self, k)
+        if k == "Recoil" or k == "CurrentRecoil" then
+            return 0
+        end
+        return metodoOriginal(self, k)
     end)
 end
 
--- Create GUI Elements
-local AimbotSection = Instance.new("Frame")
-AimbotSection.Name = "AimbotSection"
-AimbotSection.Parent = Container
-AimbotSection.BackgroundTransparency = 1
-AimbotSection.Position = UDim2.new(0, 10, 0, 10)
-AimbotSection.Size = UDim2.new(1, -20, 0, 120)
+-- Habilitar Tiro Rápido
+if _G.Settings.Aimbot.RapidFire then
+    local mt = getrawmetatable(game)
+    local metodoOriginal = mt.__index
+    setreadonly(mt, false)
+    
+    mt.__index = newcclosure(function(self, k)
+        if k == "FireRate" then
+            return 0.01
+        end
+        return metodoOriginal(self, k)
+    end)
+end
 
-CreateToggle("Aimbot", AimbotSection, _G.Settings.Aimbot.Enabled, function(value)
-    _G.Settings.Aimbot.Enabled = value
+-- Conectar Eventos
+ServicoJogadores.PlayerAdded:Connect(function(jogador)
+    IniciarESP(jogador)
 end)
 
-CreateToggle("Show FOV", AimbotSection, _G.Settings.Aimbot.ShowFOV, function(value)
-    _G.Settings.Aimbot.ShowFOV = value
-    FOVCircle.Visible = value
+ServicoJogadores.PlayerRemoving:Connect(function(jogador)
+    if ESPContainer[jogador] then
+        for _, elemento in pairs(ESPContainer[jogador]) do
+            elemento:Remove()
+        end
+        ESPContainer[jogador] = nil
+    end
 end)
 
-CreateToggle("Team Check", AimbotSection, _G.Settings.Aimbot.TeamCheck, function(value)
-    _G.Settings.Aimbot.TeamCheck = value
+ServicoExecucao.RenderStepped:Connect(function()
+    CírculoFOV.Position = Vector2.new(Mouse.X, Mouse.Y)
+    CírculoFOV.Radius = _G.Settings.Aimbot.FOV
+    CírculoFOV.Visible = _G.Settings.Aimbot.ShowFOV
+    
+    AtualizarESPs()
+    AtivarAimbot()
 end)
 
-CreateToggle("No Recoil", AimbotSection, _G.Settings.Aimbot.NoRecoil, function(value)
-    _G.Settings.Aimbot.NoRecoil = value
-end)
-
-local ESPSection = Instance.new("Frame")
-ESPSection.Name = "ESPSection"
-ESPSection.Parent = Container
-ESPSection.BackgroundTransparency = 1
-ESPSection.Position = UDim2.new(0, 10, 0, 140)
-ESPSection.Size = UDim2.new(1, -20, 0, 60)
-
-CreateToggle("ESP", ESPSection, _G.Settings.ESP.Enabled, function(value)
-    _G.Settings.ESP.Enabled = value
-end)
-
-CreateToggle("ESP Team Check", ESPSection, _G.Settings.ESP.TeamCheck, function(value)
-    _G.Settings.ESP.TeamCheck = value
-end)
-
--- Initialize ESP
-for _, player in pairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        CreateESP(player)
+-- Inicializar ESPs para Jogadores Atuais
+for _, jogador in pairs(ServicoJogadores:GetPlayers()) do
+    if jogador ~= JogadorAtual then
+        IniciarESP(jogador)
     end
 end
 
-Players.PlayerAdded:Connect(function(player)
-    CreateESP(player)
-end)
-
-Players.PlayerRemoving:Connect(function(player)
-    if ESPContainer[player] then
-        for _, drawing in pairs(ESPContainer[player]) do
-            drawing:Remove()
-        end
-        ESPContainer[player] = nil
-    end
-end)
-
--- Main Loop
-RunService.RenderStepped:Connect(function()
-    FOVCircle.Position = Vector2.new(Mouse.X, Mouse.Y)
-    
-    if _G.Settings.Aimbot.Enabled then
-        local Target = GetClosestPlayer()
-        if Target then
-            local TargetPos = Target.Character[_G.Settings.Aimbot.TargetPart].Position
-            local ScreenPos = Camera:WorldToScreenPoint(TargetPos)
-            local MousePos = Vector2.new(Mouse.X, Mouse.Y)
-            local NewPos = Vector2.new(ScreenPos.X, ScreenPos.Y)
-            
-            mousemoverel(
-                (NewPos.X - MousePos.X) * _G.Settings.Aimbot.Smoothness,
-                (NewPos.Y - MousePos.Y) * _G.Settings.Aimbot.Smoothness
-            )
-        end
-    end
-    
-    UpdateESP()
-end)
-
--- Minimize Button
+-- Funcionalidade da Interface de Usuário
 MinimizeBtn.MouseButton1Click:Connect(function()
     Container.Visible = not Container.Visible
 end)
