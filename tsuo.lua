@@ -1,222 +1,327 @@
--- Script FPS Aimbot + ESP + Auto Farm
+-- Script FPS Mobile Avançado
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Mouse = LocalPlayer:GetMouse()
 
--- Interface
+-- Interface Moderna
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
+local TopBar = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
+local MinimizeBtn = Instance.new("ImageButton")
 local Container = Instance.new("Frame")
-local AimbotToggle = Instance.new("TextButton")
-local ESPToggle = Instance.new("TextButton")
-local AutoFarmToggle = Instance.new("TextButton")
+local UICorner_Main = Instance.new("UICorner")
+local UICorner_Top = Instance.new("UICorner")
+local Shadow = Instance.new("ImageLabel")
 
--- Settings
+-- Configurações Avançadas
 _G.Settings = {
     Aimbot = {
         Enabled = false,
         TeamCheck = true,
         TargetPart = "Head",
-        Smoothness = 0.1,
-        FOV = 400
+        Smoothness = 0.25,
+        FOV = 400,
+        AutoShoot = false,
+        PredictMovement = true,
+        VisibilityCheck = true,
+        HitboxExpander = false,
+        HitboxSize = 5
     },
     ESP = {
         Enabled = false,
         TeamCheck = true,
         BoxesEnabled = true,
-        NamesEnabled = true
+        NamesEnabled = true,
+        HealthEnabled = true,
+        DistanceEnabled = true,
+        TracersEnabled = true,
+        ChamsEnabled = false,
+        RainbowMode = false
     },
     AutoFarm = {
         Enabled = false,
-        Range = 15
+        Range = 15,
+        TargetClosest = true,
+        AutoHeal = true,
+        SafeMode = true
     }
 }
 
--- Interface Setup
+-- Interface Setup Moderna
 ScreenGui.Parent = game.CoreGui
-MainFrame.Size = UDim2.new(0, 200, 0, 160)
-MainFrame.Position = UDim2.new(0.8, 0, 0.4, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ScreenGui.ResetOnSpawn = false
+
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 300, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
+MainFrame.Active = true
+MainFrame.Draggable = true
 
-Title.Text = "Combat Hub"
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Shadow.Name = "Shadow"
+Shadow.Parent = MainFrame
+Shadow.BackgroundTransparency = 1
+Shadow.Position = UDim2.new(0, -15, 0, -15)
+Shadow.Size = UDim2.new(1, 30, 1, 30)
+Shadow.Image = "rbxassetid://5028857084"
+Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+Shadow.ImageTransparency = 0.6
+Shadow.ScaleType = Enum.ScaleType.Slice
+Shadow.SliceCenter = Rect.new(24, 24, 276, 276)
+
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0, 40)
+TopBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = MainFrame
+
+Title.Name = "Title"
+Title.Size = UDim2.new(1, -40, 1, 0)
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.Text = "Ultimate Combat Hub"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Parent = MainFrame
+Title.TextSize = 18
+Title.Parent = TopBar
 
-Container.Position = UDim2.new(0, 0, 0, 35)
-Container.Size = UDim2.new(1, 0, 1, -35)
+MinimizeBtn.Name = "MinimizeBtn"
+MinimizeBtn.Size = UDim2.new(0, 30, 0, 30)
+MinimizeBtn.Position = UDim2.new(1, -35, 0.5, -15)
+MinimizeBtn.BackgroundTransparency = 1
+MinimizeBtn.Image = "rbxassetid://7072718362"
+MinimizeBtn.Parent = TopBar
+
+Container.Name = "Container"
+Container.Size = UDim2.new(1, -20, 1, -60)
+Container.Position = UDim2.new(0, 10, 0, 50)
 Container.BackgroundTransparency = 1
 Container.Parent = MainFrame
 
--- Buttons
-local function CreateButton(name, position)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0.9, 0, 0, 30)
-    button.Position = position
-    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.Text = name
-    button.Parent = Container
-    return button
+UICorner_Main.CornerRadius = UDim.new(0, 10)
+UICorner_Main.Parent = MainFrame
+
+UICorner_Top.CornerRadius = UDim.new(0, 10)
+UICorner_Top.Parent = TopBar
+
+-- Funções de Criação de Elementos
+local function CreateButton(text, position)
+    local Button = Instance.new("TextButton")
+    local UICorner = Instance.new("UICorner")
+    local StatusDot = Instance.new("Frame")
+    local UICorner_Dot = Instance.new("UICorner")
+    
+    Button.Size = UDim2.new(1, 0, 0, 40)
+    Button.Position = position
+    Button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    Button.Text = text
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.TextSize = 16
+    Button.Font = Enum.Font.GothamSemibold
+    Button.Parent = Container
+    
+    UICorner.CornerRadius = UDim.new(0, 8)
+    UICorner.Parent = Button
+    
+    StatusDot.Size = UDim2.new(0, 10, 0, 10)
+    StatusDot.Position = UDim2.new(1, -20, 0.5, -5)
+    StatusDot.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    StatusDot.Parent = Button
+    
+    UICorner_Dot.CornerRadius = UDim.new(1, 0)
+    UICorner_Dot.Parent = StatusDot
+    
+    return Button, StatusDot
 end
 
-AimbotToggle = CreateButton("Aimbot: OFF", UDim2.new(0.05, 0, 0, 10))
-ESPToggle = CreateButton("ESP: OFF", UDim2.new(0.05, 0, 0, 50))
-AutoFarmToggle = CreateButton("Auto Farm: OFF", UDim2.new(0.05, 0, 0, 90))
+-- Criar Botões
+local AimbotButton, AimbotStatus = CreateButton("Aimbot", UDim2.new(0, 0, 0, 0))
+local ESPButton, ESPStatus = CreateButton("ESP", UDim2.new(0, 0, 0, 50))
+local AutoFarmButton, AutoFarmStatus = CreateButton("Auto Farm", UDim2.new(0, 0, 0, 100))
 
--- ESP Functions
+-- Funções de Animação
+local function AnimateButton(button, enabled)
+    local goal = {
+        BackgroundColor3 = enabled and Color3.fromRGB(45, 45, 45) or Color3.fromRGB(35, 35, 35)
+    }
+    
+    local tween = TweenService:Create(button, TweenInfo.new(0.3), goal)
+    tween:Play()
+end
+
+-- Funções Principais
+local function UpdateAimbot()
+    if not _G.Settings.Aimbot.Enabled then return end
+    
+    local closest = nil
+    local maxDistance = _G.Settings.Aimbot.FOV
+    local targetPart = _G.Settings.Aimbot.TargetPart
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player == LocalPlayer then continue end
+        if _G.Settings.Aimbot.TeamCheck and player.Team == LocalPlayer.Team then continue end
+        
+        if player.Character and player.Character:FindFirstChild(targetPart) then
+            local part = player.Character[targetPart]
+            local partPos = part.Position
+            
+            if _G.Settings.Aimbot.PredictMovement then
+                local velocity = player.Character.HumanoidRootPart.Velocity
+                partPos = partPos + (velocity * 0.165)
+            end
+            
+            local screenPos, onScreen = Camera:WorldToScreenPoint(partPos)
+            if not onScreen then continue end
+            
+            local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+            
+            if distance < maxDistance then
+                closest = player
+                maxDistance = distance
+            end
+        end
+    end
+    
+    if closest then
+        local part = closest.Character[targetPart]
+        local partPos = part.Position
+        
+        if _G.Settings.Aimbot.PredictMovement then
+            local velocity = closest.Character.HumanoidRootPart.Velocity
+            partPos = partPos + (velocity * 0.165)
+        end
+        
+        local screenPos = Camera:WorldToScreenPoint(partPos)
+        local moveVector = Vector2.new(
+            (screenPos.X - Camera.ViewportSize.X/2) * _G.Settings.Aimbot.Smoothness,
+            (screenPos.Y - Camera.ViewportSize.Y/2) * _G.Settings.Aimbot.Smoothness
+        )
+        
+        mousemoverel(moveVector.X, moveVector.Y)
+    end
+end
+
+-- ESP Function
 local function CreateESP(player)
-    local Box = Drawing.new("Square")
-    Box.Visible = false
-    Box.Color = Color3.fromRGB(255, 0, 0)
-    Box.Thickness = 1
-    Box.Transparency = 1
-    Box.Filled = false
-
-    local Name = Drawing.new("Text")
-    Name.Visible = false
-    Name.Color = Color3.fromRGB(255, 255, 255)
-    Name.Size = 14
-    Name.Center = true
-    Name.Outline = true
-
+    local esp = {
+        Box = Drawing.new("Square"),
+        Name = Drawing.new("Text"),
+        Health = Drawing.new("Text"),
+        Distance = Drawing.new("Text"),
+        Tracer = Drawing.new("Line")
+    }
+    
     RunService.RenderStepped:Connect(function()
         if not _G.Settings.ESP.Enabled then
-            Box.Visible = false
-            Name.Visible = false
+            for _, element in pairs(esp) do
+                element.Visible = false
+            end
             return
         end
-
+        
         if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local humanoidRootPart = player.Character.HumanoidRootPart
-            local vector, onScreen = Camera:WorldToViewportPoint(humanoidRootPart.Position)
+            local pos = player.Character.HumanoidRootPart.Position
+            local screenPos, onScreen = Camera:WorldToScreenPoint(pos)
             
             if onScreen and player ~= LocalPlayer then
-                if _G.Settings.ESP.TeamCheck and player.Team == LocalPlayer.Team then
-                    Box.Visible = false
-                    Name.Visible = false
-                    return
-                end
-
-                local rootPosition = player.Character.HumanoidRootPart.Position
-                local headPosition = player.Character.Head.Position
-                local screenPosition = Camera:WorldToViewportPoint(rootPosition)
+                -- Update ESP elements
+                local distance = (LocalPlayer.Character.HumanoidRootPart.Position - pos).Magnitude
+                local size = 1000 / distance
                 
-                Box.Size = Vector2.new(1000 / screenPosition.Z, 1000 / screenPosition.Z)
-                Box.Position = Vector2.new(screenPosition.X - Box.Size.X / 2, screenPosition.Y - Box.Size.Y / 2)
-                Box.Visible = _G.Settings.ESP.BoxesEnabled
+                esp.Box.Size = Vector2.new(size, size * 1.5)
+                esp.Box.Position = Vector2.new(screenPos.X - size/2, screenPos.Y - size * 0.75)
+                esp.Box.Color = _G.Settings.ESP.TeamCheck and player.Team == LocalPlayer.Team and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+                esp.Box.Visible = _G.Settings.ESP.BoxesEnabled
                 
-                Name.Position = Vector2.new(screenPosition.X, screenPosition.Y - Box.Size.Y / 2 - 15)
-                Name.Text = player.Name
-                Name.Visible = _G.Settings.ESP.NamesEnabled
+                esp.Name.Position = Vector2.new(screenPos.X, screenPos.Y - size * 0.9)
+                esp.Name.Text = player.Name
+                esp.Name.Color = esp.Box.Color
+                esp.Name.Visible = _G.Settings.ESP.NamesEnabled
+                
+                -- Additional ESP features...
             else
-                Box.Visible = false
-                Name.Visible = false
+                for _, element in pairs(esp) do
+                    element.Visible = false
+                end
             end
         end
     end)
 end
 
--- Aimbot Function
-local function GetClosestPlayer()
-    local closestPlayer = nil
-    local shortestDistance = _G.Settings.Aimbot.FOV
-
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild(_G.Settings.Aimbot.TargetPart) then
-            if _G.Settings.Aimbot.TeamCheck and player.Team == LocalPlayer.Team then
-                continue
-            end
-
-            local pos = Camera:WorldToViewportPoint(player.Character[_G.Settings.Aimbot.TargetPart].Position)
-            local magnitude = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).magnitude
-
-            if magnitude < shortestDistance then
-                closestPlayer = player
-                shortestDistance = magnitude
-            end
-        end
-    end
-
-    return closestPlayer
-end
-
--- Auto Farm Function
-local function AutoFarm()
-    while _G.Settings.AutoFarm.Enabled do
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                if _G.Settings.AutoFarm.TeamCheck and player.Team == LocalPlayer.Team then
-                    continue
-                end
-
-                local distance = (player.Character.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).magnitude
-                if distance <= _G.Settings.AutoFarm.Range then
-                    local args = {
-                        [1] = player.Character.Humanoid,
-                        [2] = player.Character.HumanoidRootPart.Position
-                    }
-                    game:GetService("ReplicatedStorage").RemoteEvent:FireServer(unpack(args))
-                end
-            end
-        end
-        wait(0.1)
-    end
-end
-
--- Button Functions
-AimbotToggle.MouseButton1Click:Connect(function()
+-- Button Click Events
+AimbotButton.MouseButton1Click:Connect(function()
     _G.Settings.Aimbot.Enabled = not _G.Settings.Aimbot.Enabled
-    AimbotToggle.Text = "Aimbot: " .. (_G.Settings.Aimbot.Enabled and "ON" or "OFF")
+    AnimateButton(AimbotButton, _G.Settings.Aimbot.Enabled)
+    AimbotStatus.BackgroundColor3 = _G.Settings.Aimbot.Enabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
 end)
 
-ESPToggle.MouseButton1Click:Connect(function()
+ESPButton.MouseButton1Click:Connect(function()
     _G.Settings.ESP.Enabled = not _G.Settings.ESP.Enabled
-    ESPToggle.Text = "ESP: " .. (_G.Settings.ESP.Enabled and "ON" or "OFF")
+    AnimateButton(ESPButton, _G.Settings.ESP.Enabled)
+    ESPStatus.BackgroundColor3 = _G.Settings.ESP.Enabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
 end)
 
-AutoFarmToggle.MouseButton1Click:Connect(function()
+AutoFarmButton.MouseButton1Click:Connect(function()
     _G.Settings.AutoFarm.Enabled = not _G.Settings.AutoFarm.Enabled
-    AutoFarmToggle.Text = "Auto Farm: " .. (_G.Settings.AutoFarm.Enabled and "ON" or "OFF")
-    if _G.Settings.AutoFarm.Enabled then
-        AutoFarm()
-    end
+    AnimateButton(AutoFarmButton, _G.Settings.AutoFarm.Enabled)
+    AutoFarmStatus.BackgroundColor3 = _G.Settings.AutoFarm.Enabled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
 end)
 
--- Main Loop
-RunService.RenderStepped:Connect(function()
-    if _G.Settings.Aimbot.Enabled then
-        local target = GetClosestPlayer()
-        if target and target.Character then
-            local pos = Camera:WorldToViewportPoint(target.Character[_G.Settings.Aimbot.TargetPart].Position)
-            mousemoverel(
-                (pos.X - Mouse.X) * _G.Settings.Aimbot.Smoothness,
-                (pos.Y - Mouse.Y) * _G.Settings.Aimbot.Smoothness
-            )
-        end
-    end
+-- Minimize Button
+local minimized = false
+MinimizeBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    local goal = {
+        Size = minimized and UDim2.new(0, 300, 0, 40) or UDim2.new(0, 300, 0, 400)
+    }
+    
+    local tween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart), goal)
+    tween:Play()
+    
+    Container.Visible = not minimized
+    MinimizeBtn.Rotation = minimized and 180 or 0
 end)
 
--- Initialize ESP for all players
+-- Initialize
 for _, player in pairs(Players:GetPlayers()) do
     if player ~= LocalPlayer then
         CreateESP(player)
     end
 end
 
-Players.PlayerAdded:Connect(function(player)
-    CreateESP(player)
-end)
+Players.PlayerAdded:Connect(CreateESP)
 
--- Toggle GUI
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.RightAlt then
-        MainFrame.Visible = not MainFrame.Visible
+-- Main Loop
+RunService.RenderStepped:Connect(function()
+    if _G.Settings.Aimbot.Enabled then
+        UpdateAimbot()
     end
 end)
+
+-- Mobile Touch Controls
+local TouchEnabled = false
+UserInputService.TouchStarted:Connect(function(touch, gameProcessed)
+    if not gameProcessed then
+        TouchEnabled = true
+    end
+end)
+
+UserInputService.TouchEnded:Connect(function(touch, gameProcessed)
+    if not gameProcessed then
+        TouchEnabled = false
+    end
+end)
+
+-- Notificação de Inicialização
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Script Carregado",
+    Text = "Pressione o botão para minimizar/maximizar",
+    Duration = 5
+})
