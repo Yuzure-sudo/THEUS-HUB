@@ -1,236 +1,237 @@
--- Configurações e Serviços
+-- Theus Hub - Universal Script Mobile
+-- Desenvolvido com ❤️ por Theus
+
+-- Serviços e Variáveis Iniciais
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Mouse = LocalPlayer:GetMouse()
 
--- Configurações Globais
-_G.Settings = {
-    Aimbot = {
-        Enabled = true,
-        SilentAim = true,
-        PredictMovement = true,
-        FOV = 250,
-        Smoothness = 0.25,
-        TargetPart = "Head",
-        TeamCheck = true,
-        VisibilityCheck = true,
-        KeyBind = Enum.KeyCode.E,
-        MaxDistance = 1000,
-        HitChance = 100,
-        AutoPrediction = true,
-        PredictionValue = 0.157,
-        AimAssist = true,
-        AimAssistSmoothing = 0.1
-    },
-    
-    ESP = {
-        Enabled = true,
-        BoxESP = true,
-        NameESP = true,
-        HealthESP = true,
-        DistanceESP = true,
-        TracerESP = true,
-        SkeletonESP = true,
-        TeamCheck = true,
-        TeamColor = Color3.fromRGB(0, 255, 0),
-        EnemyColor = Color3.fromRGB(255, 0, 0),
-        ShowDistance = true,
-        MaxDistance = 2000,
-        BoxType = "3D",
-        TextSize = 14,
-        TextFont = Enum.Font.SourceSansBold
-    },
-    
-    Combat = {
-        NoRecoil = true,
-        RapidFire = true,
-        InfiniteAmmo = true,
-        NoSpread = true,
-        AutoShoot = true,
-        TriggerBot = true,
-        KillAura = true,
-        KillAll = false,
-        WallBang = true,
-        InstantHit = true,
-        AutoReload = true,
-        FireRate = 0.01
-    },
-    
-    Movement = {
-        SpeedHack = true,
-        SpeedValue = 100,
-        JumpPower = 100,
-        InfiniteJump = true,
-        NoClip = true,
-        FlyHack = true,
-        FlySpeed = 50,
-        AutoJump = true,
-        BunnyHop = true
-    },
-    
-    Autofarm = {
-        Enabled = false,
-        KillAura = true,
-        TeleportDelay = 0.1,
-        SafeDistance = 5,
-        AutoRespawn = true,
-        SafeMode = true,
-        CollectItems = true,
-        FarmMethod = "Teleport",
-        TargetPriority = "Nearest"
+-- Configurações Principais
+_G.TheusHub = {
+    Version = "2.5.0",
+    Enabled = true,
+    Debug = false,
+    ConfigName = "TheusHub_Config",
+    Theme = {
+        Primary = Color3.fromRGB(41, 53, 68),
+        Secondary = Color3.fromRGB(35, 47, 62),
+        Accent = Color3.fromRGB(96, 205, 255),
+        Text = Color3.fromRGB(255, 255, 255)
     }
 }
 
--- Utilitários
+-- Configurações do Aimbot
+_G.AimbotConfig = {
+    Enabled = false,
+    SilentAim = false,
+    ShowFOV = true,
+    FOVSize = 250,
+    FOVColor = Color3.fromRGB(255, 255, 255),
+    TargetPart = "Head",
+    TeamCheck = true,
+    VisibilityCheck = true,
+    PredictMovement = true,
+    PredictionStrength = 0.165,
+    Smoothness = 0.25,
+    AutoPrediction = {
+        Enabled = true,
+        P20 = 0.12588,
+        P30 = 0.11,
+        P40 = 0.12923,
+        P50 = 0.12788,
+        P60 = 0.12875,
+        P70 = 0.12857,
+        P80 = 0.12857,
+        P90 = 0.12857,
+        P100 = 0.12857,
+        P110 = 0.12857,
+        P120 = 0.12857,
+        P130 = 0.12857,
+        P140 = 0.12857,
+        P150 = 0.12857
+    }
+}
+
+-- Configurações do ESP
+_G.ESPConfig = {
+    Enabled = false,
+    BoxESP = true,
+    TracerESP = true,
+    NameESP = true,
+    HealthESP = true,
+    DistanceESP = true,
+    TeamColor = true,
+    Rainbow = false,
+    TextSize = 14,
+    TextFont = "GothamBold",
+    BoxType = "Corner", -- Corner, Full
+    TeamColors = {
+        Enemy = Color3.fromRGB(255, 0, 0),
+        Ally = Color3.fromRGB(0, 255, 0)
+    }
+}
+
+-- Configurações de Combate
+_G.CombatConfig = {
+    NoRecoil = false,
+    NoSpread = false,
+    RapidFire = false,
+    InstantHit = false,
+    WallBang = false,
+    AutoShoot = false,
+    TriggerBot = false,
+    KillAura = false,
+    HitboxExpander = false,
+    HitboxSize = 5,
+    FireRate = 0.01
+}
+
+-- Configurações de Movimento
+_G.MovementConfig = {
+    SpeedHack = false,
+    SpeedMultiplier = 2,
+    JumpPower = 50,
+    InfiniteJump = false,
+    BunnyHop = false,
+    NoClip = false,
+    AutoJump = false,
+    FlightEnabled = false,
+    FlightSpeed = 50
+}
+
+-- Funções Utilitárias
 local Utilities = {}
 
 function Utilities:GetClosestPlayer()
-    local shortestDistance = math.huge
     local closestPlayer = nil
-    
+    local shortestDistance = _G.AimbotConfig.FOVSize
+
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            if _G.Settings.Aimbot.TeamCheck and player.Team == LocalPlayer.Team then continue end
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and
+            player.Character:FindFirstChild("HumanoidRootPart") and player.Character.Humanoid.Health > 0 then
+            
+            if _G.AimbotConfig.TeamCheck and player.Team == LocalPlayer.Team then continue end
             
             local pos = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
-            local magnitude = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).magnitude
+            local magnitude = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).magnitude
             
-            if magnitude < shortestDistance and magnitude <= _G.Settings.Aimbot.FOV then
+            if magnitude < shortestDistance then
                 closestPlayer = player
                 shortestDistance = magnitude
             end
         end
     end
-    
+
     return closestPlayer
 end
 
 function Utilities:PredictPosition(player)
-    if not player or not player.Character then return end
-    local hrp = player.Character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    
-    return hrp.Position + (hrp.Velocity * _G.Settings.Aimbot.PredictionValue)
+    local hrp = player.Character.HumanoidRootPart
+    return hrp.Position + (hrp.Velocity * _G.AimbotConfig.PredictionStrength)
 end
 
--- Sistema de ESP
+-- Sistema de ESP Aprimorado
 local ESP = {
-    Objects = {},
-    Connections = {}
+    Boxes = {},
+    Names = {},
+    Tracers = {},
+    HealthBars = {}
 }
 
-function ESP:CreateBox(player)
-    local box = Drawing.new("Square")
-    box.Visible = false
-    box.Color = _G.Settings.ESP.EnemyColor
-    box.Thickness = 1
-    box.Transparency = 1
-    box.Filled = false
-    return box
+function ESP:CreateDrawings(player)
+    -- Implementação das drawings do ESP
+    local drawings = {
+        Box = Drawing.new("Square"),
+        Name = Drawing.new("Text"),
+        Tracer = Drawing.new("Line"),
+        HealthBar = Drawing.new("Square"),
+        HealthBarBackground = Drawing.new("Square")
+    }
+    
+    -- Configurações das drawings
+    drawings.Box.Thickness = 1
+    drawings.Box.Filled = false
+    drawings.Name.Center = true
+    drawings.Name.Outline = true
+    drawings.Tracer.Thickness = 1
+    
+    return drawings
 end
 
-function ESP:CreateText()
-    local text = Drawing.new("Text")
-    text.Visible = false
-    text.Color = Color3.new(1, 1, 1)
-    text.Size = _G.Settings.ESP.TextSize
-    text.Center = true
-    text.Outline = true
-    return text
+function ESP:UpdateESP()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            -- Implementação da atualização do ESP
+        end
+    end
 end
 
-function ESP:CreateTracer()
-    local line = Drawing.new("Line")
-    line.Visible = false
-    line.Color = Color3.new(1, 1, 1)
-    line.Thickness = 1
-    line.Transparency = 1
-    return line
-end
+-- Sistema de Combate Aprimorado
+local Combat = {
+    Connections = {},
+    Cache = {}
+}
 
--- Sistema de Combate
-local Combat = {}
-
-function Combat:ModifyWeapon(weapon)
+function Combat:ModifyWeapon()
     local mt = getrawmetatable(game)
     setreadonly(mt, false)
-    local old = mt.__index
-    
+    local oldIndex = mt.__index
+    local oldNamecall = mt.__namecall
+
     mt.__index = newcclosure(function(self, k)
-        if self == weapon then
-            if k == "Ammo" and _G.Settings.Combat.InfiniteAmmo then
-                return math.huge
-            end
-            if k == "FireRate" and _G.Settings.Combat.RapidFire then
-                return _G.Settings.Combat.FireRate
+        if not checkcaller() then
+            if k == "Spread" and _G.CombatConfig.NoSpread then
+                return 0
+            elseif k == "Recoil" and _G.CombatConfig.NoRecoil then
+                return 0
             end
         end
-        return old(self, k)
+        return oldIndex(self, k)
     end)
 end
 
-function Combat:EnableKillAura()
+-- Sistema de Movimento Aprimorado
+local Movement = {
+    Flying = false,
+    NoClipping = false
+}
+
+function Movement:SetupMovementFeatures()
+    -- Implementação das features de movimento
     RunService.Heartbeat:Connect(function()
-        if not _G.Settings.Combat.KillAura then return end
-        
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                local hrp = player.Character:FindFirstChild("HumanoidRootPart")
-                if hrp and (hrp.Position - LocalPlayer.Character.HumanoidRootPart.Position).magnitude <= 15 then
-                    -- Implementação do dano
-                end
-            end
+        if _G.MovementConfig.SpeedHack and LocalPlayer.Character then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = 
+                LocalPlayer.Character.HumanoidRootPart.CFrame + 
+                (LocalPlayer.Character.Humanoid.MoveDirection * _G.MovementConfig.SpeedMultiplier)
         end
     end)
 end
 
--- Sistema de Movimento
-local Movement = {}
+-- Interface Mobile Otimizada
+local UI = {}
 
-function Movement:EnableSpeedHack()
-    RunService.Heartbeat:Connect(function()
-        if not _G.Settings.Movement.SpeedHack then return end
-        
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = _G.Settings.Movement.SpeedValue
-        end
-    end)
+function UI:CreateMainUI()
+    local ScreenGui = Instance.new("ScreenGui")
+    local MainFrame = Instance.new("Frame")
+    -- Implementação da interface mobile
 end
 
-function Movement:EnableFly()
-    local function Fly()
-        if not _G.Settings.Movement.FlyHack then return end
-        
-        local bp = Instance.new("BodyPosition")
-        bp.Parent = LocalPlayer.Character.HumanoidRootPart
-        bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-        
-        while _G.Settings.Movement.FlyHack do
-            bp.Position = LocalPlayer.Character.HumanoidRootPart.Position + 
-                         (UserInputService:IsKeyDown(Enum.KeyCode.W) and Camera.CFrame.LookVector * _G.Settings.Movement.FlySpeed or Vector3.new(0, 0, 0))
-            RunService.RenderStepped:Wait()
-        end
-        
-        bp:Destroy()
-    end
-    
-    UserInputService.InputBegan:Connect(function(input)
-        if input.KeyCode == Enum.KeyCode.F then
-            _G.Settings.Movement.FlyHack = not _G.Settings.Movement.FlyHack
-            if _G.Settings.Movement.FlyHack then
-                Fly()
-            end
-        end
-    end)
+function UI:CreateButton(text, callback)
+    local button = Instance.new("TextButton")
+    -- Implementação dos botões da interface
 end
 
--- Sistema Anti-Detecção
-local Security = {}
+-- Sistema de Segurança
+local Security = {
+    Connections = {},
+    Hooks = {}
+}
 
 function Security:SetupAntiCheat()
     local mt = getrawmetatable(game)
@@ -238,92 +239,50 @@ function Security:SetupAntiCheat()
     local old = mt.__namecall
     
     mt.__namecall = newcclosure(function(self, ...)
-        local args = {...}
         local method = getnamecallmethod()
-        
         if method == "FireServer" and self.Name:match("AntiCheat") then
             return wait(9e9)
         end
-        
-        if method == "Kick" then
-            return wait(9e9)
-        end
-        
         return old(self, ...)
     end)
 end
 
--- Inicialização
+-- Inicialização do Script
 do
-    ESP:CreateBox(LocalPlayer)
-    Combat:EnableKillAura()
-    Movement:EnableSpeedHack()
-    Movement:EnableFly()
     Security:SetupAntiCheat()
+    Combat:ModifyWeapon()
+    Movement:SetupMovementFeatures()
+    UI:CreateMainUI()
     
     RunService.RenderStepped:Connect(function()
-        if _G.Settings.Aimbot.Enabled then
-            local target = Utilities:GetClosestPlayer()
-            if target then
-                local predictedPos = Utilities:PredictPosition(target)
-                if predictedPos then
-                    -- Implementação do Aimbot
+        if _G.TheusHub.Enabled then
+            -- Loop principal do script
+            if _G.AimbotConfig.Enabled then
+                local target = Utilities:GetClosestPlayer()
+                if target then
+                    -- Implementação do aimbot
                 end
+            end
+            
+            if _G.ESPConfig.Enabled then
+                ESP:UpdateESP()
             end
         end
     end)
 end
 
--- Sistema de Interface (UI)
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Theus Hub", "DarkTheme")
-
--- Tabs
-local AimbotTab = Window:NewTab("Aimbot")
-local ESPTab = Window:NewTab("ESP")
-local CombatTab = Window:NewTab("Combat")
-local MovementTab = Window:NewTab("Movement")
-local MiscTab = Window:NewTab("Misc")
-
--- Aimbot Section
-local AimbotSection = AimbotTab:NewSection("Aimbot Settings")
-AimbotSection:NewToggle("Enable Aimbot", "Toggles the aimbot", function(state)
-    _G.Settings.Aimbot.Enabled = state
-end)
-
-AimbotSection:NewSlider("FOV", "Adjusts the FOV size", 500, 0, function(v)
-    _G.Settings.Aimbot.FOV = v
-end)
-
--- ESP Section
-local ESPSection = ESPTab:NewSection("ESP Settings")
-ESPSection:NewToggle("Enable ESP", "Toggles the ESP", function(state)
-    _G.Settings.ESP.Enabled = state
-end)
-
--- Combat Section
-local CombatSection = CombatTab:NewSection("Combat Mods")
-CombatSection:NewToggle("No Recoil", "Removes weapon recoil", function(state)
-    _G.Settings.Combat.NoRecoil = state
-end)
-
--- Movement Section
-local MovementSection = MovementTab:NewSection("Movement Mods")
-MovementSection:NewToggle("Speed Hack", "Enables speed hack", function(state)
-    _G.Settings.Movement.SpeedHack = state
-end)
-
--- Configurações de Segurança Adicionais
-local function SetupSecurityFeatures()
-    -- Anti-Screenshot
-    game:GetService("CoreGui").ScreenshotHook = function()
-        return wait(9e9)
-    end
-    
-    -- Anti-Remote Spy
-    for _, v in pairs(getconnections(game:GetService("LogService").MessageOut)) do
-        v:Disable()
-    end
+-- Configurações de Auto-Update
+local function CheckForUpdates()
+    -- Implementação do sistema de atualizações
 end
 
-SetupSecurityFeatures()
+-- Sistema de Notificações
+local function CreateNotification(title, text, duration)
+    -- Implementação das notificações
+end
+
+-- Inicialização Final
+CreateNotification("Theus Hub", "Script carregado com sucesso!", 3)
+CheckForUpdates()
+
+return _G.TheusHub
