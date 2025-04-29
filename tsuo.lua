@@ -1,3 +1,232 @@
+-- Serviços e Variáveis
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local Mouse = LocalPlayer:GetMouse()
+
+-- Configurações Flag War
+local Settings = {
+    Aimbot = {
+        Enabled = false,
+        Key = Enum.KeyCode.E,
+        TeamCheck = true,
+        Smoothness = 0.25,
+        TargetPart = "Head",
+        FOV = 250,
+        ShowFOV = true,
+        PredictMovement = true,
+        PredictionStrength = 0.15
+    },
+    ESP = {
+        Enabled = false,
+        TeamCheck = true,
+        Box = true,
+        Name = true,
+        Distance = true,
+        Health = true,
+        Flag = true,
+        TeamColor = Color3.fromRGB(0, 255, 0),
+        EnemyColor = Color3.fromRGB(255, 0, 0)
+    },
+    Combat = {
+        NoRecoil = true,
+        AutoShoot = true,
+        RapidFire = true
+    },
+    Autofarm = {
+        Enabled = false,
+        Mode = "Players", -- Players, Flags
+        KillAura = true,
+        TeleportDelay = 0.1,
+        SafeDistance = 5
+    }
+}
+
+-- Interface Avaco
+local Avaco = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Avaco/main/Library.lua"))()
+
+local Window = Avaco:CreateWindow({
+    Title = "Theus Hub | Flag War",
+    Theme = "Dark",
+    SizeX = 400,
+    SizeY = 500
+})
+
+-- Tabs
+local CombatTab = Window:CreateTab("Combat")
+local VisualTab = Window:CreateTab("Visuals")
+local MiscTab = Window:CreateTab("Misc")
+local SettingsTab = Window:CreateTab("Settings")
+
+-- Combat Section
+local AimbotSection = CombatTab:CreateSection("Aimbot")
+AimbotSection:CreateToggle({
+    Name = "Enable Aimbot",
+    Default = false,
+    Callback = function(Value)
+        Settings.Aimbot.Enabled = Value
+    end
+})
+
+AimbotSection:CreateSlider({
+    Name = "Smoothness",
+    Min = 0,
+    Max = 1,
+    Default = 0.25,
+    Increment = 0.01,
+    Callback = function(Value)
+        Settings.Aimbot.Smoothness = Value
+    end
+})
+
+AimbotSection:CreateSlider({
+    Name = "FOV",
+    Min = 50,
+    Max = 500,
+    Default = 250,
+    Increment = 10,
+    Callback = function(Value)
+        Settings.Aimbot.FOV = Value
+        if FOVCircle then
+            FOVCircle.Radius = Value
+        end
+    end
+})
+
+-- Autofarm Section
+local AutofarmSection = CombatTab:CreateSection("Autofarm")
+AutofarmSection:CreateToggle({
+    Name = "Enable Autofarm",
+    Default = false,
+    Callback = function(Value)
+        Settings.Autofarm.Enabled = Value
+    end
+})
+
+AutofarmSection:CreateDropdown({
+    Name = "Autofarm Mode",
+    Options = {"Players", "Flags"},
+    Default = "Players",
+    Callback = function(Value)
+        Settings.Autofarm.Mode = Value
+    end
+})
+
+-- Combat Mods Section
+local CombatModsSection = CombatTab:CreateSection("Combat Mods")
+CombatModsSection:CreateToggle({
+    Name = "No Recoil",
+    Default = true,
+    Callback = function(Value)
+        Settings.Combat.NoRecoil = Value
+    end
+})
+
+CombatModsSection:CreateToggle({
+    Name = "Auto Shoot",
+    Default = false,
+    Callback = function(Value)
+        Settings.Combat.AutoShoot = Value
+    end
+})
+
+-- ESP Section
+local ESPSection = VisualTab:CreateSection("ESP")
+ESPSection:CreateToggle({
+    Name = "Enable ESP",
+    Default = false,
+    Callback = function(Value)
+        Settings.ESP.Enabled = Value
+    end
+})
+
+-- Funções do Flag War
+local function GetClosestEnemy()
+    local ClosestPlayer = nil
+    local ShortestDistance = math.huge
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Team ~= LocalPlayer.Team then
+            if player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+                local Distance = (player.Character.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                if Distance < ShortestDistance then
+                    ClosestPlayer = player
+                    ShortestDistance = Distance
+                end
+            end
+        end
+    end
+    
+    return ClosestPlayer
+end
+
+-- Autofarm Function
+local function AutofarmPlayers()
+    if not Settings.Autofarm.Enabled then return end
+    
+    local Target = GetClosestEnemy()
+    if Target and Target.Character then
+        -- Teleport behind enemy
+        LocalPlayer.Character.HumanoidRootPart.CFrame = Target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, Settings.Autofarm.SafeDistance)
+        
+        -- Auto aim at enemy
+        if Settings.Combat.AutoShoot then
+            local Gun = LocalPlayer.Character:FindFirstChild("Gun")
+            if Gun then
+                local Args = {
+                    [1] = Target.Character.Head.Position,
+                    [2] = Target.Character.Head
+                }
+                Gun.RemoteEvent:FireServer(unpack(Args))
+            end
+        end
+        
+        wait(Settings.Autofarm.TeleportDelay)
+    end
+end
+
+-- No Recoil Implementation
+local mt = getrawmetatable(game)
+setreadonly(mt, false)
+local old = mt.__namecall
+mt.__namecall = newcclosure(function(...)
+    local args = {...}
+    local method = getnamecallmethod()
+    
+    if method == "FireServer" and Settings.Combat.NoRecoil then
+        local callingScript = getcallingscript()
+        if callingScript and callingScript.Name == "GunScript" then
+            return wait(9e9)
+        end
+    end
+    
+    return old(...)
+end)
+
+-- ESP Implementation
+local function CreateESP(player)
+    local ESP = {
+        Box = Drawing.new("Square"),
+        Name = Drawing.new("Text"),
+        Distance = Drawing.new("Text"),
+        Health = Drawing.new("Text")
+    }
+    
+    -- ESP Properties Setup
+    ESP.Box.Thickness = 1
+    ESP.Box.Filled = false
+    ESP.Box.Transparency = 1
+    
+    ESP.Name.Size = 14
+    ESP.Name.Center = true
+    ESP.Name.Para criar um script específico para o jogo "Flag War" que inclui a funcionalidade de autofarm para jogadores, juntamente com melhorias na interface usando a biblioteca Avaco, podemos estruturar o script da seguinte forma. Este script incluirá funcionalidades de aimbot, ESP, combate sem recuo e autofarm, com a interface melhorada.
+
+### Script Avançado para "Flag War"
+
+```lua
 -- Serviços necessários
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
