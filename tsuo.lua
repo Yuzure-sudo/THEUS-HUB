@@ -1,3 +1,4 @@
+-- Theus Hub v3.1
 -- Serviços
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -29,8 +30,8 @@ local ESP = {
 _G.Settings = {
     Aimbot = {
         Enabled = false,
-        Key = "E",
-        Smoothness = 0.25,
+        Key = "MouseButton1",
+        Smoothness = 0.5,
         FOV = 250,
         ShowFOV = true,
         TeamCheck = true
@@ -178,21 +179,24 @@ FOVCircle.Visible = false
 FOVCircle.ZIndex = 999
 FOVCircle.Transparency = 1
 FOVCircle.Color = Color3.fromRGB(255, 255, 255)
+FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
 -- Aimbot Functions
 local function GetClosestPlayer()
     local MaxDist = _G.Settings.Aimbot.FOV
     local Target = nil
+    local ScreenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
     for _, v in pairs(Players:GetPlayers()) do
-        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
+        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("Head") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
             if _G.Settings.Aimbot.TeamCheck and v.Team == LocalPlayer.Team then continue end
             
-            local pos = Camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
-            local magnitude = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).magnitude
-
-            if magnitude < MaxDist then
-                MaxDist = magnitude
+            local HeadPos = Camera:WorldToViewportPoint(v.Character.Head.Position)
+            if HeadPos.Z < 0 then continue end
+            
+            local Distance = (Vector2.new(HeadPos.X, HeadPos.Y) - ScreenCenter).Magnitude
+            if Distance < MaxDist then
+                MaxDist = Distance
                 Target = v
             end
         end
@@ -231,23 +235,59 @@ local function CreateESP()
                 Box = Box,
                 Tracer = Tracer
             }
-
-            v.CharacterAdded:Connect(function()
-                BoxOutline.Visible = false
-                Box.Visible = false
-                Tracer.Visible = false
-            end)
         end
     end
+
+    Players.PlayerAdded:Connect(function(player)
+        -- Box ESP
+        local BoxOutline = Drawing.new("Square")
+        BoxOutline.Visible = false
+        BoxOutline.Color = Color3.new(0, 0, 0)
+        BoxOutline.Thickness = 3
+        BoxOutline.Transparency = 1
+        BoxOutline.Filled = false
+
+        local Box = Drawing.new("Square")
+        Box.Visible = false
+        Box.Color = Color3.new(1, 1, 1)
+        Box.Thickness = 1
+        Box.Transparency = 1
+        Box.Filled = false
+
+        -- Tracer ESP
+        local Tracer = Drawing.new("Line")
+        Tracer.Visible = false
+        Tracer.Color = Color3.new(1, 1, 1)
+        Tracer.Thickness = 1
+        Tracer.Transparency = 1
+
+        ESP.Boxes[player] = {
+            BoxOutline = BoxOutline,
+            Box = Box,
+            Tracer = Tracer
+        }
+    end)
+
+    Players.PlayerRemoving:Connect(function(player)
+        if ESP.Boxes[player] then
+            ESP.Boxes[player].BoxOutline:Remove()
+            ESP.Boxes[player].Box:Remove()
+            ESP.Boxes[player].Tracer:Remove()
+            ESP.Boxes[player] = nil
+        end
+    end)
 end
 
 -- Update ESP
 local function UpdateESP()
     for player, drawings in pairs(ESP.Boxes) do
         if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
-            local pos, onScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
+            local HRP = player.Character.HumanoidRootPart
+            local Head = player.Character.Head
+            local pos, onScreen = Camera:WorldToViewportPoint(HRP.Position)
             
-            if onScreen and _G.Settings.ESP.Enabled then
+            if onScreen then
+                -- Team Check
                 if _G.Settings.ESP.TeamCheck and player.Team == LocalPlayer.Team then
                     drawings.Box.Visible = false
                     drawings.BoxOutline.Visible = false
@@ -257,24 +297,17 @@ local function UpdateESP()
 
                 -- Box ESP
                 if _G.Settings.ESP.BoxESP then
-                    local rootPos = player.Character.HumanoidRootPart.Position
-                    local box = {
-                        TopLeft = Camera:WorldToViewportPoint(rootPos + Vector3.new(-2, 3, 0)),
-                        TopRight = Camera:WorldToViewportPoint(rootPos + Vector3.new(2, 3, 0)),
-                        BottomLeft = Camera:WorldToViewportPoint(rootPos + Vector3.new(-2, -3, 0)),
-                        BottomRight = Camera:WorldToViewportPoint(rootPos + Vector3.new(2, -3, 0))
-                    }
+                    local TopY = Camera:WorldToViewportPoint(Head.Position + Vector3.new(0, 1, 0)).Y
+                    local BottomY = Camera:WorldToViewportPoint(HRP.Position - Vector3.new(0, 3, 0)).Y
+                    local Height = math.abs(TopY - BottomY)
+                    local Width = Height * 0.6
 
-                    drawings.BoxOutline.PointA = Vector2.new(box.TopLeft.X, box.TopLeft.Y)
-                    drawings.BoxOutline.PointB = Vector2.new(box.TopRight.X, box.TopRight.Y)
-                    drawings.BoxOutline.PointC = Vector2.new(box.BottomRight.X, box.BottomRight.Y)
-                    drawings.BoxOutline.PointD = Vector2.new(box.BottomLeft.X, box.BottomLeft.Y)
+                    drawings.BoxOutline.Size = Vector2.new(Width, Height)
+                    drawings.BoxOutline.Position = Vector2.new(pos.X - Width / 2, pos.Y - Height / 2)
                     drawings.BoxOutline.Visible = true
 
-                    drawings.Box.PointA = Vector2.new(box.TopLeft.X, box.TopLeft.Y)
-                    drawings.Box.PointB = Vector2.new(box.TopRight.X, box.TopRight.Y)
-                    drawings.Box.PointC = Vector2.new(box.BottomRight.X, box.BottomRight.Y)
-                    drawings.Box.PointD = Vector2.new(box.BottomLeft.X, box.BottomLeft.Y)
+                    drawings.Box.Size = Vector2.new(Width, Height)
+                    drawings.Box.Position = Vector2.new(pos.X - Width / 2, pos.Y - Height / 2)
                     drawings.Box.Visible = true
                 else
                     drawings.Box.Visible = false
@@ -319,26 +352,23 @@ end)
 
 -- Main Loop
 RunService.RenderStepped:Connect(function()
-    if _G.Settings.Aimbot.ShowFOV then
-        FOVCircle.Position = Vector2.new(Mouse.X, Mouse.Y)
-        FOVCircle.Visible = true
-    else
-        FOVCircle.Visible = false
-    end
+    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    FOVCircle.Visible = _G.Settings.Aimbot.ShowFOV
 
-    if _G.Settings.Aimbot.Enabled and UserInputService:IsKeyDown(Enum.KeyCode[_G.Settings.Aimbot.Key]) then
+    if _G.Settings.Aimbot.Enabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
         local Target = GetClosestPlayer()
         if Target and Target.Character and Target.Character:FindFirstChild("Head") then
-            local pos = Camera:WorldToScreenPoint(Target.Character.Head.Position)
-            mousemoverel((pos.X - Mouse.X) * _G.Settings.Aimbot.Smoothness, (pos.Y - Mouse.Y) * _G.Settings.Aimbot.Smoothness)
+            local HeadPos = Target.Character.Head.Position
+            local HeadScreenPos = Camera:WorldToViewportPoint(HeadPos)
+            local ScreenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+            local MousePos = Vector2.new(Mouse.X, Mouse.Y)
+            local MoveAmount = (Vector2.new(HeadScreenPos.X, HeadScreenPos.Y) - MousePos) * _G.Settings.Aimbot.Smoothness
+            mousemoverel(MoveAmount.X, MoveAmount.Y)
         end
     end
 
     UpdateESP()
 end)
-
--- Inicialização
-CreateESP()
 
 -- Minimizar/Maximizar
 MinimizeBtn.MouseButton1Click:Connect(function()
@@ -350,3 +380,6 @@ MinimizeBtn.MouseButton1Click:Connect(function()
         MainFrame:TweenSize(UDim2.new(0, 250, 0, 300), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.5, true)
     end
 end)
+
+-- Inicialização
+CreateESP()
