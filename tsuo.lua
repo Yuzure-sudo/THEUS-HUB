@@ -6,178 +6,6 @@ local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
--- Interface (mantida a mesma)
--- [Todo o código da interface permanece igual até as configurações]
-
--- Configurações específicas para Campos de Batalha
-_G.Settings = {
-    Aimbot = {
-        Enabled = false,
-        Smoothness = 0.5,
-        FOV = 250,
-        ShowFOV = true,
-        TeamCheck = false,
-        TargetPart = "Head",
-        AutoShoot = false,
-        TriggerBot = false
-    },
-    ESP = {
-        Enabled = false,
-        TeamCheck = false,
-        ShowHealth = true
-    }
-}
-
--- Funções específicas para Campos de Batalha
-local function GetCharacter(player)
-    if player and player:FindFirstChild("Personagem") then
-        return player.Personagem.Value
-    end
-    return nil
-end
-
-local function IsAlive(character)
-    return character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0
-end
-
--- Função Aimbot melhorada para Campos de Batalha
-local function GetClosestPlayer()
-    local MaxDist = _G.Settings.Aimbot.FOV
-    local Target = nil
-    local ScreenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            local character = GetCharacter(player)
-            if character and IsAlive(character) then
-                local head = character:FindFirstChild("Head")
-                if head then
-                    local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
-                    if onScreen then
-                        local distance = (Vector2.new(screenPos.X, screenPos.Y) - ScreenCenter).Magnitude
-                        if distance < MaxDist then
-                            MaxDist = distance
-                            Target = character
-                        end
-                    end
-                end
-            end
-        end
-    end
-    return Target
-end
-
--- Função de tiro automático
-local function AutoShoot()
-    if _G.Settings.Aimbot.AutoShoot then
-        mouse1press()
-        wait()
-        mouse1release()
-    end
-end
-
--- ESP melhorado para Campos de Batalha
-local function UpdateESP()
-    for player, drawings in pairs(ESPContainer) do
-        local character = GetCharacter(player)
-        if character and IsAlive(character) then
-            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-            local humanoid = character:FindFirstChild("Humanoid")
-            
-            if humanoidRootPart and humanoid then
-                local pos, onScreen = Camera:WorldToViewportPoint(humanoidRootPart.Position)
-                
-                if onScreen and _G.Settings.ESP.Enabled then
-                    -- Box ESP
-                    local rootPos = humanoidRootPart.Position
-                    local headPos = character.Head.Position
-                    local torsoSize = humanoidRootPart.Size
-                    local size = (Camera:WorldToViewportPoint(rootPos + Vector3.new(0, 3, 0)).Y - Camera:WorldToViewportPoint(rootPos - Vector3.new(0, 3, 0)).Y) / 2
-                    
-                    drawings.Box.Size = Vector2.new(size * 1.5, size * 2)
-                    drawings.Box.Position = Vector2.new(pos.X - size * 1.5 / 2, pos.Y - size)
-                    drawings.Box.Color = Color3.fromRGB(255, 255 * (humanoid.Health/humanoid.MaxHealth), 0)
-                    drawings.Box.Visible = true
-
-                    -- Tracer ESP
-                    drawings.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-                    drawings.Tracer.To = Vector2.new(pos.X, pos.Y)
-                    drawings.Tracer.Color = drawings.Box.Color
-                    drawings.Tracer.Visible = true
-
-                    -- Health ESP
-                    if _G.Settings.ESP.ShowHealth then
-                        drawings.Box.Color = Color3.fromRGB(255 * (1 - humanoid.Health/humanoid.MaxHealth), 255 * (humanoid.Health/humanoid.MaxHealth), 0)
-                    end
-                else
-                    drawings.Box.Visible = false
-                    drawings.Tracer.Visible = false
-                end
-            end
-        else
-            drawings.Box.Visible = false
-            drawings.Tracer.Visible = false
-        end
-    end
-end
-
--- Main Loop atualizado
-RunService.RenderStepped:Connect(function()
-    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    FOVCircle.Visible = _G.Settings.Aimbot.ShowFOV
-
-    if _G.Settings.Aimbot.Enabled then
-        local Target = GetClosestPlayer()
-        if Target then
-            local head = Target:FindFirstChild("Head")
-            if head then
-                local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
-                if onScreen then
-                    local moveVector = Vector2.new(
-                        (screenPos.X - Mouse.X) * _G.Settings.Aimbot.Smoothness,
-                        (screenPos.Y - Mouse.Y) * _G.Settings.Aimbot.Smoothness
-                    )
-                    mousemoverel(moveVector.X, moveVector.Y)
-                    
-                    if _G.Settings.Aimbot.AutoShoot then
-                        AutoShoot()
-                    end
-                end
-            end
-        end
-    end
-
-    UpdateESP()
-end)
-
--- Adicionar novos toggles
-CreateToggle("AutoShoot", UDim2.new(0, 10, 0, 170), function(enabled)
-    _G.Settings.Aimbot.AutoShoot = enabled
-end)
-
--- Hook para remover recoil e spread
-local mt = getrawmetatable(game)
-setreadonly(mt, false)
-local old = mt.__namecall
-
-mt.__namecall = newcclosure(function(self, ...)
-    local args = {...}
-    local method = getnamecallmethod()
-    
-    if method == "FireServer" and tostring(self) == "Recoil" thenPara desenvolver um script específico para o jogo "FPS: Campos De Armas FFA", precisamos ajustar o script para as características e mecânicas desse jogo. Vou criar um script que inclui ESP e Aimbot, focando em funcionalidades apelativas para o jogo mencionado.
-
-### Script para "FPS: Campos De Armas FFA"
-
-```lua
--- Campos De Armas FFA - Theus Hub v3.4
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local Camera = workspace.CurrentCamera
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-
--- Interface
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local UICorner = Instance.new("UICorner")
@@ -189,26 +17,24 @@ local UICorner_3 = Instance.new("UICorner")
 local Container = Instance.new("Frame")
 local UICorner_4 = Instance.new("UICorner")
 
--- Configurações
 _G.Settings = {
     Aimbot = {
         Enabled = false,
         Smoothness = 0.15,
         FOV = 300,
         ShowFOV = true,
-        TeamCheck = true,
-        TargetPart = "Head"
+        TeamCheck = false,
+        TargetPart = "Head",
+        AutoShoot = false
     },
     ESP = {
         Enabled = false,
-        TeamCheck = true
+        TeamCheck = false
     }
 }
 
--- ESP Container
 local ESPContainer = {}
 
--- Interface Setup
 ScreenGui.Parent = game.CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -237,7 +63,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "Campos De Armas FFA Hub"
+Title.Text = "Theus Hub"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -263,7 +89,6 @@ Container.Size = UDim2.new(1, -10, 1, -40)
 UICorner_4.Parent = Container
 UICorner_4.CornerRadius = UDim.new(0, 10)
 
--- FOV Circle
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 1
 FOVCircle.NumSides = 100
@@ -274,7 +99,6 @@ FOVCircle.ZIndex = 999
 FOVCircle.Transparency = 1
 FOVCircle.Color = Color3.fromRGB(255, 255, 255)
 
--- ESP Function
 local function CreateESP(plr)
     local Box = Drawing.new("Square")
     local Tracer = Drawing.new("Line")
@@ -296,56 +120,36 @@ local function CreateESP(plr)
     }
 end
 
--- Get Closest Player Function
 local function GetClosestPlayer()
     local MaxDist = _G.Settings.Aimbot.FOV
     local Target = nil
     local ScreenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
     
     for _, v in pairs(Players:GetPlayers()) do
-        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild(_G.Settings.Aimbot.TargetPart) and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
-            if _G.Settings.Aimbot.TeamCheck and v.Team == LocalPlayer.Team then continue end
-            
-            local TargetPos = v.Character[_G.Settings.Aimbot.TargetPart].Position
-            local ScreenPos, OnScreen = Camera:WorldToViewportPoint(TargetPos)
+        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("Head") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
+            local HeadPos = v.Character.Head.Position
+            local ScreenPos, OnScreen = Camera:WorldToViewportPoint(HeadPos)
             
             if OnScreen then
                 local Distance = (Vector2.new(ScreenPos.X, ScreenPos.Y) - ScreenCenter).Magnitude
-                
-                if Distance <= MaxDist then
+                if Distance < MaxDist then
                     MaxDist = Distance
                     Target = v
                 end
             end
         end
     end
-    
     return Target
 end
 
--- Aimbot Function
-local function AimbotTarget()
-    local Target = GetClosestPlayer()
-    if Target and Target.Character and Target.Character:FindFirstChild(_G.Settings.Aimbot.TargetPart) then
-        local TargetPos = Target.Character[_G.Settings.Aimbot.TargetPart].Position
-        local ScreenPos, OnScreen = Camera:WorldToViewportPoint(TargetPos)
-        
-        if OnScreen then
-            local TargetVec = Vector2.new(ScreenPos.X, ScreenPos.Y)
-            local MouseVec = Vector2.new(Mouse.X, Mouse.Y)
-            local Distance = (TargetVec - MouseVec).Magnitude
-            
-            if Distance <= _G.Settings.Aimbot.FOV then
-                mousemoverel(
-                    (TargetVec.X - MouseVec.X) * _G.Settings.Aimbot.Smoothness,
-                    (TargetVec.Y - MouseVec.Y) * _G.Settings.Aimbot.Smoothness
-                )
-            end
-        end
+local function AutoShoot()
+    if _G.Settings.Aimbot.AutoShoot then
+        mouse1press()
+        wait()
+        mouse1release()
     end
 end
 
--- Create Toggle Function
 local function CreateToggle(name, position, callback)
     local Toggle = Instance.new("Frame")
     local UICorner = Instance.new("UICorner")
@@ -393,7 +197,6 @@ local function CreateToggle(name, position, callback)
     end)
 end
 
--- Create Toggles
 CreateToggle("Aimbot", UDim2.new(0, 10, 0, 10), function(enabled)
     _G.Settings.Aimbot.Enabled = enabled
 end)
@@ -406,12 +209,10 @@ CreateToggle("ESP", UDim2.new(0, 10, 0, 90), function(enabled)
     _G.Settings.ESP.Enabled = enabled
 end)
 
-CreateToggle("Team Check", UDim2.new(0, 10, 0, 130), function(enabled)
-    _G.Settings.ESP.TeamCheck = enabled
-    _G.Settings.Aimbot.TeamCheck = enabled
+CreateToggle("Auto Shoot", UDim2.new(0, 10, 0, 130), function(enabled)
+    _G.Settings.Aimbot.AutoShoot = enabled
 end)
 
--- Initialize ESP
 for _, plr in pairs(Players:GetPlayers()) do
     if plr ~= LocalPlayer then
         CreateESP(plr)
@@ -430,28 +231,12 @@ Players.PlayerRemoving:Connect(function(plr)
     end
 end)
 
--- Main Loop
-RunService.RenderStepped:Connect(function()
-    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    FOVCircle.Visible = _G.Settings.Aimbot.ShowFOV
-
-    if _G.Settings.Aimbot.Enabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
-        AimbotTarget()
-    end
-
-    -- ESP Update
+local function UpdateESP()
     for plr, drawings in pairs(ESPContainer) do
         if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health > 0 then
             local pos, onScreen = Camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
             
             if onScreen and _G.Settings.ESP.Enabled then
-                if _G.Settings.ESP.TeamCheck and plr.Team == LocalPlayer.Team then
-                    drawings.Box.Visible = false
-                    drawings.Tracer.Visible = false
-                    continue
-                end
-
-                -- Box ESP
                 local RootPosition = plr.Character.HumanoidRootPart.Position
                 local CamPosition = Camera.CFrame.Position
                 local Distance = (RootPosition - CamPosition).Magnitude
@@ -461,7 +246,6 @@ RunService.RenderStepped:Connect(function()
                 drawings.Box.Position = Vector2.new(pos.X - Size * 1.5 / 2, pos.Y - Size * 2 / 2)
                 drawings.Box.Visible = true
 
-                -- Tracer ESP
                 drawings.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
                 drawings.Tracer.To = Vector2.new(pos.X, pos.Y)
                 drawings.Tracer.Visible = true
@@ -474,9 +258,49 @@ RunService.RenderStepped:Connect(function()
             drawings.Tracer.Visible = false
         end
     end
+end
+
+local function NoRecoil()
+    local mt = getrawmetatable(game)
+    setreadonly(mt, false)
+    local old = mt.__namecall
+    
+    mt.__namecall = newcclosure(function(self, ...)
+        local args = {...}
+        local method = getnamecallmethod()
+        
+        if method == "FireServer" and tostring(self) == "Recoil" then
+            return wait(9e9)
+        end
+        
+        return old(self, ...)
+    end)
+end
+
+NoRecoil()
+
+RunService.RenderStepped:Connect(function()
+    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    FOVCircle.Visible = _G.Settings.Aimbot.ShowFOV
+
+    if _G.Settings.Aimbot.Enabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+        local Target = GetClosestPlayer()
+        if Target and Target.Character and Target.Character:FindFirstChild("Head") then
+            local HeadPos = Target.Character.Head.Position
+            local ScreenPos = Camera:WorldToViewportPoint(HeadPos)
+            local MousePos = Vector2.new(Mouse.X, Mouse.Y)
+            local MoveAmount = (Vector2.new(ScreenPos.X, ScreenPos.Y) - MousePos) * _G.Settings.Aimbot.Smoothness
+            mousemoverel(MoveAmount.X, MoveAmount.Y)
+            
+            if _G.Settings.Aimbot.AutoShoot then
+                AutoShoot()
+            end
+        end
+    end
+
+    UpdateESP()
 end)
 
--- Minimize Button
 MinimizeBtn.MouseButton1Click:Connect(function()
     if Container.Visible then
         Container.Visible = false
