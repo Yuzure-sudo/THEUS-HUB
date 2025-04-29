@@ -1,4 +1,175 @@
--- Theus Hub v3.3 (Universal)
+-- Theus Hub v3.4 (Campos de Batalha FFA)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+
+-- Interface (mantida a mesma)
+-- [Todo o código da interface permanece igual até as configurações]
+
+-- Configurações específicas para Campos de Batalha
+_G.Settings = {
+    Aimbot = {
+        Enabled = false,
+        Smoothness = 0.5,
+        FOV = 250,
+        ShowFOV = true,
+        TeamCheck = false,
+        TargetPart = "Head",
+        AutoShoot = false,
+        TriggerBot = false
+    },
+    ESP = {
+        Enabled = false,
+        TeamCheck = false,
+        ShowHealth = true
+    }
+}
+
+-- Funções específicas para Campos de Batalha
+local function GetCharacter(player)
+    if player and player:FindFirstChild("Personagem") then
+        return player.Personagem.Value
+    end
+    return nil
+end
+
+local function IsAlive(character)
+    return character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0
+end
+
+-- Função Aimbot melhorada para Campos de Batalha
+local function GetClosestPlayer()
+    local MaxDist = _G.Settings.Aimbot.FOV
+    local Target = nil
+    local ScreenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local character = GetCharacter(player)
+            if character and IsAlive(character) then
+                local head = character:FindFirstChild("Head")
+                if head then
+                    local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
+                    if onScreen then
+                        local distance = (Vector2.new(screenPos.X, screenPos.Y) - ScreenCenter).Magnitude
+                        if distance < MaxDist then
+                            MaxDist = distance
+                            Target = character
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return Target
+end
+
+-- Função de tiro automático
+local function AutoShoot()
+    if _G.Settings.Aimbot.AutoShoot then
+        mouse1press()
+        wait()
+        mouse1release()
+    end
+end
+
+-- ESP melhorado para Campos de Batalha
+local function UpdateESP()
+    for player, drawings in pairs(ESPContainer) do
+        local character = GetCharacter(player)
+        if character and IsAlive(character) then
+            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+            local humanoid = character:FindFirstChild("Humanoid")
+            
+            if humanoidRootPart and humanoid then
+                local pos, onScreen = Camera:WorldToViewportPoint(humanoidRootPart.Position)
+                
+                if onScreen and _G.Settings.ESP.Enabled then
+                    -- Box ESP
+                    local rootPos = humanoidRootPart.Position
+                    local headPos = character.Head.Position
+                    local torsoSize = humanoidRootPart.Size
+                    local size = (Camera:WorldToViewportPoint(rootPos + Vector3.new(0, 3, 0)).Y - Camera:WorldToViewportPoint(rootPos - Vector3.new(0, 3, 0)).Y) / 2
+                    
+                    drawings.Box.Size = Vector2.new(size * 1.5, size * 2)
+                    drawings.Box.Position = Vector2.new(pos.X - size * 1.5 / 2, pos.Y - size)
+                    drawings.Box.Color = Color3.fromRGB(255, 255 * (humanoid.Health/humanoid.MaxHealth), 0)
+                    drawings.Box.Visible = true
+
+                    -- Tracer ESP
+                    drawings.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                    drawings.Tracer.To = Vector2.new(pos.X, pos.Y)
+                    drawings.Tracer.Color = drawings.Box.Color
+                    drawings.Tracer.Visible = true
+
+                    -- Health ESP
+                    if _G.Settings.ESP.ShowHealth then
+                        drawings.Box.Color = Color3.fromRGB(255 * (1 - humanoid.Health/humanoid.MaxHealth), 255 * (humanoid.Health/humanoid.MaxHealth), 0)
+                    end
+                else
+                    drawings.Box.Visible = false
+                    drawings.Tracer.Visible = false
+                end
+            end
+        else
+            drawings.Box.Visible = false
+            drawings.Tracer.Visible = false
+        end
+    end
+end
+
+-- Main Loop atualizado
+RunService.RenderStepped:Connect(function()
+    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    FOVCircle.Visible = _G.Settings.Aimbot.ShowFOV
+
+    if _G.Settings.Aimbot.Enabled then
+        local Target = GetClosestPlayer()
+        if Target then
+            local head = Target:FindFirstChild("Head")
+            if head then
+                local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
+                if onScreen then
+                    local moveVector = Vector2.new(
+                        (screenPos.X - Mouse.X) * _G.Settings.Aimbot.Smoothness,
+                        (screenPos.Y - Mouse.Y) * _G.Settings.Aimbot.Smoothness
+                    )
+                    mousemoverel(moveVector.X, moveVector.Y)
+                    
+                    if _G.Settings.Aimbot.AutoShoot then
+                        AutoShoot()
+                    end
+                end
+            end
+        end
+    end
+
+    UpdateESP()
+end)
+
+-- Adicionar novos toggles
+CreateToggle("AutoShoot", UDim2.new(0, 10, 0, 170), function(enabled)
+    _G.Settings.Aimbot.AutoShoot = enabled
+end)
+
+-- Hook para remover recoil e spread
+local mt = getrawmetatable(game)
+setreadonly(mt, false)
+local old = mt.__namecall
+
+mt.__namecall = newcclosure(function(self, ...)
+    local args = {...}
+    local method = getnamecallmethod()
+    
+    if method == "FireServer" and tostring(self) == "Recoil" thenPara desenvolver um script específico para o jogo "FPS: Campos De Armas FFA", precisamos ajustar o script para as características e mecânicas desse jogo. Vou criar um script que inclui ESP e Aimbot, focando em funcionalidades apelativas para o jogo mencionado.
+
+### Script para "FPS: Campos De Armas FFA"
+
+```lua
+-- Campos De Armas FFA - Theus Hub v3.4
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -18,16 +189,14 @@ local UICorner_3 = Instance.new("UICorner")
 local Container = Instance.new("Frame")
 local UICorner_4 = Instance.new("UICorner")
 
--- Settings
+-- Configurações
 _G.Settings = {
     Aimbot = {
         Enabled = false,
-        Smoothness = 0.25,
-        FOV = 250,
+        Smoothness = 0.15,
+        FOV = 300,
         ShowFOV = true,
         TeamCheck = true,
-        RapidFire = false,
-        NoRecoil = true,
         TargetPart = "Head"
     },
     ESP = {
@@ -68,7 +237,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "Theus Hub"
+Title.Text = "Campos De Armas FFA Hub"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -240,45 +409,6 @@ end)
 CreateToggle("Team Check", UDim2.new(0, 10, 0, 130), function(enabled)
     _G.Settings.ESP.TeamCheck = enabled
     _G.Settings.Aimbot.TeamCheck = enabled
-end)
-
-CreateToggle("RapidFire", UDim2.new(0, 10, 0, 170), function(enabled)
-    _G.Settings.Aimbot.RapidFire = enabled
-end)
-
-CreateToggle("NoRecoil", UDim2.new(0, 10, 0, 210), function(enabled)
-    _G.Settings.Aimbot.NoRecoil = enabled
-end)
-
--- RapidFire and NoRecoil
-local mt = getrawmetatable(game)
-setreadonly(mt, false)
-local oldNamecall = mt.__namecall
-local oldIndex = mt.__index
-
-mt.__namecall = newcclosure(function(self, ...)
-    local args = {...}
-    local method = getnamecallmethod()
-    
-    if method == "FireServer" then
-        if _G.Settings.Aimbot.NoRecoil and (args[1] == "Recoil" or args[1] == "RecoilFire") then
-            return
-        end
-        if _G.Settings.Aimbot.RapidFire and args[1] == "FireBullet" then
-            args[2] = 0
-        end
-    end
-    
-    return oldNamecall(self, unpack(args))
-end)
-
-mt.__index = newcclosure(function(self, k)
-    if _G.Settings.Aimbot.NoRecoil then
-        if k == "Recoil" or k == "Spread" then
-            return 0
-        end
-    end
-    return oldIndex(self, k)
 end)
 
 -- Initialize ESP
