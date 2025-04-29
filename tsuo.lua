@@ -1,2 +1,480 @@
---Interface Mobile Combat Hub v4.0 Pro
-local Lib={};local a=game:GetService("TweenService");local b=game:GetService("UserInputService");local c=game:GetService("Players");local d=game:GetService("RunService");local e=c.LocalPlayer;local f=workspace.CurrentCamera;local g={};local h=Instance.new("ScreenGui");h.Name="CombatHubPro";h.ResetOnSpawn=false;h.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;h.Parent=game.CoreGui;local i=Instance.new("Frame");i.Name="Main";i.Size=UDim2.new(0,320,0,480);i.Position=UDim2.new(0.5,-160,0.5,-240);i.BackgroundColor3=Color3.fromRGB(18,18,18);i.BorderSizePixel=0;i.Parent=h;local j=Instance.new("UICorner");j.CornerRadius=UDim.new(0,12);j.Parent=i;local k=Instance.new("Frame");k.Name="Shadow";k.BackgroundTransparency=1;k.Size=UDim2.new(1,30,1,30);k.Position=UDim2.new(0,-15,0,-15);k.ZIndex=0;k.Parent=i;local l=Instance.new("ImageLabel");l.Name="Gradient";l.BackgroundTransparency=1;l.Size=UDim2.new(1,0,1,0);l.Image="rbxassetid://4155801252";l.ImageTransparency=0.8;l.Parent=k;local m=Instance.new("Frame");m.Name="TopBar";m.Size=UDim2.new(1,0,0,48);m.BackgroundColor3=Color3.fromRGB(22,22,22);m.Parent=i;local n=Instance.new("UICorner");n.CornerRadius=UDim.new(0,12);n.Parent=m;local o=Instance.new("TextLabel");o.Name="Title";o.Size=UDim2.new(1,-80,1,0);o.Position=UDim2.new(0,20,0,0);o.BackgroundTransparency=1;o.Text="Combat Hub Pro";o.TextColor3=Color3.fromRGB(255,255,255);o.TextSize=18;o.Font=Enum.Font.GothamBold;o.TextXAlignment=Enum.TextXAlignment.Left;o.Parent=m;local p=Instance.new("ImageButton");p.Name="MinimizeBtn";p.Size=UDim2.new(0,38,0,38);p.Position=UDim2.new(1,-44,0.5,-19);p.BackgroundColor3=Color3.fromRGB(26,26,26);p.AutoButtonColor=false;p.Image="rbxassetid://7072718362";p.ImageColor3=Color3.fromRGB(255,255,255);p.Parent=m;local q=Instance.new("UICorner");q.CornerRadius=UDim.new(1,0);q.Parent=p;local r=Instance.new("Frame");r.Name="Container";r.Size=UDim2.new(1,-20,1,-68);r.Position=UDim2.new(0,10,0,58);r.BackgroundTransparency=1;r.Parent=i;_G.Settings={Aimbot={Enabled=false,TeamCheck=true,WallCheck=true,Smoothness=0.25,AimPart="Head",FOV=400,ShowFOV=true,Prediction=true,AutoShoot=false},ESP={Enabled=false,TeamCheck=true,BoxEnabled=true,NameEnabled=true,HealthEnabled=true,DistanceEnabled=true,TracerEnabled=false,ChamsEnabled=false},Combat={KillAura=false,AutoParry=false,AutoBlock=false,Range=15,HitDelay=0.1,AutoHeal=false},Movement={SpeedEnabled=false,JumpEnabled=false,FlightEnabled=false,NoClip=false,Speed=2,JumpPower=50},Visuals={FullBright=false,NoFog=false,CustomFOV=70,ThirdPerson=false}};local s={};local function t(u,v)local w=Instance.new("TextButton");w.Size=UDim2.new(1,0,0,45);w.BackgroundColor3=Color3.fromRGB(26,26,26);w.Text="";w.AutoButtonColor=false;w.Parent=v;local x=Instance.new("UICorner");x.CornerRadius=UDim.new(0,8);x.Parent=w;local y=Instance.new("TextLabel");y.Size=UDim2.new(1,-50,1,0);y.Position=UDim2.new(0,15,0,0);y.BackgroundTransparency=1;y.Text=u;y.TextColor3=Color3.fromRGB(255,255,255);y.TextSize=14;y.Font=Enum.Font.GothamSemibold;y.TextXAlignment=Enum.TextXAlignment.Left;y.Parent=w;local z=Instance.new("Frame");z.Size=UDim2.new(0,36,0,20);z.Position=UDim2.new(1,-46,0.5,-10);z.BackgroundColor3=Color3.fromRGB(18,18,18);z.Parent=w;local A=Instance.new("UICorner");A.CornerRadius=UDim.new(1,0);A.Parent=z;local B=Instance.new("Frame");B.Size=UDim2.new(0,16,0,16);B.Position=UDim2.new(0,2,0.5,-8);B.BackgroundColor3=Color3.fromRGB(255,69,72);B.Parent=z;local C=Instance.new("UICorner");C.CornerRadius=UDim.new(1,0);C.Parent=B;return w,B end;local function D(E)local F=Instance.new("Frame");F.Size=UDim2.new(1,0,0,30);F.BackgroundTransparency=1;F.Parent=r;local G=Instance.new("TextLabel");G.Size=UDim2.new(1,0,1,0);G.BackgroundTransparency=1;G.Text=E;G.TextColor3=Color3.fromRGB(255,255,255);G.TextSize=14;G.Font=Enum.Font.GothamBold;G.TextXAlignment=Enum.TextXAlignment.Left;G.Parent=F;return F end;D("Combat");local H,I=t("Aimbot",r);local J,K=t("ESP",r);local L,M=t("Kill Aura",r);D("Movement");local N,O=t("Speed",r);local P,Q=t("Flight",r);D("Visuals");local R,S=t("Full Bright",r);local T,U=t("Custom FOV",r);local function V(W)local X=TweenInfo.new(0.2,Enum.EasingStyle.Quad);local Y=a:Create(W,X,{Position=UDim2.new(1,-18,0.5,-8),BackgroundColor3=Color3.fromRGB(0,255,128)});Y:Play()end;local function Z(W)local X=TweenInfo.new(0.2,Enum.EasingStyle.Quad);local Y=a:Create(W,X,{Position=UDim2.new(0,2,0.5,-8),BackgroundColor3=Color3.fromRGB(255,69,72)});Y:Play()end;local function _(a0)if not e.Character then return end;local a1=e.Character:FindFirstChild("HumanoidRootPart");if not a1 then return end;local a2=a0.Character;if not a2 then return end;local a3=a2:FindFirstChild("HumanoidRootPart");if not a3 then return end;local a4=(a1.Position-a3.Position).Magnitude;return a4 end;local function a5()local a6=nil;local a7=_G.Settings.Aimbot.FOV;for a8,a0 in pairs(c:GetPlayers())do if a0~=e then if a0.Character and a0.Character:FindFirstChild(_G.Settings.Aimbot.AimPart)then if _G.Settings.Aimbot.TeamCheck and a0.Team==e.Team then continue end;if _G.Settings.Aimbot.WallCheck then local a9=Ray.new(f.CFrame.Position,(a0.Character[_G.Settings.Aimbot.AimPart].Position-f.CFrame.Position).Unit*1000);local aa,ab=workspace:FindPartOnRayWithIgnoreList(a9,{e.Character,a0.Character});if aa then continue end end;local ac=a0.Character[_G.Settings.Aimbot.AimPart];local ad,ae=f:WorldToScreenPoint(ac.Position);if ae then local af=(Vector2.new(ad.X,ad.Y)-Vector2.new(f.ViewportSize.X/2,f.ViewportSize.Y/2)).Magnitude;if af<a7 then a6=a0;a7=af end end end end end;return a6 end;local function ag()for a8,a0 in pairs(c:GetPlayers())do if a0~=e and a0.Character then local ah=_(a0);if ah and ah<=_G.Settings.Combat.Range then local ai={[1]=a0.Character.Humanoid,[2]=_G.Settings.Combat.HitDelay};game:GetService("ReplicatedStorage").RemoteEvent:FireServer(unpack(ai))end end end end;H.MouseButton1Click:Connect(function()_G.Settings.Aimbot.Enabled=not _G.Settings.Aimbot.Enabled;if _G.Settings.Aimbot.Enabled then V(I)else Z(I)end end);J.MouseButton1Click:Connect(function()_G.Settings.ESP.Enabled=not _G.Settings.ESP.Enabled;if _G.Settings.ESP.Enabled then V(K)else Z(K)end end);L.MouseButton1Click:Connect(function()_G.Settings.Combat.KillAura=not _G.Settings.Combat.KillAura;if _G.Settings.Combat.KillAura then V(M)else Z(M)end end);N.MouseButton1Click:Connect(function()_G.Settings.Movement.SpeedEnabled=not _G.Settings.Movement.SpeedEnabled;if _G.Settings.Movement.SpeedEnabled then V(O)else Z(O)end end);P.MouseButton1Click:Connect(function()_G.Settings.Movement.FlightEnabled=not _G.Settings.Movement.FlightEnabled;if _G.Settings.Movement.FlightEnabled then V(Q)else Z(Q)end end);R.MouseButton1Click:Connect(function()_G.Settings.Visuals.FullBright=not _G.Settings.Visuals.FullBright;if _G.Settings.Visuals.FullBright then V(S)else Z(S)end end);T.MouseButton1Click:Connect(function()_G.Settings.Visuals.CustomFOV=not _G.Settings.Visuals.CustomFOV;if _G.Settings.Visuals.CustomFOV then V(U)else Z(U)end end);local aj=false;p.MouseButton1Click:Connect(function()aj=not aj;local X=TweenInfo.new(0.3,Enum.EasingStyle.Quart);local ak=aj and UDim2.new(0,320,0,48)or UDim2.new(0,320,0,480);local Y=a:Create(i,X,{Size=ak});Y:Play();r.Visible=not aj;p.Rotation=aj and 180 or 0 end);i.Draggable=true;i.Active=true;d.RenderStepped:Connect(function()if _G.Settings.Aimbot.Enabled then local a6=a5();if a6 then local ac=a6.Character[_G.Settings.Aimbot.AimPart];local al=_G.Settings.Aimbot.Prediction and ac.Velocity*Vector3.new(1,0,1)*0.165 or Vector3.new();local ad=f:WorldToScreenPoint(ac.Position+al);local am=Vector2.new(b:GetMouseLocation().X,b:GetMouseLocation().Y);local an=Vector2.new(ad.X,ad.Y);local ao=(an-am)*_G.Settings.Aimbot.Smoothness;mousemoverel(ao.X,ao.Y);if _G.Settings.Aimbot.AutoShoot then mouse1click()end end end;if _G.Settings.Combat.KillAura then ag()end;if _G.Settings.Movement.SpeedEnabled and e.Character then local ap=e.Character:FindFirstChild("Humanoid");if ap then ap.WalkSpeed=16*_G.Settings.Movement.Speed end end;if _G.Settings.Movement.FlightEnabled and e.Character then local a1=e.Character:FindFirstChild("HumanoidRootPart");if a1 then local aq=b:IsKeyDown(Enum.KeyCode.Space)and 1 or 0;local ar=b:IsKeyDown(Enum.KeyCode.LeftShift)and-1 or 0;a1.Velocity=Vector3.new(a1.Velocity.X,50*(aq+ar),a1.Velocity.Z)end end;if _G.Settings.Visuals.FullBright then game.Lighting.Brightness=2;game.Lighting.ClockTime=14;game.Lighting.FogEnd=100000;game.Lighting.GlobalShadows=false end;if _G.Settings.Visuals.CustomFOV then f.FieldOfView=_G.Settings.Visuals.FOV end end);local as=Instance.new("Frame");as.Name="Notification";as.Size=UDim2.new(0,200,0,60);as.Position=UDim2.new(1,20,0.5,-30);as.BackgroundColor3=Color3.fromRGB(30,30,30);as.BorderSizePixel=0;as.Parent=i;local at=Instance.new("UICorner");at.CornerRadius=UDim.new(0,8);at.Parent=as;local au=Instance.new("TextLabel");au.Size=UDim2.new(1,-20,1,0);au.Position=UDim2.new(0,10,0,0);au.BackgroundTransparency=1;au.Text="Script Loaded!\nPress RightAlt to toggle";au.TextColor3=Color3.fromRGB(255,255,255);au.TextSize=14;au.Font=Enum.Font.GothamSemibold;au.Parent=as;local X=TweenInfo.new(0.5,Enum.EasingStyle.Quart);local Y=a:Create(as,X,{Position=UDim2.new(1,-220,0.5,-30)});Y:Play();wait(3);local av=a:Create(as,X,{Position=UDim2.new(1,20,0.5,-30)});av:Play();b.InputBegan:Connect(function(aw,ax)if not ax and aw.KeyCode==Enum.KeyCode.RightAlt then h.Enabled=not h.Enabled end end)
+--Ultimate Combat Hub Mobile v4.0 Professional Edition
+--Desenvolvido para máxima performance e usabilidade em dispositivos móveis
+--Interface moderna e responsiva com animações suaves
+
+local Services = {
+    TweenService = game:GetService("TweenService"),
+    UserInputService = game:GetService("UserInputService"),
+    Players = game:GetService("Players"),
+    RunService = game:GetService("RunService"),
+    ReplicatedStorage = game:GetService("ReplicatedStorage"),
+    Lighting = game:GetService("Lighting")
+}
+
+local LocalPlayer = Services.Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local Cache = {}
+
+--Configuração da Interface Principal
+local MainGUI = Instance.new("ScreenGui")
+MainGUI.Name = "UltimateCombatHubPro"
+MainGUI.ResetOnSpawn = false
+MainGUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+MainGUI.Parent = game.CoreGui
+
+--Frame Principal com Design Moderno
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainContainer"
+MainFrame.Size = UDim2.new(0, 320, 0, 480)
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -240)
+MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = MainGUI
+
+--Adicionando Cantos Arredondados
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = MainFrame
+
+--Sistema de Sombras Avançado
+local ShadowFrame = Instance.new("Frame")
+ShadowFrame.Name = "ShadowEffect"
+ShadowFrame.BackgroundTransparency = 1
+ShadowFrame.Size = UDim2.new(1, 30, 1, 30)
+ShadowFrame.Position = UDim2.new(0, -15, 0, -15)
+ShadowFrame.ZIndex = 0
+ShadowFrame.Parent = MainFrame
+
+--Gradiente para Efeito Visual
+local GradientEffect = Instance.new("ImageLabel")
+GradientEffect.Name = "BackgroundGradient"
+GradientEffect.BackgroundTransparency = 1
+GradientEffect.Size = UDim2.new(1, 0, 1, 0)
+GradientEffect.Image = "rbxassetid://4155801252"
+GradientEffect.ImageTransparency = 0.8
+GradientEffect.Parent = ShadowFrame
+
+--Barra Superior com Título
+local TopBar = Instance.new("Frame")
+TopBar.Name = "NavigationBar"
+TopBar.Size = UDim2.new(1, 0, 0, 48)
+TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+TopBar.Parent = MainFrame
+
+local TopBarCorner = Instance.new("UICorner")
+TopBarCorner.CornerRadius = UDim.new(0, 12)
+TopBarCorner.Parent = TopBar
+
+--Título Personalizado
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "HeaderTitle"
+TitleLabel.Size = UDim2.new(1, -80, 1, 0)
+TitleLabel.Position = UDim2.new(0, 20, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "Ultimate Combat Hub Pro"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 18
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = TopBar
+
+--Botão de Minimizar Animado
+local MinimizeButton = Instance.new("ImageButton")
+MinimizeButton.Name = "CollapseButton"
+MinimizeButton.Size = UDim2.new(0, 38, 0, 38)
+MinimizeButton.Position = UDim2.new(1, -44, 0.5, -19)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+MinimizeButton.AutoButtonColor = false
+MinimizeButton.Image = "rbxassetid://7072718362"
+MinimizeButton.ImageColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.Parent = TopBar
+
+local MinimizeCorner = Instance.new("UICorner")
+MinimizeCorner.CornerRadius = UDim.new(1, 0)
+MinimizeCorner.Parent = MinimizeButton
+
+--Container Principal para Conteúdo
+local ContentContainer = Instance.new("Frame")
+ContentContainer.Name = "MainContent"
+ContentContainer.Size = UDim2.new(1, -20, 1, -68)
+ContentContainer.Position = UDim2.new(0, 10, 0, 58)
+ContentContainer.BackgroundTransparency = 1
+ContentContainer.Parent = MainFrame
+
+--Configurações Globais do Sistema
+_G.Settings = {
+    Aimbot = {
+        Enabled = false,
+        TeamCheck = true,
+        WallCheck = true,
+        Smoothness = 0.25,
+        AimPart = "Head",
+        FOV = 400,
+        ShowFOV = true,
+        Prediction = true,
+        AutoShoot = false,
+        TriggerBot = false,
+        SilentAim = false,
+        Sensitivity = 1.0,
+        PredictionStrength = 2.0
+    },
+    ESP = {
+        Enabled = false,
+        TeamCheck = true,
+        BoxEnabled = true,
+        NameEnabled = true,
+        HealthEnabled = true,
+        DistanceEnabled = true,
+        TracerEnabled = false,
+        ChamsEnabled = false,
+        ShowSkeleton = false,
+        RainbowMode = false,
+        TextSize = 14,
+        BoxThickness = 1.5
+    },
+    Combat = {
+        KillAura = false,
+        AutoParry = false,
+        AutoBlock = false,
+        Range = 15,
+        HitDelay = 0.1,
+        AutoHeal = false,
+        FastAttack = false,
+        CriticalHits = false,
+        DamageMultiplier = 1.0
+    },
+    Movement = {
+        SpeedEnabled = false,
+        JumpEnabled = false,
+        FlightEnabled = false,
+        NoClip = false,
+        Speed = 2,
+        JumpPower = 50,
+        FlightSpeed = 50,
+        BunnyHop = false,
+        AutoJump = false
+    },
+    Visuals = {
+        FullBright = false,
+        NoFog = false,
+        CustomFOV = 70,
+        ThirdPerson = false,
+        Crosshair = true,
+        CustomTime = false,
+        TimeValue = 14,
+        RemoveShadows = false
+    }
+}
+
+--Funções Utilitárias
+local function CreateToggleButton(text, parent)
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(1, 0, 0, 45)
+    Button.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+    Button.Text = ""
+    Button.AutoButtonColor = false
+    Button.Parent = parent
+
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(0, 8)
+    ButtonCorner.Parent = Button
+
+    local ButtonLabel = Instance.new("TextLabel")
+    ButtonLabel.Size = UDim2.new(1, -50, 1, 0)
+    ButtonLabel.Position = UDim2.new(0, 15, 0, 0)
+    ButtonLabel.BackgroundTransparency = 1
+    ButtonLabel.Text = text
+    ButtonLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ButtonLabel.TextSize = 14
+    ButtonLabel.Font = Enum.Font.GothamSemibold
+    ButtonLabel.TextXAlignment = Enum.TextXAlignment.Left
+    ButtonLabel.Parent = Button
+
+    local ToggleFrame = Instance.new("Frame")
+    ToggleFrame.Size = UDim2.new(0, 36, 0, 20)
+    ToggleFrame.Position = UDim2.new(1, -46, 0.5, -10)
+    ToggleFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+    ToggleFrame.Parent = Button
+
+    local ToggleCorner = Instance.new("UICorner")
+    ToggleCorner.CornerRadius = UDim.new(1, 0)
+    ToggleCorner.Parent = ToggleFrame
+
+    local ToggleIndicator = Instance.new("Frame")
+    ToggleIndicator.Size = UDim2.new(0, 16, 0, 16)
+    ToggleIndicator.Position = UDim2.new(0, 2, 0.5, -8)
+    ToggleIndicator.BackgroundColor3 = Color3.fromRGB(255, 69, 72)
+    ToggleIndicator.Parent = ToggleFrame
+
+    local IndicatorCorner = Instance.new("UICorner")
+    IndicatorCorner.CornerRadius = UDim.new(1, 0)
+    IndicatorCorner.Parent = ToggleIndicator
+
+    return Button, ToggleIndicator
+end
+
+--[Continuação do script anterior...]
+
+--Sistema de Categorias
+local function CreateCategory(name)
+    local CategoryLabel = Instance.new("Frame")
+    CategoryLabel.Size = UDim2.new(1, 0, 0, 30)
+    CategoryLabel.BackgroundTransparency = 1
+    CategoryLabel.Parent = ContentContainer
+
+    local TextLabel = Instance.new("TextLabel")
+    TextLabel.Size = UDim2.new(1, 0, 1, 0)
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Text = name
+    TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TextLabel.TextSize = 14
+    TextLabel.Font = Enum.Font.GothamBold
+    TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TextLabel.Parent = CategoryLabel
+
+    return CategoryLabel
+end
+
+--Criação dos Botões
+CreateCategory("Combat")
+local AimbotButton, AimbotIndicator = CreateToggleButton("Aimbot", ContentContainer)
+local ESPButton, ESPIndicator = CreateToggleButton("ESP", ContentContainer)
+local KillAuraButton, KillAuraIndicator = CreateToggleButton("Kill Aura", ContentContainer)
+
+CreateCategory("Movement")
+local SpeedButton, SpeedIndicator = CreateToggleButton("Speed", ContentContainer)
+local FlightButton, FlightIndicator = CreateToggleButton("Flight", ContentContainer)
+
+CreateCategory("Visuals")
+local BrightButton, BrightIndicator = CreateToggleButton("Full Bright", ContentContainer)
+local FOVButton, FOVIndicator = CreateToggleButton("Custom FOV", ContentContainer)
+
+--Funções de Animação
+local function EnableToggle(indicator)
+    local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad)
+    local goal = {
+        Position = UDim2.new(1, -18, 0.5, -8),
+        BackgroundColor3 = Color3.fromRGB(0, 255, 128)
+    }
+    local tween = Services.TweenService:Create(indicator, tweenInfo, goal)
+    tween:Play()
+end
+
+local function DisableToggle(indicator)
+    local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad)
+    local goal = {
+        Position = UDim2.new(0, 2, 0.5, -8),
+        BackgroundColor3 = Color3.fromRGB(255, 69, 72)
+    }
+    local tween = Services.TweenService:Create(indicator, tweenInfo, goal)
+    tween:Play()
+end
+
+--Sistema de Aimbot
+local function GetDistance(player)
+    if not LocalPlayer.Character then return end
+    local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    
+    local character = player.Character
+    if not character then return end
+    local targetRoot = character:FindFirstChild("HumanoidRootPart")
+    if not targetRoot then return end
+    
+    local distance = (root.Position - targetRoot.Position).Magnitude
+    return distance
+end
+
+local function GetClosestPlayer()
+    local closestPlayer = nil
+    local shortestDistance = _G.Settings.Aimbot.FOV
+    
+    for _, player in pairs(Services.Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            if player.Character and player.Character:FindFirstChild(_G.Settings.Aimbot.AimPart) then
+                if _G.Settings.Aimbot.TeamCheck and player.Team == LocalPlayer.Team then continue end
+                
+                if _G.Settings.Aimbot.WallCheck then
+                    local ray = Ray.new(Camera.CFrame.Position, 
+                        (player.Character[_G.Settings.Aimbot.AimPart].Position - Camera.CFrame.Position).Unit * 1000)
+                    local hit, _ = workspace:FindPartOnRayWithIgnoreList(ray, {LocalPlayer.Character, player.Character})
+                    if hit then continue end
+                end
+                
+                local targetPart = player.Character[_G.Settings.Aimbot.AimPart]
+                local screenPoint = Camera:WorldToScreenPoint(targetPart.Position)
+                
+                if screenPoint.Z > 0 then
+                    local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - 
+                        Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                    
+                    if distance < shortestDistance then
+                        closestPlayer = player
+                        shortestDistance = distance
+                    end
+                end
+            end
+        end
+    end
+    
+    return closestPlayer
+end
+
+--Sistema de Combate
+local function ActivateKillAura()
+    for _, player in pairs(Services.Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local distance = GetDistance(player)
+            if distance and distance <= _G.Settings.Combat.Range then
+                local args = {
+                    [1] = player.Character.Humanoid,
+                    [2] = _G.Settings.Combat.HitDelay
+                }
+                Services.ReplicatedStorage.RemoteEvent:FireServer(unpack(args))
+            end
+        end
+    end
+end
+
+--Event Handlers
+AimbotButton.MouseButton1Click:Connect(function()
+    _G.Settings.Aimbot.Enabled = not _G.Settings.Aimbot.Enabled
+    if _G.Settings.Aimbot.Enabled then
+        EnableToggle(AimbotIndicator)
+    else
+        DisableToggle(AimbotIndicator)
+    end
+end)
+
+ESPButton.MouseButton1Click:Connect(function()
+    _G.Settings.ESP.Enabled = not _G.Settings.ESP.Enabled
+    if _G.Settings.ESP.Enabled then
+        EnableToggle(ESPIndicator)
+    else
+        DisableToggle(ESPIndicator)
+    end
+end)
+
+KillAuraButton.MouseButton1Click:Connect(function()
+    _G.Settings.Combat.KillAura = not _G.Settings.Combat.KillAura
+    if _G.Settings.Combat.KillAura then
+        EnableToggle(KillAuraIndicator)
+    else
+        DisableToggle(KillAuraIndicator)
+    end
+end)
+
+--Sistema de Minimização
+local isMinimized = false
+MinimizeButton.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quart)
+    local targetSize = isMinimized and UDim2.new(0, 320, 0, 48) or UDim2.new(0, 320, 0, 480)
+    local tween = Services.TweenService:Create(MainFrame, tweenInfo, {Size = targetSize})
+    tween:Play()
+    ContentContainer.Visible = not isMinimized
+    MinimizeButton.Rotation = isMinimized and 180 or 0
+end)
+
+--Arrastar Interface
+MainFrame.Draggable = true
+MainFrame.Active = true
+
+--Loop Principal
+Services.RunService.RenderStepped:Connect(function()
+    if _G.Settings.Aimbot.Enabled then
+        local target = GetClosestPlayer()
+        if target then
+            local targetPart = target.Character[_G.Settings.Aimbot.AimPart]
+            local prediction = _G.Settings.Aimbot.Prediction and 
+                targetPart.Velocity * Vector3.new(1, 0, 1) * 0.165 or Vector3.new()
+            
+            local screenPoint = Camera:WorldToScreenPoint(targetPart.Position + prediction)
+            local mousePos = Vector2.new(Services.UserInputService:GetMouseLocation().X,
+                Services.UserInputService:GetMouseLocation().Y)
+            local targetPos = Vector2.new(screenPoint.X, screenPoint.Y)
+            local delta = (targetPos - mousePos) * _G.Settings.Aimbot.Smoothness
+            
+            mousemoverel(delta.X, delta.Y)
+            
+            if _G.Settings.Aimbot.AutoShoot then
+                mouse1click()
+            end
+        end
+    end
+    
+    if _G.Settings.Combat.KillAura then
+        ActivateKillAura()
+    end
+    
+    if _G.Settings.Movement.SpeedEnabled and LocalPlayer.Character then
+        local humanoid = LocalPlayer.Character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = 16 * _G.Settings.Movement.Speed
+        end
+    end
+    
+    if _G.Settings.Movement.FlightEnabled and LocalPlayer.Character then
+        local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            local upForce = Services.UserInputService:IsKeyDown(Enum.KeyCode.Space) and 1 or 0
+            local downForce = Services.UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and -1 or 0
+            root.Velocity = Vector3.new(
+                root.Velocity.X,
+                50 * (upForce + downForce),
+                root.Velocity.Z
+            )
+        end
+    end
+    
+    if _G.Settings.Visuals.FullBright then
+        Services.Lighting.Brightness = 2
+        Services.Lighting.ClockTime = 14
+        Services.Lighting.FogEnd = 100000
+        Services.Lighting.GlobalShadows = false
+    end
+    
+    if _G.Settings.Visuals.CustomFOV then
+        Camera.FieldOfView = _G.Settings.Visuals.FOV
+    end
+end)
+
+--Notificação de Inicialização
+local NotificationFrame = Instance.new("Frame")
+NotificationFrame.Name = "Notification"
+NotificationFrame.Size = UDim2.new(0, 200, 0, 60)
+NotificationFrame.Position = UDim2.new(1, 20, 0.5, -30)
+NotificationFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+NotificationFrame.BorderSizePixel = 0
+NotificationFrame.Parent = MainFrame
+
+local NotificationCorner = Instance.new("UICorner")
+NotificationCorner.CornerRadius = UDim.new(0, 8)
+NotificationCorner.Parent = NotificationFrame
+
+local NotificationText = Instance.new("TextLabel")
+NotificationText.Size = UDim2.new(1, -20, 1, 0)
+NotificationText.Position = UDim2.new(0, 10, 0, 0)
+NotificationText.BackgroundTransparency = 1
+NotificationText.Text = "Script Loaded!\nPress RightAlt to toggle"
+NotificationText.TextColor3 = Color3.fromRGB(255, 255, 255)
+NotificationText.TextSize = 14
+NotificationText.Font = Enum.Font.GothamSemibold
+NotificationText.Parent = NotificationFrame
+
+--Animação da Notificação
+local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quart)
+local showTween = Services.TweenService:Create(NotificationFrame, tweenInfo, 
+    {Position = UDim2.new(1, -220, 0.5, -30)})
+showTween:Play()
+wait(3)
+local hideTween = Services.TweenService:Create(NotificationFrame, tweenInfo,
+    {Position = UDim2.new(1, 20, 0.5, -30)})
+hideTween:Play()
+
+--Atalho para Toggle
+Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.RightAlt then
+        MainGUI.Enabled = not MainGUI.Enabled
+    end
+end)
