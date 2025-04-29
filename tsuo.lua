@@ -408,4 +408,4 @@ local function CreateNotification(title, text, duration)
 end
 
 -- Inicialização Final
-CreateNotification("Theus Hub", "Script carrega
+CreateNotification("Theus Hub", "Script carregado"
