@@ -1,4 +1,4 @@
--- Theus Hub v3.2 (Universal)
+-- Theus Hub v3.3 (Universal)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -25,7 +25,10 @@ _G.Settings = {
         Smoothness = 0.25,
         FOV = 250,
         ShowFOV = true,
-        TeamCheck = true
+        TeamCheck = true,
+        RapidFire = false,
+        NoRecoil = true,
+        TargetPart = "Head"
     },
     ESP = {
         Enabled = false,
@@ -43,8 +46,8 @@ ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-MainFrame.Position = UDim2.new(0.5, -125, 0.5, -100)
-MainFrame.Size = UDim2.new(0, 250, 0, 200)
+MainFrame.Position = UDim2.new(0.5, -125, 0.5, -150)
+MainFrame.Size = UDim2.new(0, 250, 0, 300)
 MainFrame.Active = true
 MainFrame.Draggable = true
 
@@ -128,22 +131,49 @@ end
 local function GetClosestPlayer()
     local MaxDist = _G.Settings.Aimbot.FOV
     local Target = nil
+    local ScreenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
     
     for _, v in pairs(Players:GetPlayers()) do
-        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
+        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild(_G.Settings.Aimbot.TargetPart) and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
             if _G.Settings.Aimbot.TeamCheck and v.Team == LocalPlayer.Team then continue end
             
-            local pos = Camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
-            local magnitude = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).magnitude
+            local TargetPos = v.Character[_G.Settings.Aimbot.TargetPart].Position
+            local ScreenPos, OnScreen = Camera:WorldToViewportPoint(TargetPos)
             
-            if magnitude < MaxDist then
-                MaxDist = magnitude
-                Target = v
+            if OnScreen then
+                local Distance = (Vector2.new(ScreenPos.X, ScreenPos.Y) - ScreenCenter).Magnitude
+                
+                if Distance <= MaxDist then
+                    MaxDist = Distance
+                    Target = v
+                end
             end
         end
     end
     
     return Target
+end
+
+-- Aimbot Function
+local function AimbotTarget()
+    local Target = GetClosestPlayer()
+    if Target and Target.Character and Target.Character:FindFirstChild(_G.Settings.Aimbot.TargetPart) then
+        local TargetPos = Target.Character[_G.Settings.Aimbot.TargetPart].Position
+        local ScreenPos, OnScreen = Camera:WorldToViewportPoint(TargetPos)
+        
+        if OnScreen then
+            local TargetVec = Vector2.new(ScreenPos.X, ScreenPos.Y)
+            local MouseVec = Vector2.new(Mouse.X, Mouse.Y)
+            local Distance = (TargetVec - MouseVec).Magnitude
+            
+            if Distance <= _G.Settings.Aimbot.FOV then
+                mousemoverel(
+                    (TargetVec.X - MouseVec.X) * _G.Settings.Aimbot.Smoothness,
+                    (TargetVec.Y - MouseVec.Y) * _G.Settings.Aimbot.Smoothness
+                )
+            end
+        end
+    end
 end
 
 -- Create Toggle Function
@@ -212,6 +242,45 @@ CreateToggle("Team Check", UDim2.new(0, 10, 0, 130), function(enabled)
     _G.Settings.Aimbot.TeamCheck = enabled
 end)
 
+CreateToggle("RapidFire", UDim2.new(0, 10, 0, 170), function(enabled)
+    _G.Settings.Aimbot.RapidFire = enabled
+end)
+
+CreateToggle("NoRecoil", UDim2.new(0, 10, 0, 210), function(enabled)
+    _G.Settings.Aimbot.NoRecoil = enabled
+end)
+
+-- RapidFire and NoRecoil
+local mt = getrawmetatable(game)
+setreadonly(mt, false)
+local oldNamecall = mt.__namecall
+local oldIndex = mt.__index
+
+mt.__namecall = newcclosure(function(self, ...)
+    local args = {...}
+    local method = getnamecallmethod()
+    
+    if method == "FireServer" then
+        if _G.Settings.Aimbot.NoRecoil and (args[1] == "Recoil" or args[1] == "RecoilFire") then
+            return
+        end
+        if _G.Settings.Aimbot.RapidFire and args[1] == "FireBullet" then
+            args[2] = 0
+        end
+    end
+    
+    return oldNamecall(self, unpack(args))
+end)
+
+mt.__index = newcclosure(function(self, k)
+    if _G.Settings.Aimbot.NoRecoil then
+        if k == "Recoil" or k == "Spread" then
+            return 0
+        end
+    end
+    return oldIndex(self, k)
+end)
+
 -- Initialize ESP
 for _, plr in pairs(Players:GetPlayers()) do
     if plr ~= LocalPlayer then
@@ -233,24 +302,14 @@ end)
 
 -- Main Loop
 RunService.RenderStepped:Connect(function()
-    -- Update FOV Circle
     FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
     FOVCircle.Visible = _G.Settings.Aimbot.ShowFOV
 
-    -- Aimbot
     if _G.Settings.Aimbot.Enabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
-        local Target = GetClosestPlayer()
-        if Target and Target.Character and Target.Character:FindFirstChild("Head") then
-            local HeadPos = Camera:WorldToViewportPoint(Target.Character.Head.Position)
-            local MoveTo = Vector2.new(
-                (HeadPos.X - Mouse.X) * _G.Settings.Aimbot.Smoothness,
-                (HeadPos.Y - Mouse.Y) * _G.Settings.Aimbot.Smoothness
-            )
-            mousemoverel(MoveTo.X, MoveTo.Y)
-        end
+        AimbotTarget()
     end
 
-    -- ESP
+    -- ESP Update
     for plr, drawings in pairs(ESPContainer) do
         if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health > 0 then
             local pos, onScreen = Camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
@@ -294,6 +353,6 @@ MinimizeBtn.MouseButton1Click:Connect(function()
         MainFrame:TweenSize(UDim2.new(0, 250, 0, 30), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.5, true)
     else
         Container.Visible = true
-        MainFrame:TweenSize(UDim2.new(0, 250, 0, 200), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.5, true)
+        MainFrame:TweenSize(UDim2.new(0, 250, 0, 300), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.5, true)
     end
 end)
