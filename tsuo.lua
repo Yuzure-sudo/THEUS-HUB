@@ -1,60 +1,12 @@
--- Services
+-- Serviços necessários
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
--- UI Setup
-local ScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local TopBar = Instance.new("Frame")
-local Title = Instance.new("TextLabel")
-local MinimizeButton = Instance.new("TextButton")
-local Container = Instance.new("Frame")
-
-ScreenGui.Parent = game.CoreGui
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
-MainFrame.Size = UDim2.new(0, 300, 0, 350)
-MainFrame.Active = true
-MainFrame.Draggable = true
-
-TopBar.Name = "TopBar"
-TopBar.Parent = MainFrame
-TopBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-TopBar.Size = UDim2.new(1, 0, 0, 35)
-
-Title.Parent = TopBar
-Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0, 10, 0, 0)
-Title.Size = UDim2.new(1, -20, 1, 0)
-Title.Font = Enum.Font.GothamBold
-Title.Text = "Theus Hub"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 14
-Title.TextXAlignment = Enum.TextXAlignment.Left
-
-MinimizeButton.Parent = TopBar
-MinimizeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-MinimizeButton.Position = UDim2.new(1, -30, 0.5, -10)
-MinimizeButton.Size = UDim2.new(0, 20, 0, 20)
-MinimizeButton.Font = Enum.Font.GothamBold
-MinimizeButton.Text = "-"
-MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-MinimizeButton.TextSize = 14
-
-Container.Name = "Container"
-Container.Parent = MainFrame
-Container.BackgroundTransparency = 1
-Container.Position = UDim2.new(0, 10, 0, 45)
-Container.Size = UDim2.new(1, -20, 1, -55)
-
--- Advanced Settings
+-- Configurações do Script
 local Settings = {
     Aimbot = {
         Enabled = false,
@@ -72,17 +24,18 @@ local Settings = {
         Name = true,
         Distance = true,
         Health = true,
-        Tracer = true,
         TeamColor = Color3.fromRGB(0, 255, 0),
-        EnemyColor = Color3.fromRGB(255, 0, 0),
-        TracerFrom = "Bottom"
+        EnemyColor = Color3.fromRGB(255, 0, 0)
     },
     Combat = {
         NoRecoil = true
+    },
+    Autofarm = {
+        Enabled = false
     }
 }
 
--- Utility Functions
+-- Função utilitária para verificar visibilidade (opcional para in-game)
 local function IsPlayerVisible(player)
     local character = player.Character
     local head = character and character:FindFirstChild("Head")
@@ -96,23 +49,22 @@ local function IsPlayerVisible(player)
     return false
 end
 
+-- Função para calcular a distância de um jogador
 local function GetDistanceFromPlayer(part)
     return (part.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
 end
 
--- ESP Functionality
+-- Função de ESP
 local function CreateESP(player)
     local DrawingObjects = {
         Box = Drawing.new("Square"),
         Name = Drawing.new("Text"),
         Distance = Drawing.new("Text"),
-        Tracer = Drawing.new("Line"),
         Health = Drawing.new("Text")
     }
 
     DrawingObjects.Box.Thickness = 1
     DrawingObjects.Box.Filled = false
-    DrawingObjects.Box.Transparency = 1
 
     DrawingObjects.Name.Size = 14
     DrawingObjects.Name.Center = true
@@ -121,9 +73,6 @@ local function CreateESP(player)
     DrawingObjects.Distance.Size = 12
     DrawingObjects.Distance.Center = true
     DrawingObjects.Distance.Outline = true
-
-    DrawingObjects.Tracer.Thickness = 1
-    DrawingObjects.Tracer.Transparency = 1
 
     DrawingObjects.Health.Size = 12
     DrawingObjects.Health.Center = true
@@ -199,25 +148,6 @@ local function CreateESP(player)
         else
             DrawingObjects.Health.Visible = false
         end
-
-        -- Tracer ESP
-        if Settings.ESP.Tracer then
-            local TracerOrigin
-            if Settings.ESP.TracerFrom == "Bottom" then
-                TracerOrigin = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-            elseif Settings.ESP.TracerFrom == "Mouse" then
-                TracerOrigin = Vector2.new(Mouse.X, Mouse.Y)
-            else
-                TracerOrigin = Vector2.new(Camera.ViewportSize.X / 2, 0)
-            end
-
-            DrawingObjects.Tracer.From = TracerOrigin
-            DrawingObjects.Tracer.To = Vector2.new(Vector.X, Vector.Y)
-            DrawingObjects.Tracer.Color = Color
-            DrawingObjects.Tracer.Visible = true
-        else
-            DrawingObjects.Tracer.Visible = false
-        end
     end
 
     RunService.RenderStepped:Connect(UpdateESP)
@@ -227,7 +157,7 @@ local function CreateESP(player)
     end)
 end
 
--- Aimbot Functionality
+-- Função de Aimbot
 local function GetClosestPlayer()
     local ClosestPlayer = nil
     local ShortestDistance = Settings.Aimbot.FOV
@@ -252,15 +182,13 @@ local function GetClosestPlayer()
     return ClosestPlayer
 end
 
--- FOV Circle
+-- Círculo de FOV
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 1
 FOVCircle.NumSides = 100
 FOVCircle.Radius = Settings.Aimbot.FOV
 FOVCircle.Filled = false
 FOVCircle.Visible = Settings.Aimbot.ShowFOV
-FOVCircle.ZIndex = 999
-FOVCircle.Transparency = 1
 FOVCircle.Color = Color3.fromRGB(255, 255, 255)
 
 RunService.RenderStepped:Connect(function()
@@ -272,7 +200,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Combat Logic
+-- Lógica de Combate
 RunService.RenderStepped:Connect(function()
     if Settings.Aimbot.Enabled and UserInputService:IsKeyDown(Settings.Aimbot.Key) then
         local Target = GetClosestPlayer()
@@ -303,77 +231,54 @@ mt.__namecall = newcclosure(function(self, ...)
     return oldNamecall(self, ...)
 end)
 
--- Create Buttons
-local function CreateButton(name, position)
-    local Button = Instance.new("TextButton")
-    Button.Size = UDim2.new(1, 0, 0, 35)
-    Button.Position = position
-    Button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    Button.Text = name
-    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Button.TextSize = 14
-    Button.Font = Enum.Font.GothamSemibold
-    Button.Parent = Container
+-- Função de Autofarm
+local function AutofarmPlayers()
+    if not Settings.Autofarm.Enabled then return end
 
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 6)
-    UICorner.Parent = Button
-
-    return Button
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") then
+            local isTeammate = player.Team == LocalPlayer.Team
+            if Settings.Aimbot.TeamCheck and not isTeammate and player.Character.Humanoid.Health > 0 then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -5)
+                -- Ataca o jogador rival
+                -- Adicione aqui o método de ataque
+                wait(0.5) -- Ajuste conforme necessário para ataque
+            end
+        end
+    end
 end
 
-local AimbotButton = CreateButton("Aimbot: OFF", UDim2.new(0, 0, 0, 0))
-local ESPButton = CreateButton("ESP: OFF", UDim2.new(0, 0, 0, 45))
-local TeamCheckButton = CreateButton("Team Check: ON", UDim2.new(0, 0, 0, 90))
-local NoRecoilButton = CreateButton("Combat Mods: OFF", UDim2.new(0, 0, 0, 135))
-
--- Button Events
-local function ToggleButton(button, setting)
-    setting = not setting
-    button.Text = button.Text:gsub("ON", "OFF"):gsub("OFF", "ON")
-    button.BackgroundColor3 = setting and Color3.fromRGB(0, 120, 0) or Color3.fromRGB(50, 50, 50)
-    return setting
-end
-
-AimbotButton.MouseButton1Click:Connect(function()
-    Settings.Aimbot.Enabled = ToggleButton(AimbotButton, Settings.Aimbot.Enabled)
-end)
-
-ESPButton.MouseButton1Click:Connect(function()
-    Settings.ESP.Enabled = ToggleButton(ESPButton, Settings.ESP.Enabled)
-end)
-
-TeamCheckButton.MouseButton1Click:Connect(function()
-    Settings.Aimbot.TeamCheck = not Settings.Aimbot.TeamCheck
-    Settings.ESP.TeamCheck = Settings.Aimbot.TeamCheck
-    ToggleButton(TeamCheckButton, Settings.Aimbot.TeamCheck)
-end)
-
-NoRecoilButton.MouseButton1Click:Connect(function()
-    Settings.Combat.NoRecoil = ToggleButton(NoRecoilButton, Settings.Combat.NoRecoil)
-end)
-
--- Minimize System
-MinimizeButton.MouseButton1Click:Connect(function()
-    if MainFrame.Size == UDim2.new(0, 300, 0, 350) then
-        MainFrame:TweenSize(UDim2.new(0, 300, 0, 35), "Out", "Quad", 0.3, true)
-        MinimizeButton.Text = "+"
-    else
-        MainFrame:TweenSize(UDim2.new(0, 300, 0, 350), "Out", "Quad", 0.3, true)
-        MinimizeButton.Text = "-"
+RunService.Stepped:Connect(function()
+    if Settings.Autofarm.Enabled then
+        AutofarmPlayers()
     end
 end)
 
--- Initialize ESP for existing players
+-- Inicializa ESP para jogadores existentes
 for _, player in pairs(Players:GetPlayers()) do
     if player ~= LocalPlayer then
         CreateESP(player)
     end
 end
 
--- ESP for new players
+-- ESP para novos jogadores
 Players.PlayerAdded:Connect(function(player)
     if player ~= LocalPlayer then
         CreateESP(player)
     end
+end)
+
+-- Interface Avaco (exemplo simplificado)
+-- Note: Avaco é uma biblioteca fictícia para este exemplo; você deve substituí-la por uma real ou criar uma interface customizada
+local AvacoUI = require(game.ReplicatedStorage:WaitForChild("Avaco")) -- Supondo que Avaco esteja em ReplicatedStorage
+
+local window = AvacoUI:CreateWindow("Theus Hub")
+window:AddToggle("Aimbot", Settings.Aimbot.Enabled, function(value)
+    Settings.Aimbot.Enabled = value
+end)
+window:AddToggle("ESP", Settings.ESP.Enabled, function(value)
+    Settings.ESP.Enabled = value
+end)
+window:AddToggle("Autofarm", Settings.Autofarm.Enabled, function(value)
+    Settings.Autofarm.Enabled = value
 end)
