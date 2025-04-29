@@ -408,7 +408,4 @@ local function CreateNotification(title, text, duration)
 end
 
 -- Inicialização Final
-CreateNotification("Theus Hub", "Script carregado com sucesso!", 3)
-CheckForUpdates()
-
-return _G.TheusHub
+CreateNotification("Theus Hub", "Script carrega
