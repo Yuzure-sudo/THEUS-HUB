@@ -1,7 +1,7 @@
---[[
-    ESP + AIMBOT NEAREST (TEAMCHECK) MOBILE FUNCIONAL
-    by Lek do Black (2024)
-    Cola no executor mobile e domina geral.
+--[[ 
+    AIMBOT NEAREST (TEAMCHECK) + GUI MINIMIZAR
+    Theus Script By Theus (2024)
+    Cola no executor e domina o lobby.
 --]]
 
 local Players = game:GetService("Players")
@@ -9,56 +9,14 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local RunService = game:GetService("RunService")
 
--- CONFIGS
-local ESP_COLOR = Color3.fromRGB(255,0,0)
-local ESP_TRANSPARENCY = 0.75
-
 -- ESTADO
-local espActive = true
-local aiming = false
+local aimbotEnabled = true
+local minimized = false
 
 -- CHECA TIME
 local function isEnemy(player)
     if not player.Team or not LocalPlayer.Team then return false end
     return player.Team ~= LocalPlayer.Team and player ~= LocalPlayer
-end
-
--- CRIA ESP
-local function createESP(part)
-    if part:FindFirstChild("LekESP") then return end
-    local espBox = Instance.new("BoxHandleAdornment")
-    espBox.Name = "LekESP"
-    espBox.Size = part.Size
-    espBox.Color3 = ESP_COLOR
-    espBox.AlwaysOnTop = true
-    espBox.Adornee = part
-    espBox.Parent = part
-    espBox.Transparency = ESP_TRANSPARENCY
-    espBox.ZIndex = 10
-end
-
--- LIMPA ESP
-local function clearESP()
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local hrp = player.Character.HumanoidRootPart
-            for _, v in ipairs(hrp:GetChildren()) do
-                if v:IsA("BoxHandleAdornment") and v.Name == "LekESP" then
-                    v:Destroy()
-                end
-            end
-        end
-    end
-end
-
--- ATUALIZA ESP
-local function updateESP()
-    if not espActive then clearESP() return end
-    for _, player in ipairs(Players:GetPlayers()) do
-        if isEnemy(player) and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            createESP(player.Character.HumanoidRootPart)
-        end
-    end
 end
 
 -- PEGA O INIMIGO MAIS PRÓXIMO DO CENTRO DA TELA
@@ -80,50 +38,86 @@ local function getNearestEnemy()
     return closest
 end
 
--- GUI MOBILE: Botões flutuantes
-local function makeBtn(txt, pos, color)
-    local gui = Instance.new("ScreenGui")
-    gui.Parent = game.CoreGui
-    gui.ResetOnSpawn = false
-    gui.Name = "LekGui_"..txt
+-- GUI MOBILE/PC COM MINIMIZAR
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "TheusScript"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
 
-    local btn = Instance.new("TextButton")
-    btn.Parent = gui
-    btn.Size = UDim2.new(0, 120, 0, 46)
-    btn.Position = pos
-    btn.BackgroundColor3 = color
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.TextScaled = true
-    btn.Font = Enum.Font.GothamBlack
-    btn.Text = txt
-    btn.BackgroundTransparency = 0.17
-    btn.BorderSizePixel = 0
-    btn.AnchorPoint = Vector2.new(0,0)
-    btn.AutoButtonColor = true
-    return btn
+local mainFrame = Instance.new("Frame", gui)
+mainFrame.Size = UDim2.new(0, 260, 0, 70)
+mainFrame.Position = UDim2.new(0, 15, 0, 70)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25,25,38)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+local title = Instance.new("TextLabel", mainFrame)
+title.Size = UDim2.new(1, 0, 0.5, 0)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "Theus Script By Theus"
+title.Font = Enum.Font.GothamBold
+title.TextColor3 = Color3.fromRGB(0,200,255)
+title.TextSize = 22
+title.TextStrokeTransparency = 0.6
+
+local status = Instance.new("TextLabel", mainFrame)
+status.Size = UDim2.new(0.7, 0, 0.5, 0)
+status.Position = UDim2.new(0, 10, 0.5, -7)
+status.BackgroundTransparency = 1
+status.Text = "Aimbot: ON"
+status.Font = Enum.Font.Gotham
+status.TextColor3 = Color3.fromRGB(0,255,110)
+status.TextSize = 20
+status.TextStrokeTransparency = 0.8
+status.TextXAlignment = Enum.TextXAlignment.Left
+
+local minimizeBtn = Instance.new("TextButton", mainFrame)
+minimizeBtn.Size = UDim2.new(0, 40, 0, 30)
+minimizeBtn.Position = UDim2.new(1, -48, 0, 9)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(90, 30, 30)
+minimizeBtn.Text = "_"
+minimizeBtn.Font = Enum.Font.GothamBlack
+minimizeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+minimizeBtn.TextSize = 26
+minimizeBtn.BorderSizePixel = 0
+
+local function setMinimized(state)
+    minimized = state
+    if minimized then
+        mainFrame.Size = UDim2.new(0, 120, 0, 36)
+        status.Visible = false
+        title.Text = "Theus Script"
+        minimizeBtn.Text = "□"
+    else
+        mainFrame.Size = UDim2.new(0, 260, 0, 70)
+        status.Visible = true
+        title.Text = "Theus Script By Theus"
+        minimizeBtn.Text = "_"
+    end
 end
 
--- BOTÃO ESP
-local espBtn = makeBtn("ESP: ON", UDim2.new(0,12, 0.85,0), Color3.fromRGB(190,55,55))
-espBtn.MouseButton1Click:Connect(function()
-    espActive = not espActive
-    espBtn.Text = espActive and "ESP: ON" or "ESP: OFF"
-    if not espActive then clearESP() end
+minimizeBtn.MouseButton1Click:Connect(function()
+    setMinimized(not minimized)
 end)
 
--- BOTÃO AIMBOT
-local aimBtn = makeBtn("AIMBOT (Segura)", UDim2.new(0,142, 0.85,0), Color3.fromRGB(40,80,200))
-aimBtn.MouseButton1Down:Connect(function()
-    aiming = true
-end)
-aimBtn.MouseButton1Up:Connect(function()
-    aiming = false
+-- Ativação/desativação do aimbot com clique duplo no título
+title.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        local t = tick()
+        if title._lastClick and t - title._lastClick < 0.4 then
+            aimbotEnabled = not aimbotEnabled
+            status.Text = "Aimbot: " .. (aimbotEnabled and "ON" or "OFF")
+            status.TextColor3 = aimbotEnabled and Color3.fromRGB(0,255,110) or Color3.fromRGB(255,0,0)
+        end
+        title._lastClick = t
+    end
 end)
 
--- ATUALIZA LOOP
+-- LOOP PRINCIPAL
 RunService.RenderStepped:Connect(function()
-    updateESP()
-    if aiming then
+    if aimbotEnabled then
         local target = getNearestEnemy()
         if target then
             Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position)
@@ -131,4 +125,4 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-print("[Lek do Black] ESP + Aimbot MOBILE FUNCIONANDO. Usa os botões flutuantes. Distraído não fica rico!")
+print("[Theus Script] Aimbot NEAREST ativado. Clique duplo no título para ligar/desligar. Botão minimiza interface. Só os atentos vencem.")
