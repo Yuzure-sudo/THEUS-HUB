@@ -1,14 +1,13 @@
 
-    ESP + AIMBOT NEAREST (TEAMCHECK)
+    ESP + AIMBOT NEAREST (TEAMCHECK) MOBILE
     by Lek do Black (2024)
-    Cola isso no executor e já era.
+    Cola no executor mobile e domina o lobby.
 --]]
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local RunService = game:GetService("RunService")
-local UIS = game:GetService("UserInputService")
 
 -- CONFIG
 local ESP_COLOR = Color3.fromRGB(255,0,0)
@@ -80,21 +79,46 @@ local function getNearestEnemy()
     return closest
 end
 
--- TOGGLE AIMBOT (MOUSE2)
-UIS.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton2 then
-        aiming = true
-    elseif input.KeyCode == Enum.KeyCode.F4 then
-        espActive = not espActive
-        if not espActive then
-            clearESP()
-        end
-    end
+-- BOTÕES MOBILE (ScreenGui)
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.Name = "LekHaxGui"
+
+-- BOTÃO ESP
+local espBtn = Instance.new("TextButton")
+espBtn.Parent = ScreenGui
+espBtn.Size = UDim2.new(0, 100, 0, 40)
+espBtn.Position = UDim2.new(0, 10, 0.85, 0)
+espBtn.BackgroundColor3 = Color3.fromRGB(20,20,20)
+espBtn.TextColor3 = Color3.new(1, 1, 1)
+espBtn.TextScaled = true
+espBtn.Text = "ESP: ON"
+espBtn.BackgroundTransparency = 0.2
+espBtn.BorderSizePixel = 0
+
+espBtn.MouseButton1Click:Connect(function()
+    espActive = not espActive
+    espBtn.Text = espActive and "ESP: ON" or "ESP: OFF"
+    if not espActive then clearESP() end
 end)
-UIS.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton2 then
-        aiming = false
-    end
+
+-- BOTÃO AIMBOT
+local aimBtn = Instance.new("TextButton")
+aimBtn.Parent = ScreenGui
+aimBtn.Size = UDim2.new(0, 120, 0, 40)
+aimBtn.Position = UDim2.new(0, 120, 0.85, 0)
+aimBtn.BackgroundColor3 = Color3.fromRGB(25,40,80)
+aimBtn.TextColor3 = Color3.new(1, 1, 1)
+aimBtn.TextScaled = true
+aimBtn.Text = "AIMBOT (segura)"
+aimBtn.BackgroundTransparency = 0.2
+aimBtn.BorderSizePixel = 0
+
+aimBtn.MouseButton1Down:Connect(function()
+    aiming = true
+end)
+aimBtn.MouseButton1Up:Connect(function()
+    aiming = false
 end)
 
 -- LOOP PRINCIPAL
@@ -108,4 +132,4 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-print("[Lek do Black] ESP + Aimbot ativado. F4 desliga/ativa ESP. Segura botão direito pra mirar automático. Ficar parado é ser cúmplice da própria miséria.")
+print("[Lek do Black] ESP + Aimbot MOBILE ativado. Usa os botões flutuantes pra ligar/desligar. Ficar distraído não é opção, irmão!")
