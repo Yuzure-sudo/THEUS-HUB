@@ -1,7 +1,7 @@
-
-    ESP + AIMBOT NEAREST (TEAMCHECK) MOBILE
+--[[
+    ESP + AIMBOT NEAREST (TEAMCHECK) MOBILE FUNCIONAL
     by Lek do Black (2024)
-    Cola no executor mobile e domina o lobby.
+    Cola no executor mobile e domina geral.
 --]]
 
 local Players = game:GetService("Players")
@@ -9,20 +9,21 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local RunService = game:GetService("RunService")
 
--- CONFIG
+-- CONFIGS
 local ESP_COLOR = Color3.fromRGB(255,0,0)
-local ESP_TRANSPARENCY = 0.7
+local ESP_TRANSPARENCY = 0.75
 
--- CONTROLE
-local aiming = false
+-- ESTADO
 local espActive = true
+local aiming = false
 
--- CHECA SE É INIMIGO
+-- CHECA TIME
 local function isEnemy(player)
+    if not player.Team or not LocalPlayer.Team then return false end
     return player.Team ~= LocalPlayer.Team and player ~= LocalPlayer
 end
 
--- CRIA ESP NO PLAYER
+-- CRIA ESP
 local function createESP(part)
     if part:FindFirstChild("LekESP") then return end
     local espBox = Instance.new("BoxHandleAdornment")
@@ -36,12 +37,12 @@ local function createESP(part)
     espBox.ZIndex = 10
 end
 
--- LIMPA ESP DOS PLAYERS
+-- LIMPA ESP
 local function clearESP()
-    for _, player in pairs(Players:GetPlayers()) do
+    for _, player in ipairs(Players:GetPlayers()) do
         if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local hrp = player.Character.HumanoidRootPart
-            for _, v in pairs(hrp:GetChildren()) do
+            for _, v in ipairs(hrp:GetChildren()) do
                 if v:IsA("BoxHandleAdornment") and v.Name == "LekESP" then
                     v:Destroy()
                 end
@@ -53,18 +54,18 @@ end
 -- ATUALIZA ESP
 local function updateESP()
     if not espActive then clearESP() return end
-    for _, player in pairs(Players:GetPlayers()) do
+    for _, player in ipairs(Players:GetPlayers()) do
         if isEnemy(player) and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             createESP(player.Character.HumanoidRootPart)
         end
     end
 end
 
--- AIMBOT: PEGA O INIMIGO MAIS PRÓXIMO DO CENTRO DA TELA
+-- PEGA O INIMIGO MAIS PRÓXIMO DO CENTRO DA TELA
 local function getNearestEnemy()
     local closest = nil
     local shortest = math.huge
-    for _, player in pairs(Players:GetPlayers()) do
+    for _, player in ipairs(Players:GetPlayers()) do
         if isEnemy(player) and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
             local pos, onScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
             if onScreen then
@@ -79,23 +80,31 @@ local function getNearestEnemy()
     return closest
 end
 
--- BOTÕES MOBILE (ScreenGui)
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-ScreenGui.IgnoreGuiInset = true
-ScreenGui.Name = "LekHaxGui"
+-- GUI MOBILE: Botões flutuantes
+local function makeBtn(txt, pos, color)
+    local gui = Instance.new("ScreenGui")
+    gui.Parent = game.CoreGui
+    gui.ResetOnSpawn = false
+    gui.Name = "LekGui_"..txt
+
+    local btn = Instance.new("TextButton")
+    btn.Parent = gui
+    btn.Size = UDim2.new(0, 120, 0, 46)
+    btn.Position = pos
+    btn.BackgroundColor3 = color
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.TextScaled = true
+    btn.Font = Enum.Font.GothamBlack
+    btn.Text = txt
+    btn.BackgroundTransparency = 0.17
+    btn.BorderSizePixel = 0
+    btn.AnchorPoint = Vector2.new(0,0)
+    btn.AutoButtonColor = true
+    return btn
+end
 
 -- BOTÃO ESP
-local espBtn = Instance.new("TextButton")
-espBtn.Parent = ScreenGui
-espBtn.Size = UDim2.new(0, 100, 0, 40)
-espBtn.Position = UDim2.new(0, 10, 0.85, 0)
-espBtn.BackgroundColor3 = Color3.fromRGB(20,20,20)
-espBtn.TextColor3 = Color3.new(1, 1, 1)
-espBtn.TextScaled = true
-espBtn.Text = "ESP: ON"
-espBtn.BackgroundTransparency = 0.2
-espBtn.BorderSizePixel = 0
-
+local espBtn = makeBtn("ESP: ON", UDim2.new(0,12, 0.85,0), Color3.fromRGB(190,55,55))
 espBtn.MouseButton1Click:Connect(function()
     espActive = not espActive
     espBtn.Text = espActive and "ESP: ON" or "ESP: OFF"
@@ -103,17 +112,7 @@ espBtn.MouseButton1Click:Connect(function()
 end)
 
 -- BOTÃO AIMBOT
-local aimBtn = Instance.new("TextButton")
-aimBtn.Parent = ScreenGui
-aimBtn.Size = UDim2.new(0, 120, 0, 40)
-aimBtn.Position = UDim2.new(0, 120, 0.85, 0)
-aimBtn.BackgroundColor3 = Color3.fromRGB(25,40,80)
-aimBtn.TextColor3 = Color3.new(1, 1, 1)
-aimBtn.TextScaled = true
-aimBtn.Text = "AIMBOT (segura)"
-aimBtn.BackgroundTransparency = 0.2
-aimBtn.BorderSizePixel = 0
-
+local aimBtn = makeBtn("AIMBOT (Segura)", UDim2.new(0,142, 0.85,0), Color3.fromRGB(40,80,200))
 aimBtn.MouseButton1Down:Connect(function()
     aiming = true
 end)
@@ -121,7 +120,7 @@ aimBtn.MouseButton1Up:Connect(function()
     aiming = false
 end)
 
--- LOOP PRINCIPAL
+-- ATUALIZA LOOP
 RunService.RenderStepped:Connect(function()
     updateESP()
     if aiming then
@@ -132,4 +131,4 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-print("[Lek do Black] ESP + Aimbot MOBILE ativado. Usa os botões flutuantes pra ligar/desligar. Ficar distraído não é opção, irmão!")
+print("[Lek do Black] ESP + Aimbot MOBILE FUNCIONANDO. Usa os botões flutuantes. Distraído não fica rico!")
