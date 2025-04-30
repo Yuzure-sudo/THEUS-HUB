@@ -1,191 +1,183 @@
---[[
-    Theus Script By Theus - ESP Universal (TeamCheck)
-    Funciona em KRNL, PC e Mobile
-    Interface: Ativar/Desativar e Minimizar
---]]
+-- Aimbot Universal + ESP [By Theus]
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("Theus Script By Theus", "Ocean")
 
+-- Tabs
+local AimTab = Window:NewTab("Aimbot")
+local ESPTab = Window:NewTab("ESP")
+local SettingsTab = Window:NewTab("Settings")
+
+-- Sections
+local AimSection = AimTab:NewSection("Aimbot Settings")
+local ESPSection = ESPTab:NewSection("ESP Settings")
+local SettingsSection = SettingsTab:NewSection("Script Settings")
+
+-- Aimbot
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
 local Camera = workspace.CurrentCamera
-local RunService = game:GetService("RunService")
-local Drawing = Drawing or getgenv().Drawing
+local UserInputService = game:GetService("UserInputService")
 
-local espEnabled = true
-local minimized = false
-local espObjects = {}
+local AimbotEnabled = false
+local TeamCheck = true
+local TargetPart = "Head"
+local Sensitivity = 0.5
 
-function isEnemy(plr)
-    return plr ~= LocalPlayer and plr.Team ~= LocalPlayer.Team
-end
-
-function createESP(plr)
-    if espObjects[plr] then return end
-    espObjects[plr] = {
-        box = Drawing.new("Square"),
-        name = Drawing.new("Text"),
-        dist = Drawing.new("Text")
-    }
-    local box = espObjects[plr].box
-    box.Thickness = 2
-    box.Color = Color3.fromRGB(255,0,0)
-    box.Filled = false
-    box.Transparency = 1
-
-    local name = espObjects[plr].name
-    name.Size = 16
-    name.Color = Color3.fromRGB(0,255,255)
-    name.Center = true
-    name.Outline = true
-
-    local dist = espObjects[plr].dist
-    dist.Size = 14
-    dist.Color = Color3.fromRGB(0,255,80)
-    dist.Center = true
-    dist.Outline = true
-end
-
-function removeESP(plr)
-    if not espObjects[plr] then return end
-    for _,v in pairs(espObjects[plr]) do pcall(function() v:Remove() end) end
-    espObjects[plr] = nil
-end
-
-Players.PlayerRemoving:Connect(removeESP)
-Players.PlayerAdded:Connect(function(plr)
-    plr.CharacterAdded:Connect(function()
-        if isEnemy(plr) then createESP(plr) end
-    end)
+AimSection:NewToggle("Enable Aimbot", "Toggles aimbot functionality", function(state)
+    AimbotEnabled = state
 end)
 
-for _,plr in ipairs(Players:GetPlayers()) do
-    if isEnemy(plr) then createESP(plr) end
-end
-
--- GUI
-local gui = Instance.new("ScreenGui")
-gui.Parent = game.CoreGui
-gui.Name = "TheusESP"
-gui.IgnoreGuiInset = true
-gui.ResetOnSpawn = false
-
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 260, 0, 66)
-frame.Position = UDim2.new(0, 15, 0, 65)
-frame.BackgroundColor3 = Color3.fromRGB(25,25,38)
-frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true
-
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1, 0, 0.45, 0)
-title.Position = UDim2.new(0, 0, 0, 0)
-title.BackgroundTransparency = 1
-title.Text = "Theus Script By Theus"
-title.TextColor3 = Color3.fromRGB(0,200,255)
-title.Font = Enum.Font.GothamBold
-title.TextSize = 22
-
-local status = Instance.new("TextLabel", frame)
-status.Size = UDim2.new(0.9, 0, 0.36, 0)
-status.Position = UDim2.new(0.05, 0, 0.5, 0)
-status.BackgroundTransparency = 1
-status.Text = "ESP: ON"
-status.Font = Enum.Font.Gotham
-status.TextColor3 = Color3.fromRGB(0,255,110)
-status.TextSize = 19
-status.TextXAlignment = Enum.TextXAlignment.Left
-
-local toggle = Instance.new("TextButton", frame)
-toggle.Size = UDim2.new(0, 74, 0, 30)
-toggle.Position = UDim2.new(1, -78, 0.52, 0)
-toggle.BackgroundColor3 = Color3.fromRGB(35, 120, 80)
-toggle.Text = "DESLIGAR"
-toggle.Font = Enum.Font.GothamBold
-toggle.TextColor3 = Color3.fromRGB(255,255,255)
-toggle.TextSize = 16
-toggle.BorderSizePixel = 0
-
-local minimize = Instance.new("TextButton", frame)
-minimize.Size = UDim2.new(0, 40, 0, 30)
-minimize.Position = UDim2.new(1, -48, 0, 9)
-minimize.BackgroundColor3 = Color3.fromRGB(60, 30, 30)
-minimize.Text = "_"
-minimize.Font = Enum.Font.GothamBlack
-minimize.TextColor3 = Color3.fromRGB(255,255,255)
-minimize.TextSize = 26
-minimize.BorderSizePixel = 0
-
-local function updateGUI()
-    status.Text = "ESP: " .. (espEnabled and "ON" or "OFF")
-    status.TextColor3 = espEnabled and Color3.fromRGB(0,255,110) or Color3.fromRGB(255,60,60)
-    toggle.Text = espEnabled and "DESLIGAR" or "LIGAR"
-    toggle.BackgroundColor3 = espEnabled and Color3.fromRGB(35, 120, 80) or Color3.fromRGB(140, 35, 35)
-end
-
-toggle.MouseButton1Click:Connect(function()
-    espEnabled = not espEnabled
-    updateGUI()
-    if not espEnabled then
-        for _,objs in pairs(espObjects) do
-            for _,v in pairs(objs) do pcall(function() v.Visible = false end) end
-        end
-    else
-        for _,objs in pairs(espObjects) do
-            for _,v in pairs(objs) do pcall(function() v.Visible = true end) end
-        end
-    end
+AimSection:NewToggle("Team Check", "Don't target teammates", function(state)
+    TeamCheck = state
 end)
 
-local function setMinimized(state)
-    minimized = state
-    if minimized then
-        frame.Size = UDim2.new(0, 120, 0, 36)
-        status.Visible = false
-        title.Text = "Theus Script"
-        minimize.Text = "□"
-        toggle.Visible = false
-    else
-        frame.Size = UDim2.new(0, 260, 0, 66)
-        status.Visible = true
-        title.Text = "Theus Script By Theus"
-        minimize.Text = "_"
-        toggle.Visible = true
-    end
-end
-
-minimize.MouseButton1Click:Connect(function()
-    setMinimized(not minimized)
+AimSection:NewDropdown("Target Part", "Select part to aim at", {"Head", "Torso"}, function(selected)
+    TargetPart = selected
 end)
 
-updateGUI()
+AimSection:NewSlider("Sensitivity", "Adjust aimbot sensitivity", 100, 1, function(value)
+    Sensitivity = value/100
+end)
 
--- LOOP
-RunService.RenderStepped:Connect(function()
-    if not espEnabled then return end
-    for plr,objs in pairs(espObjects) do
-        local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-        if hrp and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health > 0 then
-            local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-            if onScreen then
-                local sizeY = math.clamp(50 * (Camera.CFrame.Position - hrp.Position).Magnitude / 50, 30, 350)
-                local sizeX = sizeY/2
-                objs.box.Visible = true
-                objs.box.Size = Vector2.new(sizeX, sizeY)
-                objs.box.Position = Vector2.new(pos.X - sizeX/2, pos.Y - sizeY/2)
-                objs.name.Visible = true
-                objs.name.Position = Vector2.new(pos.X, pos.Y - sizeY/2 - 15)
-                objs.name.Text = plr.Name
-                objs.dist.Visible = true
-                local dist = math.floor((Camera.CFrame.Position - hrp.Position).Magnitude)
-                objs.dist.Position = Vector2.new(pos.X, pos.Y + sizeY/2 + 2)
-                objs.dist.Text = tostring(dist).."m"
+-- ESP Functions
+local ESPEnabled = false
+local BoxesEnabled = true
+local NamesEnabled = true
+local DistanceEnabled = true
+
+ESPSection:NewToggle("Enable ESP", "Toggles ESP functionality", function(state)
+    ESPEnabled = state
+end)
+
+ESPSection:NewToggle("Show Boxes", "Displays boxes around players", function(state)
+    BoxesEnabled = state
+end)
+
+ESPSection:NewToggle("Show Names", "Displays player names", function(state)
+    NamesEnabled = state
+end)
+
+ESPSection:NewToggle("Show Distance", "Shows distance to players", function(state)
+    DistanceEnabled = state
+end)
+
+-- ESP Drawing
+local function CreateESP(player)
+    local Box = Drawing.new("Square")
+    Box.Visible = false
+    Box.Color = Color3.fromRGB(255, 0, 0)
+    Box.Thickness = 1
+    Box.Transparency = 1
+    Box.Filled = false
+
+    local Name = Drawing.new("Text")
+    Name.Visible = false
+    Name.Color = Color3.fromRGB(255, 255, 255)
+    Name.Size = 14
+    Name.Center = true
+    Name.Outline = true
+
+    local Distance = Drawing.new("Text")
+    Distance.Visible = false
+    Distance.Color = Color3.fromRGB(255, 255, 255)
+    Distance.Size = 12
+    Distance.Center = true
+    Distance.Outline = true
+
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if ESPEnabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local Vector, OnScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
+            
+            if OnScreen and player ~= LocalPlayer then
+                if TeamCheck and player.Team == LocalPlayer.Team then
+                    Box.Color = Color3.fromRGB(0, 255, 0)
+                else
+                    Box.Color = Color3.fromRGB(255, 0, 0)
+                end
+
+                local RootPart = player.Character.HumanoidRootPart
+                local Head = player.Character.Head
+                local RootPosition = RootPart.Position
+                local HeadPosition = Head.Position
+                
+                local TopLeft = Camera:WorldToViewportPoint(Vector3.new(RootPosition.X - 3, HeadPosition.Y + 2, RootPosition.Z - 3))
+                local TopRight = Camera:WorldToViewportPoint(Vector3.new(RootPosition.X + 3, HeadPosition.Y + 2, RootPosition.Z + 3))
+                local BottomLeft = Camera:WorldToViewportPoint(Vector3.new(RootPosition.X - 3, RootPosition.Y - 3, RootPosition.Z - 3))
+                local BottomRight = Camera:WorldToViewportPoint(Vector3.new(RootPosition.X + 3, RootPosition.Y - 3, RootPosition.Z + 3))
+
+                Box.Size = Vector2.new(TopRight.X - TopLeft.X, BottomLeft.Y - TopLeft.Y)
+                Box.Position = Vector2.new(TopLeft.X, TopLeft.Y)
+                Box.Visible = BoxesEnabled
+
+                Name.Position = Vector2.new(TopLeft.X + Box.Size.X / 2, TopLeft.Y - 20)
+                Name.Text = player.Name
+                Name.Visible = NamesEnabled
+
+                local dist = math.floor((RootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude)
+                Distance.Position = Vector2.new(TopLeft.X + Box.Size.X / 2, BottomLeft.Y + 20)
+                Distance.Text = tostring(dist) .. " studs"
+                Distance.Visible = DistanceEnabled
             else
-                for _,v in pairs(objs) do v.Visible = false end
+                Box.Visible = false
+                Name.Visible = false
+                Distance.Visible = false
             end
         else
-            for _,v in pairs(objs) do v.Visible = false end
+            Box.Visible = false
+            Name.Visible = false
+            Distance.Visible = false
+        end
+    end)
+end
+
+-- Initialize ESP for existing players
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        CreateESP(player)
+    end
+end
+
+-- Initialize ESP for new players
+Players.PlayerAdded:Connect(function(player)
+    CreateESP(player)
+end)
+
+-- Aimbot Logic
+game:GetService("RunService").RenderStepped:Connect(function()
+    if AimbotEnabled then
+        local closest = math.huge
+        local target = nil
+        
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild(TargetPart) then
+                if TeamCheck and player.Team == LocalPlayer.Team then continue end
+                
+                local pos = Camera:WorldToViewportPoint(player.Character[TargetPart].Position)
+                local magnitude = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).magnitude
+                
+                if magnitude < closest then
+                    closest = magnitude
+                    target = player.Character[TargetPart]
+                end
+            end
+        end
+        
+        if target then
+            local pos = Camera:WorldToViewportPoint(target.Position)
+            mousemoverel((pos.X - Mouse.X) * Sensitivity, (pos.Y - Mouse.Y) * Sensitivity)
         end
     end
 end)
 
-print("[Theus Script By Theus] ESP ON! Só pega inimigo. Minimiza e ativa/desativa do jeito que tu quiser.")
+-- Settings
+SettingsSection:NewKeybind("Toggle UI", "Shows/Hides the UI", Enum.KeyCode.RightControl, function()
+    Library:ToggleUI()
+end)
+
+-- Notification
+game.StarterGui:SetCore("SendNotification", {
+    Title = "Script Loaded!",
+    Text = "Made by Theus",
+    Duration = 3
+})
