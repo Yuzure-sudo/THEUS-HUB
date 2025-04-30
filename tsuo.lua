@@ -1,184 +1,85 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+--[[ THEUS PREMIUM MOBILE v2 ]]--
 
-local Window = Fluent:CreateWindow({
-    Title = "THEUS PREMIUM",
-    SubTitle = "by theuz",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
-})
-
-local Tabs = {
-    Combat = Window:AddTab({ Title = "Combat", Icon = "combat" }),
-    Visuals = Window:AddTab({ Title = "Visuals", Icon = "eye" }),
-    Movement = Window:AddTab({ Title = "Movement", Icon = "movement" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-}
-
-local Config = {
-    Aim = {
-        Enabled = false,
-        Target = "Head",
-        FOV = 500,
-        Prediction = 0.165,
-        AutoFire = false,
-        TeamCheck = false,
-        WallCheck = false,
-        Smooth = true,
-        SmoothValue = 0.5
-    },
-    ESP = {
-        Enabled = false,
-        Box = false,
-        Tracer = false,
-        Name = false,
-        Distance = false,
-        BoxColor = Color3.fromRGB(255,0,0),
-        TracerColor = Color3.fromRGB(255,0,0),
-        TextColor = Color3.fromRGB(255,255,255),
-        BoxTrans = 0.3,
-        TextSize = 14,
-        MaxDistance = 2000
-    },
-    Movement = {
-        SpeedEnabled = false,
-        SpeedValue = 16,
-        JumpEnabled = false,
-        JumpPower = 50,
-        InfJump = false
-    }
-}
-
-local AimbotSection = Tabs.Combat:AddSection("Aimbot")
-
-local AimbotToggle = AimbotSection:AddToggle("AimbotEnabled", {
-    Title = "Enable Aimbot",
-    Default = false,
-    Callback = function(Value)
-        Config.Aim.Enabled = Value
-    end
-})
-
-local TargetPartDropdown = AimbotSection:AddDropdown("TargetPart", {
-    Title = "Target Part",
-    Values = {"Head", "HumanoidRootPart", "Torso"},
-    Default = "Head",
-    Callback = function(Value)
-        Config.Aim.Target = Value
-    end
-})
-
-local FOVSlider = AimbotSection:AddSlider("FOV", {
-    Title = "Field of View",
-    Description = "Aimbot FOV Radius",
-    Default = 500,
-    Min = 10,
-    Max = 1000,
-    Callback = function(Value)
-        Config.Aim.FOV = Value
-    end
-})
-
-local PredictionSlider = AimbotSection:AddSlider("Prediction", {
-    Title = "Prediction",
-    Description = "Movement Prediction",
-    Default = 0.165,
-    Min = 0,
-    Max = 1,
-    Decimals = 3,
-    Callback = function(Value)
-        Config.Aim.Prediction = Value
-    end
-})
-
-local AutoFireToggle = AimbotSection:AddToggle("AutoFire", {
-    Title = "Auto Fire",
-    Default = false,
-    Callback = function(Value)
-        Config.Aim.AutoFire = Value
-    end
-})
-
-local ESPSection = Tabs.Visuals:AddSection("ESP")
-
-local ESPToggle = ESPSection:AddToggle("ESPEnabled", {
-    Title = "Enable ESP",
-    Default = false,
-    Callback = function(Value)
-        Config.ESP.Enabled = Value
-    end
-})
-
-local BoxESPToggle = ESPSection:AddToggle("BoxESP", {
-    Title = "Box ESP",
-    Default = false,
-    Callback = function(Value)
-        Config.ESP.Box = Value
-    end
-})
-
-local TracerESPToggle = ESPSection:AddToggle("TracerESP", {
-    Title = "Tracer ESP",
-    Default = false,
-    Callback = function(Value)
-        Config.ESP.Tracer = Value
-    end
-})
-
-local MovementSection = Tabs.Movement:AddSection("Movement")
-
-local SpeedToggle = MovementSection:AddToggle("SpeedEnabled", {
-    Title = "Speed Hack",
-    Default = false,
-    Callback = function(Value)
-        Config.Movement.SpeedEnabled = Value
-    end
-})
-
-local SpeedSlider = MovementSection:AddSlider("Speed", {
-    Title = "Speed Value",
-    Default = 16,
-    Min = 16,
-    Max = 500,
-    Callback = function(Value)
-        Config.Movement.SpeedValue = Value
-    end
-})
-
-local InfJumpToggle = MovementSection:AddToggle("InfJump", {
-    Title = "Infinite Jump",
-    Default = false,
-    Callback = function(Value)
-        Config.Movement.InfJump = Value
-    end
-})
-
--- Main Functions
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
+-- Configurações do Aimbot
+local AimbotConfig = {
+    Enabled = false,
+    TargetPart = "Head", 
+    FOV = 500,
+    Smoothness = 0.5,
+    TeamCheck = false,
+    VisibilityCheck = true,
+    AutoFire = false,
+    ShowFOV = true,
+    Prediction = {
+        Enabled = true,
+        Multiplier = 0.165
+    }
+}
+
+-- Interface Visual
+local Library = {}
+
+local ThemeColors = {
+    Background = Color3.fromRGB(25, 25, 25),
+    DarkContrast = Color3.fromRGB(15, 15, 15),
+    LightContrast = Color3.fromRGB(35, 35, 35),
+    TextColor = Color3.fromRGB(255, 255, 255),
+    AccentColor = Color3.fromRGB(0, 170, 255)
+}
+
+-- Funções Utilitárias
+local function Create(instance, properties)
+    local obj = Instance.new(instance)
+    for i, v in pairs(properties) do
+        obj[i] = v
+    end
+    return obj
+end
+
+-- FOV Circle
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Thickness = 1
+FOVCircle.NumSides = 100
+FOVCircle.Radius = AimbotConfig.FOV
+FOVCircle.Filled = false
+FOVCircle.Visible = false
+FOVCircle.ZIndex = 999
+FOVCircle.Transparency = 1
+FOVCircle.Color = Color3.fromRGB(255, 255, 255)
+
+-- Aimbot Functions
 local function GetClosestPlayer()
+    local MaxDist = AimbotConfig.FOV
     local Target = nil
-    local MaxDist = Config.Aim.FOV
+    
     for _, v in pairs(Players:GetPlayers()) do
-        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild(Config.Aim.Target) and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
-            if Config.Aim.TeamCheck and v.Team == LocalPlayer.Team then continue end
-            if Config.Aim.WallCheck then
-                local Ray = Ray.new(Camera.CFrame.Position, (v.Character[Config.Aim.Target].Position - Camera.CFrame.Position).Unit * 2000)
-                local Hit = workspace:FindPartOnRayWithIgnoreList(Ray, {LocalPlayer.Character, Camera})
-                if not Hit or not Hit:IsDescendantOf(v.Character) then continue end
-            end
-            local Vector = Camera:WorldToScreenPoint(v.Character[Config.Aim.Target].Position)
-            local Distance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
-            if Distance < MaxDist then
+        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild(AimbotConfig.TargetPart) then
+            if AimbotConfig.TeamCheck and v.Team == LocalPlayer.Team then continue end
+            
+            local HRP = v.Character.HumanoidRootPart
+            local Humanoid = v.Character:FindFirstChild("Humanoid")
+            
+            if not HRP or not Humanoid or Humanoid.Health <= 0 then continue end
+            
+            local ScreenPos, OnScreen = Camera:WorldToViewportPoint(v.Character[AimbotConfig.TargetPart].Position)
+            local Distance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(ScreenPos.X, ScreenPos.Y)).Magnitude
+            
+            if Distance < MaxDist and OnScreen then
+                if AimbotConfig.VisibilityCheck then
+                    local Ray = Ray.new(Camera.CFrame.Position, (v.Character[AimbotConfig.TargetPart].Position - Camera.CFrame.Position).Unit * 2000)
+                    local Hit = workspace:FindPartOnRayWithIgnoreList(Ray, {LocalPlayer.Character, Camera})
+                    
+                    if not Hit or not Hit:IsDescendantOf(v.Character) then continue end
+                end
+                
                 MaxDist = Distance
                 Target = v
             end
@@ -187,117 +88,282 @@ local function GetClosestPlayer()
     return Target
 end
 
-local function CreateESP()
-    for _, v in pairs(Players:GetPlayers()) do
-        if v ~= LocalPlayer then
-            local Box = Drawing.new("Square")
-            local Tracer = Drawing.new("Line")
-            local Name = Drawing.new("Text")
-            
-            RunService.RenderStepped:Connect(function()
-                if v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and Config.ESP.Enabled then
-                    local Vector, OnScreen = Camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
-                    local Distance = (Camera.CFrame.Position - v.Character.HumanoidRootPart.Position).Magnitude
-                    
-                    if OnScreen and Distance <= Config.ESP.MaxDistance then
-                        if Config.ESP.Box then
-                            Box.Visible = true
-                            Box.Color = Config.ESP.BoxColor
-                            Box.Transparency = Config.ESP.BoxTrans
-                            Box.Size = Vector2.new(2000/Distance, 2500/Distance)
-                            Box.Position = Vector2.new(Vector.X - Box.Size.X/2, Vector.Y - Box.Size.Y/2)
-                            Box.Thickness = 1
-                            Box.Filled = false
-                        else
-                            Box.Visible = false
-                        end
-                        
-                        if Config.ESP.Tracer then
-                            Tracer.Visible = true
-                            Tracer.Color = Config.ESP.TracerColor
-                            Tracer.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
-                            Tracer.To = Vector2.new(Vector.X, Vector.Y)
-                            Tracer.Thickness = 1
-                        else
-                            Tracer.Visible = false
-                        end
-                        
-                        if Config.ESP.Name then
-                            Name.Visible = true
-                            Name.Color = Config.ESP.TextColor
-                            Name.Text = v.Name.." ["..math.floor(Distance).."]"
-                            Name.Center = true
-                            Name.Outline = true
-                            Name.Position = Vector2.new(Vector.X, Vector.Y - Box.Size.Y/2 - 16)
-                            Name.Size = Config.ESP.TextSize
-                        else
-                            Name.Visible = false
-                        end
-                    else
-                        Box.Visible = false
-                        Tracer.Visible = false
-                        Name.Visible = false
-                    end
-                else
-                    Box.Visible = false
-                    Tracer.Visible = false
-                    Name.Visible = false
-                end
-            end)
-        end
-    end
-end
+-- Mobile Touch Button
+local TouchButton = Create("ImageButton", {
+    Parent = game.CoreGui,
+    BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+    BackgroundTransparency = 0.5,
+    Position = UDim2.new(0.8, 0, 0.5, 0),
+    Size = UDim2.new(0, 50, 0, 50),
+    Image = "",
+    Active = true,
+    Draggable = true
+})
 
+local TouchActive = false
+
+TouchButton.MouseButton1Down:Connect(function()
+    TouchActive = true
+end)
+
+TouchButton.MouseButton1Up:Connect(function()
+    TouchActive = false
+end)
+
+-- Main Aimbot Loop
 RunService.RenderStepped:Connect(function()
-    if Config.Aim.Enabled then
+    if AimbotConfig.ShowFOV then
+        FOVCircle.Position = Vector2.new(Mouse.X, Mouse.Y)
+        FOVCircle.Radius = AimbotConfig.FOV
+        FOVCircle.Visible = true
+    else
+        FOVCircle.Visible = false
+    end
+    
+    if AimbotConfig.Enabled and TouchActive then
         local Target = GetClosestPlayer()
         if Target then
-            local Position = Target.Character[Config.Aim.Target].Position
-            local Velocity = Target.Character[Config.Aim.Target].Velocity
-            local Prediction = Position + (Velocity * Config.Aim.Prediction)
+            local TargetPos = Target.Character[AimbotConfig.TargetPart].Position
             
-            if Config.Aim.Smooth then
-                Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, Prediction), Config.Aim.SmoothValue)
-            else
-                Camera.CFrame = CFrame.new(Camera.CFrame.Position, Prediction)
+            if AimbotConfig.Prediction.Enabled then
+                local Velocity = Target.Character[AimbotConfig.TargetPart].Velocity
+                TargetPos = TargetPos + (Velocity * AimbotConfig.Prediction.Multiplier)
             end
             
-            if Config.Aim.AutoFire then
+            local ScreenPos = Camera:WorldToScreenPoint(TargetPos)
+            local MousePos = Vector2.new(Mouse.X, Mouse.Y)
+            local MovePos = Vector2.new(ScreenPos.X, ScreenPos.Y)
+            
+            if AimbotConfig.Smoothness > 0 then
+                mousemoverel(
+                    (MovePos.X - MousePos.X) * AimbotConfig.Smoothness,
+                    (MovePos.Y - MousePos.Y) * AimbotConfig.Smoothness
+                )
+            else
+                mousemoverel(
+                    (MovePos.X - MousePos.X),
+                    (MovePos.Y - MousePos.Y)
+                )
+            end
+            
+            if AimbotConfig.AutoFire then
                 mouse1click()
             end
         end
     end
-    
-    if Config.Movement.SpeedEnabled then
-        LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame + LocalPlayer.Character.Humanoid.MoveDirection * Config.Movement.SpeedValue/10
-    end
 end)
 
-UserInputService.JumpRequest:Connect(function()
-    if Config.Movement.InfJump then
-        LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-    end
-end)
-
-CreateESP()
-Players.PlayerAdded:Connect(CreateESP)
-
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-InterfaceManager:SetFolder("FluentScriptHub")
-SaveManager:SetFolder("FluentScriptHub/specific-game")
-
-SaveManager:BuildConfigSection(Tabs.Settings)
-InterfaceManager:BuildInterfaceSection(Tabs.Settings)
-
-Window:SelectTab(1)
-
-Fluent:Notify({
-    Title = "THEUS PREMIUM",
-    Content = "Script loaded successfully!",
-    Duration = 3
+-- Interface
+local Window = Create("ScreenGui", {
+    Parent = game.CoreGui,
+    Name = "TheusAimbot"
 })
 
-SaveManager:LoadAutoloadConfig()
+local Main = Create("Frame", {
+    Parent = Window,
+    BackgroundColor3 = ThemeColors.Background,
+    BorderSizePixel = 0,
+    Position = UDim2.new(0.5, -150, 0.5, -200),
+    Size = UDim2.new(0, 300, 0, 400),
+    Active = true,
+    Draggable = true
+})
+
+local Title = Create("TextLabel", {
+    Parent = Main,
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0, 10, 0, 5),
+    Size = UDim2.new(1, -20, 0, 30),
+    Font = Enum.Font.GothamBold,
+    Text = "THEUS PREMIUM",
+    TextColor3 = ThemeColors.TextColor,
+    TextSize = 18
+})
+
+local Container = Create("ScrollingFrame", {
+    Parent = Main,
+    BackgroundColor3 = ThemeColors.LightContrast,
+    BorderSizePixel = 0,
+    Position = UDim2.new(0, 5, 0, 40),
+    Size = UDim2.new(1, -10, 1, -45),
+    ScrollBarThickness = 2,
+    CanvasSize = UDim2.new(0, 0, 0, 400)
+})
+
+-- Toggle Function
+local function CreateToggle(text, default, y, callback)
+    local Toggle = Create("Frame", {
+        Parent = Container,
+        BackgroundColor3 = ThemeColors.DarkContrast,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 5, 0, y),
+        Size = UDim2.new(1, -10, 0, 30)
+    })
+    
+    local Label = Create("TextLabel", {
+        Parent = Toggle,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 5, 0, 0),
+        Size = UDim2.new(1, -35, 1, 0),
+        Font = Enum.Font.Gotham,
+        Text = text,
+        TextColor3 = ThemeColors.TextColor,
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+    
+    local Button = Create("TextButton", {
+        Parent = Toggle,
+        BackgroundColor3 = default and ThemeColors.AccentColor or ThemeColors.LightContrast,
+        BorderSizePixel = 0,
+        Position = UDim2.new(1, -30, 0.5, -10),
+        Size = UDim2.new(0, 20, 0, 20),
+        Text = "",
+        AutoButtonColor = false
+    })
+    
+    local Enabled = default
+    Button.MouseButton1Click:Connect(function()
+        Enabled = not Enabled
+        Button.BackgroundColor3 = Enabled and ThemeColors.AccentColor or ThemeColors.LightContrast
+        callback(Enabled)
+    end)
+end
+
+-- Slider Function
+local function CreateSlider(text, min, max, default, y, callback)
+    local Slider = Create("Frame", {
+        Parent = Container,
+        BackgroundColor3 = ThemeColors.DarkContrast,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 5, 0, y),
+        Size = UDim2.new(1, -10, 0, 45)
+    })
+    
+    local Label = Create("TextLabel", {
+        Parent = Slider,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 5, 0, 0),
+        Size = UDim2.new(1, -10, 0, 20),
+        Font = Enum.Font.Gotham,
+        Text = text,
+        TextColor3 = ThemeColors.TextColor,
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+    
+    local SliderFrame = Create("Frame", {
+        Parent = Slider,
+        BackgroundColor3 = ThemeColors.LightContrast,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 5, 0, 25),
+        Size = UDim2.new(1, -10, 0, 10)
+    })
+    
+    local Fill = Create("Frame", {
+        Parent = SliderFrame,
+        BackgroundColor3 = ThemeColors.AccentColor,
+        BorderSizePixel = 0,
+        Size = UDim2.new((default - min)/(max - min), 0, 1, 0)
+    })
+    
+    local Value = Create("TextLabel", {
+        Parent = SliderFrame,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(1, 5, 0, -5),
+        Size = UDim2.new(0, 30, 0, 20),
+        Font = Enum.Font.Gotham,
+        Text = tostring(default),
+        TextColor3 = ThemeColors.TextColor,
+        TextSize = 12
+    })
+    
+    local IsDragging = false
+    
+    SliderFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            IsDragging = true
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            IsDragging = false
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if IsDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local AbsolutePos = SliderFrame.AbsolutePosition
+            local AbsoluteSize = SliderFrame.AbsoluteSize
+            local Position = input.Position
+            
+            local Percentage = math.clamp((Position.X - AbsolutePos.X) / AbsoluteSize.X, 0, 1)
+            local Value = math.floor(min + (max - min) * Percentage)
+            
+            Fill.Size = UDim2.new(Percentage, 0, 1, 0)
+            Value.Text = tostring(Value)
+            callback(Value)
+        end
+    end)
+end
+
+-- Create Controls
+CreateToggle("Enable Aimbot", false, 5, function(state)
+    AimbotConfig.Enabled = state
+end)
+
+CreateToggle("Show FOV", true, 40, function(state)
+    AimbotConfig.ShowFOV = state
+end)
+
+CreateToggle("Team Check", false, 75, function(state)
+    AimbotConfig.TeamCheck = state
+end)
+
+CreateToggle("Visibility Check", true, 110, function(state)
+    AimbotConfig.VisibilityCheck = state
+end)
+
+CreateToggle("Auto Fire", false, 145, function(state)
+    AimbotConfig.AutoFire = state
+end)
+
+CreateSlider("FOV", 10, 1000, 500, 180, function(value)
+    AimbotConfig.FOV = value
+end)
+
+CreateSlider("Smoothness", 0, 1, 0.5, 230, function(value)
+    AimbotConfig.Smoothness = value
+end)
+
+CreateSlider("Prediction", 0, 1, 0.165, 280, function(value)
+    AimbotConfig.Prediction.Multiplier = value
+end)
+
+-- Notification
+local function CreateNotification(text)
+    local Notification = Create("Frame", {
+        Parent = Window,
+        BackgroundColor3 = ThemeColors.Background,
+        BorderSizePixel = 0,
+        Position = UDim2.new(1, -220, 1, -60),
+        Size = UDim2.new(0, 200, 0, 50),
+        AnchorPoint = Vector2.new(1, 1)
+    })
+    
+    local Label = Create("TextLabel", {
+        Parent = Notification,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 10, 0, 0),
+        Size = UDim2.new(1, -20, 1, 0),
+        Font = Enum.Font.Gotham,
+        Text = text,
+        TextColor3 = ThemeColors.TextColor,
+        TextSize = 14
+    })
+    
+    game.Debris:AddItem(Notification, 3)
+end
+
+CreateNotification("THEUS PREMIUM carregado com sucesso!")
