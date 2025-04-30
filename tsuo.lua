@@ -1,34 +1,61 @@
-local Library=loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window=Library:CreateWindow("THEUS HUB","Midnight")
-local Players=game:GetService("Players")
-local RunService=game:GetService("RunService")
-local UserInputService=game:GetService("UserInputService")
-local Camera=workspace.CurrentCamera
-local LocalPlayer=Players.LocalPlayer
-local Mouse=LocalPlayer:GetMouse()
-local Config={Aimbot={Enabled=false,Silent=true,WallBang=true,InstantKill=true,AutoTrigger=true,Prediction=true,TargetPart="Head",FOV=999999,HitChance=100,TeamCheck=false,VisibilityCheck=false,AutoShoot=true,MouseTrigger=true,NearestPoint=true,PredictionAmount=0.165,AimAssist=true,SmoothAim=true,SmoothAmount=0.5},Visuals={ESP={Enabled=false,Boxes=true,Tracers=true,Names=true,Distance=true,Health=true,Chams=true,XRay=true,Rainbow=true,TeamColor=false,ShowTeam=false,Skeleton=true,HeadDot=true,DirectionArrow=true,BoxType="Corner",BoxColor=Color3.fromRGB(255,255,255),BoxTransparency=0.8,TracerOrigin="Bottom",TracerColor=Color3.fromRGB(255,255,255),NameColor=Color3.fromRGB(255,255,255),DistanceColor=Color3.fromRGB(255,255,255),HealthBarType="Side",HealthBarColor=Color3.fromRGB(0,255,0),ChamsColor=Color3.fromRGB(255,0,0),ChamsTransparency=0.5},World={FullBright=false,NoFog=false,CustomTime=false,TimeValue=14,Ambient=false,AmbientColor=Color3.new(1,1,1),NoShadows=false,CustomFOV=false,FOVAmount=70}},Combat={InfiniteAmmo=false,NoRecoil=false,NoSpread=false,RapidFire=false,AutoReload=false,InstantReload=false,OneShot=false,FireRate=false,FireRateAmount=0.1},Movement={SpeedHack=false,SpeedValue=100,JumpPower=false,JumpValue=100,InfiniteJump=false,BunnyHop=false,NoClip=false,Flight=false,FlightSpeed=50},Exploits={GodMode=false,AntiAim=false,NoFallDamage=false,NoStun=false,InstantRespawn=false,AntiKick=false,AntiBan=false}}
-local MainTab=Window:NewTab("Combat")
-local VisualsTab=Window:NewTab("Visuals")
-local MovementTab=Window:NewTab("Movement")
-local ExploitsTab=Window:NewTab("Exploits")
-local AimbotSection=MainTab:NewSection("Aimbot")
-local ESPSection=VisualsTab:NewSection("ESP")
-local MovementSection=MovementTab:NewSection("Movement")
-local ExploitsSection=ExploitsTab:NewSection("Exploits")
-local function GetClosestPlayer()local a=nil;local b=Config.Aimbot.FOV;local c={}for d,e in pairs(Players:GetPlayers())do if e~=LocalPlayer and e.Character and e.Character:FindFirstChild("Humanoid")and e.Character.Humanoid.Health>0 and e.Character:FindFirstChild(Config.Aimbot.TargetPart)then if Config.Aimbot.TeamCheck and e.Team==LocalPlayer.Team then continue end;local f=Camera:WorldToViewportPoint(e.Character[Config.Aimbot.TargetPart].Position)local g=(Vector2.new(f.X,f.Y)-Vector2.new(Mouse.X,Mouse.Y)).magnitude;table.insert(c,{Player=e,Distance=g,Position=f})end end;table.sort(c,function(h,i)return h.Distance<i.Distance end)return c[1]and c[1].Player or nil end
-AimbotSection:NewToggle("Aimbot","",function(a)Config.Aimbot.Enabled=a end)
-AimbotSection:NewToggle("Silent Aim","",function(a)Config.Aimbot.Silent=a end)
-AimbotSection:NewToggle("WallBang","",function(a)Config.Aimbot.WallBang=a end)
-AimbotSection:NewToggle("Instant Kill","",function(a)Config.Aimbot.InstantKill=a end)
-AimbotSection:NewSlider("FOV",10,1000,500,function(a)Config.Aimbot.FOV=a end)
-ESPSection:NewToggle("ESP","",function(a)Config.Visuals.ESP.Enabled=a end)
-ESPSection:NewToggle("Boxes","",function(a)Config.Visuals.ESP.Boxes=a end)
-ESPSection:NewToggle("Tracers","",function(a)Config.Visuals.ESP.Tracers=a end)
-MovementSection:NewToggle("Speed Hack","",function(a)Config.Movement.SpeedHack=a;if a then spawn(function()while Config.Movement.SpeedHack do LocalPlayer.Character.HumanoidRootPart.CFrame=LocalPlayer.Character.HumanoidRootPart.CFrame+LocalPlayer.Character.Humanoid.MoveDirection*Config.Movement.SpeedValue/10;RunService.Heartbeat:Wait()end end)end end)
-MovementSection:NewToggle("Infinite Jump","",function(a)Config.Movement.InfiniteJump=a end)
-ExploitsSection:NewToggle("God Mode","",function(a)Config.Exploits.GodMode=a end)
-local mt=getrawmetatable(game)local old=mt.__namecall;setreadonly(mt,false)mt.__namecall=newcclosure(function(self,...)local a={...}local b=getnamecallmethod()if b=="Kick"or b=="kick"then return wait(9e9)end;if b=="FireServer"then if a[1]and typeof(a[1])=="string"and(a[1]:lower():find("ban")or a[1]:lower():find("kick"))then return wait(9e9)end end;return old(self,...)end)
-RunService.RenderStepped:Connect(function()if Config.Aimbot.Enabled then local a=GetClosestPlayer()if a then local b=a.Character[Config.Aimbot.TargetPart]local c=Config.Aimbot.Prediction and(b.Position+b.Velocity*Config.Aimbot.PredictionAmount)or b.Position;if Config.Aimbot.Silent then Camera.CFrame=CFrame.new(Camera.CFrame.Position,c)elseif Config.Aimbot.SmoothAim then local d=Camera.CFrame;local e=CFrame.new(d.Position,c)Camera.CFrame=d:Lerp(e,Config.Aimbot.SmoothAmount)end;if Config.Aimbot.AutoShoot then mouse1click()end end end end)
-UserInputService.InputBegan:Connect(function(a,b)if not b then if a.KeyCode==Enum.KeyCode.RightAlt then Library:ToggleUI()elseif a.KeyCode==Enum.KeyCode.X then Config.Aimbot.Enabled=not Config.Aimbot.Enabled end end end)
-if UserInputService.TouchEnabled then Config.Aimbot.FOV=Config.Aimbot.FOV*1.5;Config.Aimbot.SmoothAmount=Config.Aimbot.SmoothAmount*1.2 end
-game:GetService("ScriptContext").Error:Connect(function()return nil end)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local Config = {
+    Enabled = true,
+    TargetPart = "Head",
+    FOV = 500,
+    Prediction = 0.165,
+    AutoFire = true,
+    TeamCheck = false,
+    VisibilityCheck = false,
+    SmoothAim = true,
+    SmoothAmount = 0.5,
+    HitChance = 100
+}
+local function GetClosestPlayer()
+    local Target = nil
+    local MaxDist = Config.FOV
+    for _,v in pairs(Players:GetPlayers()) do
+        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild(Config.TargetPart) and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
+            if Config.TeamCheck and v.Team == LocalPlayer.Team then continue end
+            if Config.VisibilityCheck then
+                local Ray = Ray.new(Camera.CFrame.Position, (v.Character[Config.TargetPart].Position - Camera.CFrame.Position).Unit * 2000)
+                local Hit = workspace:FindPartOnRayWithIgnoreList(Ray, {LocalPlayer.Character, Camera})
+                if not Hit or not Hit:IsDescendantOf(v.Character) then continue end
+            end
+            local Pos = Camera:WorldToScreenPoint(v.Character[Config.TargetPart].Position)
+            local Dist = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Pos.X, Pos.Y)).Magnitude
+            if Dist < MaxDist then
+                MaxDist = Dist
+                Target = v
+            end
+        end
+    end
+    return Target
+end
+RunService.RenderStepped:Connect(function()
+    if Config.Enabled and math.random(1,100) <= Config.HitChance then
+        local Target = GetClosestPlayer()
+        if Target then
+            local Pos = Target.Character[Config.TargetPart].Position
+            local Vel = Target.Character[Config.TargetPart].Velocity
+            local PredPos = Pos + (Vel * Config.Prediction)
+            if Config.SmoothAim then
+                Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, PredPos), Config.SmoothAmount)
+            else
+                Camera.CFrame = CFrame.new(Camera.CFrame.Position, PredPos)
+            end
+            if Config.AutoFire then mouse1click() end
+        end
+    end
+end)
+UserInputService.InputBegan:Connect(function(Input)
+    if Input.KeyCode == Enum.KeyCode.X then
+        Config.Enabled = not Config.Enabled
+    end
+end)
+game:GetService("StarterGui"):SetCore("SendNotification",{Title="Aimbot",Text="Loaded | Toggle: X",Duration=3})
