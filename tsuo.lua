@@ -1,122 +1,111 @@
 
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local rootPart = character:WaitForChild("HumanoidRootPart")
-local userInputService = game:GetService("UserInputService")
-local runService = game:GetService("RunService")
-local players = game:GetService("Players")
-local camera = workspace.CurrentCamera
+    ESP + AIMBOT NEAREST (TEAMCHECK)
+    by Lek do Black (2024)
+    Cola isso no executor e já era.
+--]]
 
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
 
-local aimbotRange = 1000
-local aimbotSmoothness = 0.1
+-- CONFIG
+local ESP_COLOR = Color3.fromRGB(255,0,0)
+local ESP_TRANSPARENCY = 0.7
 
+-- CONTROLE
+local aiming = false
+local espActive = true
 
-local espBoxColor = Color3.new(1, 0, 0)
-local espTextColor = Color3.new(1, 1, 1)
-local espTextSize = 14
-local espTextFont = Enum.Font.SourceSansBold
-
-
-    return (position1 - position2).Magnitude
+-- CHECA SE É INIMIGO
+local function isEnemy(player)
+    return player.Team ~= LocalPlayer.Team and player ~= LocalPlayer
 end
 
-
-    local closestPlayer = nil
-    local closestDistance = aimbotRange
-
-    for _, player in pairs(players:GetPlayers()) do
-        if player ~= player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local distance = calculateDistance(rootPart.Position, player.Character.HumanoidRootPart.Position)
-            if distance < closestDistance then
-                closestPlayer = player
-                closestDistance = distance
-            end
-        end
-    end
-
-    return closestPlayer
+-- CRIA ESP NO PLAYER
+local function createESP(part)
+    if part:FindFirstChild("LekESP") then return end
+    local espBox = Instance.new("BoxHandleAdornment")
+    espBox.Name = "LekESP"
+    espBox.Size = part.Size
+    espBox.Color3 = ESP_COLOR
+    espBox.AlwaysOnTop = true
+    espBox.Adornee = part
+    espBox.Parent = part
+    espBox.Transparency = ESP_TRANSPARENCY
+    espBox.ZIndex = 10
 end
 
-
-    aimbotActive = not aimbotActive
-end
-
-local function toggleESP()
-    espActive = not espActive
-end
-
-
-    if aimbotActive then
-        local closestPlayer = findClosestPlayer()
-        if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local targetPosition = closestPlayer.Character.HumanoidRootPart.Position
-            local direction = (targetPosition - rootPart.Position).Unit
-            local currentCFrame = rootPart.CFrame
-            local targetCFrame = CFrame.new(rootPart.Position, rootPart.Position + direction)
-            rootPart.CFrame = currentCFrame:Lerp(targetCFrame, aimbotSmoothness)
-        end
-    end
-end)
-
-
-    if espActive then
-        for _, player in pairs(players:GetPlayers()) do
-            if player ~= player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local distance = calculateDistance(rootPart.Position, player.Character.HumanoidRootPart.Position)
-                local screenPosition, onScreen = camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
-
-                if onScreen then
-                    -- Desenha uma caixa ao redor do jogador
-                    local box = Instance.new("Frame")
-                    box.Size = UDim2.new(0, 50, 0, 50)
-                    box.Position = UDim2.new(0, screenPosition.X, 0, screenPosition.Y)
-                    box.BackgroundColor3 = espBoxColor
-                    box.BorderSizePixel = 0
-                    box.Parent = camera:WaitForChild("Viewport")
-
-                    -- Exibe a distância do jogador
-                    local distanceLabel = Instance.new("TextLabel")
-                    distanceLabel.Size = UDim2.new(0, 50, 0, 20)
-                    distanceLabel.Position = UDim2.new(0, screenPosition.X, 0, screenPosition.Y - 30)
-                    distanceLabel.Text = string.format("%.1f", distance)
-                    distanceLabel.TextColor3 = espTextColor
-                    distanceLabel.TextSize = espTextSize
-                    distanceLabel.Font = espTextFont
-                    distanceLabel.BackgroundColor3 = Color3.new(0, 0, 0)
-                    distanceLabel.BorderSizePixel = 0
-                    distanceLabel.Parent = camera:WaitForChild("Viewport")
+-- LIMPA ESP DOS PLAYERS
+local function clearESP()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = player.Character.HumanoidRootPart
+            for _, v in pairs(hrp:GetChildren()) do
+                if v:IsA("BoxHandleAdornment") and v.Name == "LekESP" then
+                    v:Destroy()
                 end
             end
         end
     end
+end
+
+-- ATUALIZA ESP
+local function updateESP()
+    if not espActive then clearESP() return end
+    for _, player in pairs(Players:GetPlayers()) do
+        if isEnemy(player) and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            createESP(player.Character.HumanoidRootPart)
+        end
+    end
+end
+
+-- AIMBOT: PEGA O INIMIGO MAIS PRÓXIMO DO CENTRO DA TELA
+local function getNearestEnemy()
+    local closest = nil
+    local shortest = math.huge
+    for _, player in pairs(Players:GetPlayers()) do
+        if isEnemy(player) and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+            local pos, onScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
+            if onScreen then
+                local dist = (Vector2.new(pos.X,pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                if dist < shortest then
+                    shortest = dist
+                    closest = player.Character.HumanoidRootPart
+                end
+            end
+        end
+    end
+    return closest
+end
+
+-- TOGGLE AIMBOT (MOUSE2)
+UIS.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        aiming = true
+    elseif input.KeyCode == Enum.KeyCode.F4 then
+        espActive = not espActive
+        if not espActive then
+            clearESP()
+        end
+    end
+end)
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        aiming = false
+    end
 end)
 
+-- LOOP PRINCIPAL
+RunService.RenderStepped:Connect(function()
+    updateESP()
+    if aiming then
+        local target = getNearestEnemy()
+        if target then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position)
+        end
+    end
+end)
 
-local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = player.PlayerGui
-
-
--- Botão de Aimbot
-local aimButton = Instance.new("TextButton")
-aimButton.Size = UDim2.new(0, 100, 0, 50)
-aimButton.Position = UDim2.new(1, -110, 1, -60)
-aimButton.Text = "Aimbot"
-aimButton.TextColor3 = Color3.new(1, 1, 1)
-aimButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.8)
-aimButton.BorderSizePixel = 0
-aimButton.Parent = screenGui
-
--- Botão de ESP
-local espButton = Instance.new("TextButton")
-espButton.Size = UDim2.new(0, 100, 0, 50)
-espButton.Position = UDim2.new(1, -110, 1, -120)
-espButton.Text = "ESP"
-espButton.TextColor3 = Color3.new(1, 1, 1)
-espButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-espButton.BorderSizePixel = 0
-espButton.Parent = screenGui
-
--- Eventos dos botões
-aimButton.MouseButton1Click:Connect(toggleAimbot)
-espButton.MouseButton1Click:Connect(toggleESP)
+print("[Lek do Black] ESP + Aimbot ativado. F4 desliga/ativa ESP. Segura botão direito pra mirar automático. Ficar parado é ser cúmplice da própria miséria.")
