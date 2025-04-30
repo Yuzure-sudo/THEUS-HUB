@@ -1,152 +1,250 @@
--- SCRIPT THEUS PREMIUM V5 [VERSÃO MALOQUEIRA]
--- SCRIPT FEITO PRA DESTRUIR GERAL MLK
+-- THEUS HUB [DESTRUIÇÃO TOTAL]
+-- SISTEMA COMPLETO PRA DOMINAR QUALQUER JOGO MLK
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wally2"))()
-local Window = Library:CreateWindow("THEUS PREMIUM - DESTRUIÇÃO TOTAL")
+local Window = Library:CreateWindow("THEUS HUB - DOMINAÇÃO TOTAL")
 
--- SERVIÇOS PRA DESTRUIR
+-- SERVIÇOS E OTIMIZAÇÃO
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 local VirtualUser = game:GetService("VirtualUser")
+local Lighting = game:GetService("Lighting")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
 
--- CONFIGURAÇÃO PESADA
+-- CONFIGS PESADAS
 local Config = {
     Aimbot = {
         Enabled = false,
-        Silent = true, -- MIRA INVISÍVEL PRA NINGUÉM TE PEGAR
-        AutoWall = true, -- ATIRA ATRAVÉS DA PAREDE
+        Silent = true,
+        WallBang = true,
+        InstantKill = true,
+        AutoTrigger = true,
         Prediction = true,
+        TargetPart = "Head",
+        FOV = 999999,
         HitChance = 100,
-        HitPart = "Head",
-        FOV = 500, -- FOV GIGANTE PRA PEGAR TODO MUNDO
+        TeamCheck = false,
+        VisibilityCheck = false,
         AutoShoot = true,
-        WallCheck = false -- FODA-SE A PAREDE
+        MouseTrigger = true,
+        NearestPoint = true
     },
     
-    ESP = {
-        Enabled = false,
-        ShowTeam = false, -- NÃO MOSTRA TIME PRA TU MATAR GERAL
-        Boxes = true,
-        Tracers = true,
-        Names = true,
-        Distance = true,
-        Health = true,
-        Chams = true,
-        XRay = true -- VÊ ATRAVÉS DAS PAREDES
+    Visuals = {
+        ESP = {
+            Enabled = false,
+            Boxes = true,
+            Tracers = true,
+            Names = true,
+            Distance = true,
+            Health = true,
+            Chams = true,
+            XRay = true,
+            Rainbow = true,
+            TeamColor = false,
+            ShowTeam = false,
+            Skeleton = true,
+            HeadDot = true,
+            DirectionArrow = true
+        },
+        
+        World = {
+            FullBright = false,
+            NoFog = false,
+            ThirdPerson = false,
+            FOVChanger = false,
+            CustomSky = false,
+            AmbientColor = false,
+            NoShadows = false,
+            BetterGraphics = false
+        }
+    },
+    
+    Combat = {
+        InfiniteAmmo = false,
+        NoRecoil = false,
+        NoSpread = false,
+        RapidFire = false,
+        AutoReload = false,
+        OneShot = false,
+        GunMods = false,
+        HeadshotOnly = false
+    },
+    
+    Movement = {
+        SpeedHack = false,
+        SpeedValue = 100,
+        JumpPower = false,
+        JumpValue = 100,
+        InfiniteJump = false,
+        BunnyHop = false,
+        NoClip = false,
+        Flight = false,
+        FlightSpeed = 50,
+        AutoJump = false
+    },
+    
+    Exploits = {
+        GodMode = false,
+        AntiAim = false,
+        NoFallDamage = false,
+        NoStun = false,
+        InstantRespawn = false,
+        AntiKick = false,
+        AntiBan = false,
+        AntiReport = false
     }
 }
 
 -- INTERFACE CRIMINOSA
-local MainTab = Window:CreateTab("DESTRUIÇÃO")
-local VisualTab = Window:CreateTab("VISUAL")
-local ExtraTab = Window:CreateTab("EXTRA")
+local CombatTab = Window:NewTab("COMBATE")
+local VisualsTab = Window:NewTab("VISUAL")
+local MovementTab = Window:NewTab("MOVIMENTO")
+local ExploitsTab = Window:NewTab("EXPLOITS")
+local SettingsTab = Window:NewTab("CONFIG")
 
--- AIMBOT DESTRUTIVO
-MainTab:CreateToggle("AIMBOT DESTRUTIVO", function(state)
-    Config.Aimbot.Enabled = state
-    if state then
-        CreateNotification("ATIVADO", "MODO DESTRUIÇÃO LIGADO", 3)
-    end
-end)
+-- SEÇÕES
+local AimbotSection = CombatTab:NewSection("AIMBOT DESTRUTIVO")
+local WeaponSection = CombatTab:NewSection("MODIFICAÇÃO DE ARMAS")
+local ESPSection = VisualsTab:NewSection("ESP MALANDRO")
+local WorldSection = VisualsTab:NewSection("MUNDO")
+local MovementSection = MovementTab:NewSection("MOVIMENTO")
+local ExploitsSection = ExploitsTab:NewSection("EXPLOITS")
+local SettingsSection = SettingsTab:NewSection("CONFIGURAÇÕES")
 
-MainTab:CreateToggle("TIRO ATRAVÉS DA PAREDE", function(state)
-    Config.Aimbot.AutoWall = state
-end)
-
-MainTab:CreateSlider("CHANCE DE ACERTO", 0, 100, 100, function(value)
-    Config.Aimbot.HitChance = value
-end)
-
--- ESP MALANDRO
-VisualTab:CreateToggle("ESP MALOQUEIRO", function(state)
-    Config.ESP.Enabled = state
-end)
-
-VisualTab:CreateToggle("RAIO-X", function(state)
-    Config.ESP.XRay = state
-    if state then
-        for _,v in pairs(workspace:GetDescendants()) do
-            if v:IsA("BasePart") then
-                v.LocalTransparencyModifier = 0.5
-            end
-        end
-    end
-end)
-
--- FUNÇÕES PESADAS
+-- FUNÇÕES PRINCIPAIS
 local function GetClosestPlayer()
     local closestPlayer = nil
     local shortestDistance = math.huge
     
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") 
-        and player.Character.Humanoid.Health > 0 and player.Character:FindFirstChild(Config.Aimbot.HitPart) then
+        and player.Character.Humanoid.Health > 0 and player.Character:FindFirstChild(Config.Aimbot.TargetPart) then
             
-            local pos = Camera:WorldToViewportPoint(player.Character[Config.Aimbot.HitPart].Position)
+            if Config.Aimbot.TeamCheck and player.Team == LocalPlayer.Team then continue end
+            
+            local pos = Camera:WorldToViewportPoint(player.Character[Config.Aimbot.TargetPart].Position)
             local magnitude = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).magnitude
             
-            if magnitude < shortestDistance then
-                closestPlayer = player
-                shortestDistance = magnitude
+            if magnitude < shortestDistance and magnitude <= Config.Aimbot.FOV then
+                if Config.Aimbot.VisibilityCheck then
+                    local ray = Ray.new(Camera.CFrame.Position, (player.Character[Config.Aimbot.TargetPart].Position - Camera.CFrame.Position).unit * 2000)
+                    local hit = workspace:FindPartOnRayWithIgnoreList(ray, {LocalPlayer.Character, Camera})
+                    if hit and hit:IsDescendantOf(player.Character) then
+                        closestPlayer = player
+                        shortestDistance = magnitude
+                    end
+                else
+                    closestPlayer = player
+                    shortestDistance = magnitude
+                end
             end
         end
     end
     return closestPlayer
 end
 
--- ESP SISTEMA MALANDRO
-local function CreateESP(player)
-    local ESP = {
-        Box = Drawing.new("Square"),
-        Tracer = Drawing.new("Line"),
-        Name = Drawing.new("Text"),
-        Distance = Drawing.new("Text"),
-        HealthBar = Drawing.new("Square")
-    }
-    
-    RunService.RenderStepped:Connect(function()
-        if Config.ESP.Enabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local Vector, OnScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
-            
-            -- ATUALIZA ESP EM TEMPO REAL
-            if OnScreen then
-                -- Box ESP
-                if Config.ESP.Boxes then
-                    ESP.Box.Size = Vector2.new(2000 / Vector.Z, 2500 / Vector.Z)
-                    ESP.Box.Position = Vector2.new(Vector.X - ESP.Box.Size.X / 2, Vector.Y - ESP.Box.Size.Y / 2)
-                    ESP.Box.Visible = true
-                    ESP.Box.Color = Color3.fromRGB(255, 0, 0)
-                    ESP.Box.Thickness = 2
-                end
-                
-                -- Tracer ESP
-                if Config.ESP.Tracers then
-                    ESP.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-                    ESP.Tracer.To = Vector2.new(Vector.X, Vector.Y)
-                    ESP.Tracer.Visible = true
-                    ESP.Tracer.Color = Color3.fromRGB(255, 0, 0)
-                    ESP.Tracer.Thickness = 2
-                end
-            end
-        end
-    end)
-end
+-- AIMBOT SISTEMA
+AimbotSection:NewToggle("AIMBOT", "", function(state)
+    Config.Aimbot.Enabled = state
+end)
 
--- LOOP PRINCIPAL DO SCRIPT
+AimbotSection:NewToggle("TIRO SILENCIOSO", "", function(state)
+    Config.Aimbot.Silent = state
+end)
+
+AimbotSection:NewToggle("TIRO ATRAVÉS DA PAREDE", "", function(state)
+    Config.Aimbot.WallBang = state
+end)
+
+AimbotSection:NewToggle("MORTE INSTANTÂNEA", "", function(state)
+    Config.Aimbot.InstantKill = state
+end)
+
+AimbotSection:NewSlider("FOV", "", 1000, 10, function(value)
+    Config.Aimbot.FOV = value
+end)
+
+-- MODIFICAÇÃO DE ARMAS
+WeaponSection:NewToggle("MUNIÇÃO INFINITA", "", function(state)
+    Config.Combat.InfiniteAmmo = state
+end)
+
+WeaponSection:NewToggle("SEM RECUO", "", function(state)
+    Config.Combat.NoRecoil = state
+end)
+
+WeaponSection:NewToggle("TIRO RÁPIDO", "", function(state)
+    Config.Combat.RapidFire = state
+end)
+
+-- ESP SISTEMA
+ESPSection:NewToggle("ESP", "", function(state)
+    Config.Visuals.ESP.Enabled = state
+end)
+
+ESPSection:NewToggle("CAIXAS", "", function(state)
+    Config.Visuals.ESP.Boxes = state
+end)
+
+ESPSection:NewToggle("TRAÇOS", "", function(state)
+    Config.Visuals.ESP.Tracers = state
+end)
+
+-- MOVIMENTO
+MovementSection:NewToggle("SPEED HACK", "", function(state)
+    Config.Movement.SpeedHack = state
+end)
+
+MovementSection:NewToggle("PULO INFINITO", "", function(state)
+    Config.Movement.InfiniteJump = state
+end)
+
+MovementSection:NewToggle("VOAR", "", function(state)
+    Config.Movement.Flight = state
+end)
+
+-- EXPLOITS
+ExploitsSection:NewToggle("MODO DEUS", "", function(state)
+    Config.Exploits.GodMode = state
+end)
+
+ExploitsSection:NewToggle("ANTI KICK", "", function(state)
+    Config.Exploits.AntiKick = state
+end)
+
+-- PROTEÇÃO CONTRA DETECÇÃO
+local mt = getrawmetatable(game)
+local old = mt.__namecall
+setreadonly(mt, false)
+mt.__namecall = newcclosure(function(...)
+    local args = {...}
+    local method = getnamecallmethod()
+    
+    if method == "FireServer" then
+        if args[1].Name:match("Anti") or args[1].Name:match("Detection") then
+            return wait(9e9)
+        end
+    end
+    
+    return old(...)
+end)
+
+-- LOOP PRINCIPAL
 RunService.RenderStepped:Connect(function()
     if Config.Aimbot.Enabled then
         local target = GetClosestPlayer()
         if target then
-            local targetPart = target.Character[Config.Aimbot.HitPart]
+            local targetPart = target.Character[Config.Aimbot.TargetPart]
             local prediction = Config.Aimbot.Prediction and 
                 (targetPart.Position + targetPart.Velocity * 0.165)
                 or targetPart.Position
                 
             if Config.Aimbot.Silent then
-                -- AIMBOT SILENCIOSO PRA NINGUÉM PERCEBER
                 Camera.CFrame = CFrame.new(Camera.CFrame.Position, prediction)
             end
             
@@ -157,60 +255,34 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- NOTIFICAÇÃO BRABÍSSIMA
+-- NOTIFICAÇÃO
 game.StarterGui:SetCore("SendNotification", {
-    Title = "SCRIPT ATIVADO",
-    Text = "MODO DESTRUIÇÃO TOTAL LIBERADO",
+    Title = "THEUS HUB CARREGADO",
+    Text = "PRONTO PRA DESTRUIR TUDO MLK!",
     Duration = 5
 })
 
--- PROTEÇÃO CONTRA DETECÇÃO
-local mt = getrawmetatable(game)
-local old = mt.__namecall
-setreadonly(mt, false)
-mt.__namecall = newcclosure(function(...)
-    local args = {...}
-    if getnamecallmethod() == "FireServer" and args[1] == "RemoteEvent" then
-        return wait(9e9)
-    end
-    return old(...)
-end)
-
--- EXTRAS DESTRUTIVOS
-ExtraTab:CreateButton("CRASH SERVER", function()
-    while true do
-        spawn(function()
-            while true do end
-        end)
+-- TECLAS DE ATALHO
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.RightAlt then
+        Library:ToggleUI()
     end
 end)
 
-ExtraTab:CreateButton("REMOVER ANTI-CHEAT", function()
-    for _, v in pairs(game:GetDescendants()) do
-        if v:IsA("LocalScript") and v.Name:lower():match("anti") then
-            v:Destroy()
-        end
-    end
-end)
-
--- TECLAS DE ATALHO PRA DESTRUIR MAIS RÁPIDO
-local function BindKey(key, func)
-    UserInputService.InputBegan:Connect(function(input)
-        if input.KeyCode == key then
-            func()
-        end
-    end)
-end
-
-BindKey(Enum.KeyCode.X, function()
-    Config.Aimbot.Enabled = not Config.Aimbot.Enabled
-end)
-
-BindKey(Enum.KeyCode.C, function()
-    Config.ESP.Enabled = not Config.ESP.Enabled
-end)
-
--- PROTEÇÃO EXTRA PRA NÃO SER PEGO
+-- PROTEÇÃO EXTRA
 game:GetService("ScriptContext").Error:Connect(function()
     return nil
+end)
+
+-- ANTI KICK/BAN
+local oldNamecall
+oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local args = {...}
+    local method = getnamecallmethod()
+    
+    if method == "Kick" or method == "kick" then
+        return wait(9e9)
+    end
+    
+    return oldNamecall(self, ...)
 end)
