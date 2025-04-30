@@ -1,406 +1,328 @@
 --[[
-    UNIVERSAL ROBLOX SCRIPT v2.0
-    Features: Aimbot, Silent Aim, ESP, Prediction, Team Check, Anti-Cheat Bypass
+    King Legacy Script v3.2
     Compatível com Mobile e PC
+    Atualizado em: 2023
 ]]--
 
--- 🔧 CONFIGURAÇÕES INICIAIS (AJUSTE CONFORME NECESSÁRIO)
-local Settings = {
+local Config = {
     Aimbot = {
         Enabled = true,
-        Keybind = Enum.UserInputType.MouseButton2, -- Botão direito do mouse (PC) / Toque (Mobile)
-        FOV = 80, -- Campo de Visão (quanto maior, mais amplo)
-        Smoothness = 0.4, -- Suavidade do movimento (0.1 = rápido, 1.0 = lento)
-        Prediction = 0.18, -- Previsão de movimento (ajuste para jogos com balística)
-        HitPart = "Head", -- Parte do corpo alvo (Head, HumanoidRootPart, etc.)
-        SilentAim = true, -- Atira corretamente sem mover a câmera
-        TeamCheck = true, -- Ignora jogadores do mesmo time
-        VisibleCheck = true, -- Só atira se o alvo estiver visível
+        Keybind = Enum.KeyCode.Q, -- Pressione Q para travar no alvo
+        FOV = 100,
+        Smoothness = 0.4,
+        Priority = "Closest", -- Closest/Weakest/Strongest
+        IgnoreTeam = true,
     },
     ESP = {
         Enabled = true,
-        Boxes = true, -- Caixas ao redor dos jogadores
-        Names = true, -- Mostra nome
-        Health = true, -- Barra de vida
-        Distance = true, -- Distância em metros
-        TeamColor = true, -- Cores por time
-        MaxDistance = 1200, -- Distância máxima de renderização
-        Tracers = false, -- Linhas apontando para os jogadores
+        Players = {
+            Box = true,
+            Name = true,
+            Health = true,
+            Level = true,
+            DevilFruit = true,
+            Distance = true,
+        },
+        NPCs = {
+            Enabled = true,
+            Name = true,
+            Level = true,
+            Quest = true,
+        },
+        MaxDistance = 2000,
+    },
+    AutoFarm = {
+        Enabled = true,
+        Range = 500,
+        AttackSpeed = 0.2,
+        Priority = "Weakest", -- Weakest/Closest/Strongest
+    },
+    Hacks = {
+        Flight = true,
+        NoClip = false,
+        InfiniteEnergy = true,
+        GodMode = false,
+        DamageMultiplier = 1, -- 1 = normal, 5 = 5x mais dano
     },
     Safety = {
-        AntiKick = true, -- Previne kicks
-        AntiBan = true, -- Ofusca o script para evitar detecção
-        Randomization = true, -- Aleatoriza valores para evitar padrões
-        AutoUpdate = false, -- Verifica atualizações (desativado por padrão)
-    },
-    UI = {
-        Theme = "Dark", -- Dark / Light
-        Keybind = Enum.KeyCode.RightShift, -- Tecla para abrir/fechar menu
+        AntiKick = true,
+        AntiBan = true,
+        Randomization = true,
     }
 }
 
--- 🔄 VARIÁVEIS GLOBAIS
+-- 🔧 Variáveis Globais
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
-local Mouse = LocalPlayer:GetMouse()
+local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
-local GuiService = game:GetService("GuiService")
-local TweenService = game:GetService("TweenService")
 
--- 🎮 DETECTA PLATAFORMA (MOBILE/PC)
-local IS_MOBILE = (UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled)
-
--- 🖥️ CRIA INTERFACE GRÁFICA
-local function CreateUI()
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "UniversalScriptUI"
-    ScreenGui.Parent = game:GetService("CoreGui")
-
-    -- 📌 MENU PRINCIPAL
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 250, 0, 350)
-    MainFrame.Position = UDim2.new(0.5, -125, 0.5, -175)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    MainFrame.BorderSizePixel = 0
-    MainFrame.Visible = false
-    MainFrame.Parent = ScreenGui
-
-    -- 🏷️ TÍTULO
-    local Title = Instance.new("TextLabel")
-    Title.Name = "Title"
-    Title.Size = UDim2.new(1, 0, 0, 40)
-    Title.Text = "UNIVERSAL SCRIPT v2.0"
-    Title.Font = Enum.Font.GothamBold
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-    Title.Parent = MainFrame
-
-    -- 🔘 BOTÕES DE TOGGLE
-    local Toggles = {
-        Aimbot = {Text = "AIMBOT: ON", Default = Settings.Aimbot.Enabled},
-        SilentAim = {Text = "SILENT AIM: ON", Default = Settings.Aimbot.SilentAim},
-        ESP = {Text = "ESP: ON", Default = Settings.ESP.Enabled},
-        TeamCheck = {Text = "TEAM CHECK: ON", Default = Settings.Aimbot.TeamCheck},
-    }
-
-    local YOffset = 50
-    for name, data in pairs(Toggles) do
-        local ToggleButton = Instance.new("TextButton")
-        ToggleButton.Name = name .. "Toggle"
-        ToggleButton.Size = UDim2.new(0.9, 0, 0, 30)
-        ToggleButton.Position = UDim2.new(0.05, 0, 0, YOffset)
-        ToggleButton.Text = data.Text
-        ToggleButton.Font = Enum.Font.Gotham
-        ToggleButton.TextColor3 = data.Default and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 50, 50)
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
-        ToggleButton.Parent = MainFrame
-
-        ToggleButton.MouseButton1Click:Connect(function()
-            local newValue = not Settings[name == "SilentAim" and "Aimbot" or name][name == "SilentAim" and "SilentAim" or "Enabled"]
-            Settings[name == "SilentAim" and "Aimbot" or name][name == "SilentAim" and "SilentAim" or "Enabled"] = newValue
-            ToggleButton.Text = string.gsub(data.Text, ": .+", ": " .. (newValue and "ON" or "OFF"))
-            ToggleButton.TextColor3 = newValue and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 50, 50)
-        end)
-
-        YOffset = YOffset + 35
-    end
-
-    -- 🎚️ SLIDERS (FOV, SUAVIZAÇÃO, PREVISÃO)
-    local Sliders = {
-        FOV = {Text = "FOV: " .. Settings.Aimbot.FOV, Min = 10, Max = 360, Default = Settings.Aimbot.FOV},
-        Smoothness = {Text = "SMOOTH: " .. Settings.Aimbot.Smoothness, Min = 0.1, Max = 1.0, Default = Settings.Aimbot.Smoothness},
-        Prediction = {Text = "PREDICT: " .. Settings.Aimbot.Prediction, Min = 0.0, Max = 0.5, Default = Settings.Aimbot.Prediction},
-    }
-
-    for name, data in pairs(Sliders) do
-        local SliderFrame = Instance.new("Frame")
-        SliderFrame.Name = name .. "Slider"
-        SliderFrame.Size = UDim2.new(0.9, 0, 0, 40)
-        SliderFrame.Position = UDim2.new(0.05, 0, 0, YOffset)
-        SliderFrame.BackgroundTransparency = 1
-        SliderFrame.Parent = MainFrame
-
-        local SliderText = Instance.new("TextLabel")
-        SliderText.Name = "Text"
-        SliderText.Size = UDim2.new(1, 0, 0.5, 0)
-        SliderText.Text = data.Text
-        SliderText.Font = Enum.Font.Gotham
-        SliderText.TextColor3 = Color3.fromRGB(200, 200, 200)
-        SliderText.BackgroundTransparency = 1
-        SliderText.TextXAlignment = Enum.TextXAlignment.Left
-        SliderText.Parent = SliderFrame
-
-        local SliderBar = Instance.new("Frame")
-        SliderBar.Name = "Bar"
-        SliderBar.Size = UDim2.new(1, 0, 0, 5)
-        SliderBar.Position = UDim2.new(0, 0, 0.6, 0)
-        SliderBar.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
-        SliderBar.BorderSizePixel = 0
-        SliderBar.Parent = SliderFrame
-
-        local SliderFill = Instance.new("Frame")
-        SliderFill.Name = "Fill"
-        SliderFill.Size = UDim2.new((data.Default - data.Min) / (data.Max - data.Min), 0, 1, 0)
-        SliderFill.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-        SliderFill.BorderSizePixel = 0
-        SliderFill.Parent = SliderBar
-
-        local function UpdateSlider(value)
-            local percent = (value - data.Min) / (data.Max - data.Min)
-            SliderFill.Size = UDim2.new(percent, 0, 1, 0)
-            SliderText.Text = string.gsub(data.Text, ": .+", ": " .. string.format("%.1f", value))
-            Settings.Aimbot[name] = value
-        end
-
-        SliderBar.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                local function MoveSlider()
-                    local X = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
-                    local value = data.Min + (X * (data.Max - data.Min))
-                    UpdateSlider(value)
-                end
-                MoveSlider()
-                input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then
-                        MoveSlider()
-                    end
-                end)
-            end
-        end)
-
-        YOffset = YOffset + 45
-    end
-
-    -- 🚪 BOTÃO DE FECHAR
-    local CloseButton = Instance.new("TextButton")
-    CloseButton.Name = "CloseButton"
-    CloseButton.Size = UDim2.new(0.9, 0, 0, 30)
-    CloseButton.Position = UDim2.new(0.05, 0, 0, YOffset)
-    CloseButton.Text = "FECHAR (RightShift)"
-    CloseButton.Font = Enum.Font.Gotham
-    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    CloseButton.BackgroundColor3 = Color3.fromRGB(80, 80, 90)
-    CloseButton.Parent = MainFrame
-
-    CloseButton.MouseButton1Click:Connect(function()
-        MainFrame.Visible = false
-    end)
-
-    -- 🎮 BOTÃO DE TOGGLE (MOBILE)
-    if IS_MOBILE then
-        local ToggleButton = Instance.new("TextButton")
-        ToggleButton.Name = "MobileToggle"
-        ToggleButton.Size = UDim2.new(0, 60, 0, 60)
-        ToggleButton.Position = UDim2.new(0, 10, 0.5, -30)
-        ToggleButton.Text = "☰"
-        ToggleButton.Font = Enum.Font.GothamBold
-        ToggleButton.TextSize = 24
-        ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-        ToggleButton.Parent = ScreenGui
-
-        ToggleButton.MouseButton1Click:Connect(function()
-            MainFrame.Visible = not MainFrame.Visible
-        end)
-    end
-
-    -- 📌 TOGGLE MENU (PC - RightShift)
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if not gameProcessed and input.KeyCode == Settings.UI.Keybind then
-            MainFrame.Visible = not MainFrame.Visible
-        end
-    end)
-
-    return ScreenGui
-end
-
--- 🎯 FUNÇÕES DO AIMBOT
-local function IsValidTarget(player)
-    return player ~= LocalPlayer and
-           player.Character and
-           player.Character:FindFirstChild("Humanoid") and
-           player.Character.Humanoid.Health > 0 and
-           player.Character:FindFirstChild(Settings.Aimbot.HitPart) and
-           (not Settings.Aimbot.TeamCheck or player.Team ~= LocalPlayer.Team) and
-           (not Settings.Aimbot.VisibleCheck or Camera:GetPartsObscuringTarget({player.Character[Settings.Aimbot.HitPart].Position}, {player.Character, Camera, workspace.Ignore})[1] == nil)
-end
-
+-- 🎯 Funções do Aimbot
 local function GetClosestTarget()
-    local closestPlayer = nil
-    local closestDistance = Settings.Aimbot.FOV
-    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    local closestTarget = nil
+    local closestDistance = Config.Aimbot.FOV
+    local currentPos = Camera.CFrame.Position
 
-    for _, player in pairs(Players:GetPlayers()) do
-        if IsValidTarget(player) then
-            local hitPart = player.Character[Settings.Aimbot.HitPart]
-            local screenPos, onScreen = Camera:WorldToViewportPoint(hitPart.Position)
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            if Config.Aimbot.IgnoreTeam and player.Team == LocalPlayer.Team then
+                continue
+            end
+
+            local rootPart = player.Character.HumanoidRootPart
+            local screenPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
 
             if onScreen then
-                local screenPoint = Vector2.new(screenPos.X, screenPos.Y)
-                local distance = (center - screenPoint).Magnitude
+                local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
 
                 if distance < closestDistance then
                     closestDistance = distance
-                    closestPlayer = player
+                    closestTarget = player.Character
                 end
             end
         end
     end
 
-    return closestPlayer
-end
+    -- Verifica NPCs também
+    for _, npc in ipairs(workspace.NPCs:GetChildren()) do
+        if npc:FindFirstChild("HumanoidRootPart") then
+            local screenPos, onScreen = Camera:WorldToViewportPoint(npc.HumanoidRootPart.Position)
 
-local function CalculatePrediction(targetPart, distance)
-    local prediction = Settings.Aimbot.Prediction
-    if Settings.Safety.Randomization then
-        prediction = prediction * (0.8 + math.random() * 0.4) -- Aleatoriza entre 80% e 120%
+            if onScreen then
+                local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+
+                if distance < closestDistance then
+                    closestDistance = distance
+                    closestTarget = npc
+                end
+            end
+        end
     end
-    local targetVelocity = targetPart.Parent:FindFirstChild("HumanoidRootPart") and targetPart.Parent.HumanoidRootPart.Velocity or Vector3.new(0, 0, 0)
-    return targetPart.Position + (targetVelocity * prediction * (distance / 1000))
+
+    return closestTarget
 end
 
-local function AimAt(targetPart)
-    local distance = (LocalPlayer.Character.HumanoidRootPart.Position - targetPart.Position).Magnitude
-    local predictedPos = CalculatePrediction(targetPart, distance)
-    local direction = (predictedPos - Camera.CFrame.Position).Unit
+local function AimAt(target)
+    if not target or not target:FindFirstChild("HumanoidRootPart") then return end
+
+    local rootPart = target.HumanoidRootPart
+    local cameraPos = Camera.CFrame.Position
+    local targetPos = rootPart.Position + (rootPart.Velocity * 0.15) -- Pequena previsão
+
+    local direction = (targetPos - cameraPos).Unit
     local currentDirection = Camera.CFrame.LookVector
-    local smoothedDirection = currentDirection:Lerp(direction, Settings.Aimbot.Smoothness)
-    
-    if Settings.Aimbot.SilentAim then
-        -- 🎯 SILENT AIM (INTERCEPTA DISPAROS)
-        -- (Implementação depende do jogo)
-    else
-        -- 🖱️ AIMBOT NORMAL (MOVE A CÂMERA)
-        Camera.CFrame = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + smoothedDirection)
-    end
+    local smoothedDirection = currentDirection:Lerp(direction, Config.Aimbot.Smoothness)
+
+    Camera.CFrame = CFrame.new(cameraPos, cameraPos + smoothedDirection)
 end
 
--- 👁️🗨️ FUNÇÕES DO ESP
+-- 👁️🗨️ Funções do ESP
 local ESPObjects = {}
 
-local function CreateESP(player)
-    if ESPObjects[player] then return end
+local function CreateESP(target, isPlayer)
+    if ESPObjects[target] then return end
 
-    local Box = Instance.new("Frame")
-    Box.Name = "ESPBox"
-    Box.BackgroundTransparency = 0.8
-    Box.BorderSizePixel = 2
-    Box.ZIndex = 10
-    Box.Visible = false
-    Box.Parent = Camera
+    local drawings = {
+        BoxOutline = Drawing.new("Square"),
+        Box = Drawing.new("Square"),
+        Name = Drawing.new("Text"),
+        HealthBar = Drawing.new("Line"),
+        HealthText = Drawing.new("Text"),
+        Level = Drawing.new("Text"),
+        DevilFruit = Drawing.new("Text"),
+        Distance = Drawing.new("Text"),
+    }
 
-    local NameLabel = Instance.new("TextLabel")
-    NameLabel.Name = "ESPName"
-    NameLabel.Text = player.Name
-    NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    NameLabel.BackgroundTransparency = 1
-    NameLabel.TextStrokeTransparency = 0
-    NameLabel.TextSize = 14
-    NameLabel.ZIndex = 11
-    NameLabel.Visible = false
-    NameLabel.Parent = Camera
+    for _, drawing in pairs(drawings) do
+        drawing.Visible = false
+        drawing.ZIndex = 2
+        if drawing.ClassName == "Text" then
+            drawing.Outline = true
+            drawing.Font = 2
+            drawing.Size = 13
+        end
+    end
 
-    local HealthBar = Instance.new("Frame")
-    HealthBar.Name = "ESPHealth"
-    HealthBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    HealthBar.BorderSizePixel = 1
-    HealthBar.ZIndex = 10
-    HealthBar.Visible = false
-    HealthBar.Parent = Camera
-
-    local HealthFill = Instance.new("Frame")
-    HealthFill.Name = "ESPHealthFill"
-    HealthFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-    HealthFill.BorderSizePixel = 0
-    HealthFill.ZIndex = 11
-    HealthFill.Parent = HealthBar
-
-    ESPObjects[player] = {
-        Box = Box,
-        Name = NameLabel,
-        HealthBar = HealthBar,
-        HealthFill = HealthFill,
+    ESPObjects[target] = {
+        Drawings = drawings,
+        IsPlayer = isPlayer
     }
 end
 
 local function UpdateESP()
-    if not Settings.ESP.Enabled then return end
+    for target, data in pairs(ESPObjects) do
+        if not target or not target.Parent then
+            for _, drawing in pairs(data.Drawings) do
+                drawing:Remove()
+            end
+            ESPObjects[target] = nil
+        else
+            local rootPart = target:FindFirstChild("HumanoidRootPart")
+            local humanoid = target:FindFirstChildOfClass("Humanoid")
 
-    for player, esp in pairs(ESPObjects) do
-        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local rootPart = player.Character.HumanoidRootPart
-            local distance = (LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
-
-            if distance <= Settings.ESP.MaxDistance then
+            if rootPart and humanoid then
                 local screenPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
-
+                
                 if onScreen then
-                    local boxSize = Vector2.new(30, 50) * (1000 / distance)
-                    local color = Settings.ESP.TeamColor and (player.Team == LocalPlayer.Team and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)) or Color3.fromRGB(255, 255, 0)
-
-                    -- 📦 CAIXA
-                    if Settings.ESP.Boxes then
-                        esp.Box.Size = UDim2.new(0, boxSize.X, 0, boxSize.Y)
-                        esp.Box.Position = UDim2.new(0, screenPos.X - boxSize.X / 2, 0, screenPos.Y - boxSize.Y / 2)
-                        esp.Box.BackgroundColor3 = color
-                        esp.Box.BorderColor3 = Color3.new(color.R * 0.7, color.G * 0.7, color.B * 0.7)
-                        esp.Box.Visible = true
-                    else
-                        esp.Box.Visible = false
+                    local distance = (LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
+                    if distance > Config.ESP.MaxDistance then
+                        for _, drawing in pairs(data.Drawings) do
+                            drawing.Visible = false
+                        end
+                        continue
                     end
 
-                    -- 🏷️ NOME
-                    if Settings.ESP.Names then
-                        esp.Name.Position = UDim2.new(0, screenPos.X, 0, screenPos.Y - boxSize.Y / 2 - 20)
-                        esp.Name.TextColor3 = color
-                        esp.Name.Visible = true
+                    local headPos = target:FindFirstChild("Head") and Camera:WorldToViewportPoint(target.Head.Position) or screenPos + Vector3.new(0, -2, 0)
+                    local boxSize = Vector2.new(
+                        math.abs(headPos.X - screenPos.X) * 2,
+                        (headPos.Y - screenPos.Y) * 1.5
+                    )
+                    local boxPos = Vector2.new(
+                        screenPos.X - boxSize.X / 2,
+                        screenPos.Y - boxSize.Y
+                    )
+
+                    -- Caixa do ESP
+                    if Config.ESP.Players.Box and data.IsPlayer or Config.ESP.NPCs.Enabled and not data.IsPlayer then
+                        data.Drawings.BoxOutline.Size = boxSize
+                        data.Drawings.BoxOutline.Position = boxPos
+                        data.Drawings.BoxOutline.Color = Color3.new(0, 0, 0)
+                        data.Drawings.BoxOutline.Thickness = 2
+                        data.Drawings.BoxOutline.Visible = true
+
+                        data.Drawings.Box.Size = boxSize
+                        data.Drawings.Box.Position = boxPos
+                        data.Drawings.Box.Color = data.IsPlayer and (target.Team == LocalPlayer.Team and Color3.new(0, 1, 0) or Color3.new(1, 0, 0)) or Color3.new(1, 0.5, 0)
+                        data.Drawings.Box.Thickness = 1
+                        data.Drawings.Box.Visible = true
                     else
-                        esp.Name.Visible = false
+                        data.Drawings.BoxOutline.Visible = false
+                        data.Drawings.Box.Visible = false
                     end
 
-                    -- ❤️ BARRA DE VIDA
-                    if Settings.ESP.Health then
-                        local healthPercent = player.Character.Humanoid.Health / player.Character.Humanoid.MaxHealth
-                        esp.HealthBar.Size = UDim2.new(0, boxSize.X, 0, 4)
-                        esp.HealthBar.Position = UDim2.new(0, screenPos.X - boxSize.X / 2, 0, screenPos.Y + boxSize.Y / 2 + 5)
-                        esp.HealthFill.Size = UDim2.new(healthPercent, 0, 1, 0)
-                        esp.HealthFill.BackgroundColor3 = Color3.new(1 - healthPercent, healthPercent, 0)
-                        esp.HealthBar.Visible = true
+                    -- Nome
+                    if (Config.ESP.Players.Name and data.IsPlayer) or (Config.ESP.NPCs.Name and not data.IsPlayer) then
+                        data.Drawings.Name.Text = target.Name
+                        data.Drawings.Name.Position = Vector2.new(boxPos.X + boxSize.X / 2, boxPos.Y - 15)
+                        data.Drawings.Name.Color = Color3.new(1, 1, 1)
+                        data.Drawings.Name.Visible = true
                     else
-                        esp.HealthBar.Visible = false
+                        data.Drawings.Name.Visible = false
+                    end
+
+                    -- Vida (apenas para jogadores)
+                    if Config.ESP.Players.Health and data.IsPlayer and humanoid then
+                        local healthPercent = humanoid.Health / humanoid.MaxHealth
+                        local barWidth = boxSize.X * healthPercent
+
+                        data.Drawings.HealthBar.From = Vector2.new(boxPos.X - 6, boxPos.Y + boxSize.Y)
+                        data.Drawings.HealthBar.To = Vector2.new(boxPos.X - 6, boxPos.Y + boxSize.Y * (1 - healthPercent))
+                        data.Drawings.HealthBar.Color = Color3.new(1 - healthPercent, healthPercent, 0)
+                        data.Drawings.HealthBar.Thickness = 2
+                        data.Drawings.HealthBar.Visible = true
+
+                        data.Drawings.HealthText.Text = math.floor(humanoid.Health) .. "/" .. math.floor(humanoid.MaxHealth)
+                        data.Drawings.HealthText.Position = Vector2.new(boxPos.X + boxSize.X + 5, boxPos.Y + boxSize.Y / 2)
+                        data.Drawings.HealthText.Color = Color3.new(1, 1, 1)
+                        data.Drawings.HealthText.Visible = true
+                    else
+                        data.Drawings.HealthBar.Visible = false
+                        data.Drawings.HealthText.Visible = false
+                    end
+
+                    -- Nível (King Legacy)
+                    if Config.ESP.Players.Level and data.IsPlayer then
+                        -- Implementar detecção de nível
+                        data.Drawings.Level.Text = "Lv. ?"
+                        data.Drawings.Level.Position = Vector2.new(boxPos.X + boxSize.X / 2, boxPos.Y + boxSize.Y + 2)
+                        data.Drawings.Level.Color = Color3.new(1, 1, 0)
+                        data.Drawings.Level.Visible = true
+                    else
+                        data.Drawings.Level.Visible = false
+                    end
+
+                    -- Fruta do Diabo
+                    if Config.ESP.Players.DevilFruit and data.IsPlayer then
+                        -- Implementar detecção de fruta
+                        data.Drawings.DevilFruit.Text = "Fruta: ?"
+                        data.Drawings.DevilFruit.Position = Vector2.new(boxPos.X + boxSize.X / 2, boxPos.Y + boxSize.Y + 15)
+                        data.Drawings.DevilFruit.Color = Color3.new(0.8, 0, 0.8)
+                        data.Drawings.DevilFruit.Visible = true
+                    else
+                        data.Drawings.DevilFruit.Visible = false
+                    end
+
+                    -- Distância
+                    if Config.ESP.Players.Distance and data.IsPlayer or Config.ESP.NPCs.Enabled and not data.IsPlayer then
+                        data.Drawings.Distance.Text = string.format("[%dm]", math.floor(distance))
+                        data.Drawings.Distance.Position = Vector2.new(boxPos.X + boxSize.X / 2, boxPos.Y + boxSize.Y + 30)
+                        data.Drawings.Distance.Color = Color3.new(1, 1, 1)
+                        data.Drawings.Distance.Visible = true
+                    else
+                        data.Drawings.Distance.Visible = false
                     end
                 else
-                    for _, obj in pairs(esp) do
-                        if typeof(obj) == "Instance" then
-                            obj.Visible = false
-                        end
-                    end
-                end
-            else
-                for _, obj in pairs(esp) do
-                    if typeof(obj) == "Instance" then
-                        obj.Visible = false
+                    for _, drawing in pairs(data.Drawings) do
+                        drawing.Visible = false
                     end
                 end
             end
-        else
-            for _, obj in pairs(esp) do
-                if typeof(obj) == "Instance" then
-                    obj:Destroy()
-                end
-            end
-            ESPObjects[player] = nil
         end
     end
 end
 
--- 🛡️ FUNÇÕES DE SEGURANÇA
+-- ⚔️ Auto Farm
+local function AutoFarm()
+    if not Config.AutoFarm.Enabled or not LocalPlayer.Character then return end
+
+    local closestEnemy = nil
+    local closestDistance = Config.AutoFarm.Range
+
+    for _, npc in ipairs(workspace.NPCs:GetChildren()) do
+        if npc:FindFirstChild("HumanoidRootPart") and npc:FindFirstChildOfClass("Humanoid") and npc.Humanoid.Health > 0 then
+            local distance = (LocalPlayer.Character.HumanoidRootPart.Position - npc.HumanoidRootPart.Position).Magnitude
+
+            if distance < closestDistance then
+                closestDistance = distance
+                closestEnemy = npc
+            end
+        end
+    end
+
+    if closestEnemy then
+        AimAt(closestEnemy)
+        -- Simula clique para atacar
+        if LocalPlayer.Character:FindFirstChildOfClass("Tool") then
+            LocalPlayer.Character:FindFirstChildOfClass("Tool"):Activate()
+        end
+    end
+end
+
+-- 🚀 Flight Hack
+local function FlightHack()
+    if not Config.Hacks.Flight or not LocalPlayer.Character then return end
+
+    local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid:ChangeState(Enum.HumanoidStateType.FlyingNoPhysics)
+    end
+end
+
+-- ⚡ Infinite Energy
+local function InfiniteEnergy()
+    if not Config.Hacks.InfiniteEnergy or not LocalPlayer.Character then return end
+
+    local stats = LocalPlayer.Character:FindFirstChild("Stats")
+    if stats and stats:FindFirstChild("Energy") then
+        stats.Energy.Value = stats.Energy.MaxValue
+    end
+end
+
+-- 🛡️ Anti-Kick
 local function AntiKick()
-    if Settings.Safety.AntiKick then
+    if Config.Safety.AntiKick then
         LocalPlayer.OnClientEvent:Connect(function(event, ...)
             if event == "Kick" or event == "Teleport" then
                 return nil
@@ -409,63 +331,61 @@ local function AntiKick()
     end
 end
 
-local function AntiBan()
-    if Settings.Safety.AntiBan then
-        -- Ofusca nomes de variáveis
-        local _ = {
-            ["\101\114\114\111\114"] = function() end, -- "error"
-            ["\119\97\114\110"] = function() end, -- "warn"
-        }
-        _["\101\114\114\111\114"]("Script protegido contra detecção.")
-    end
-end
-
--- 🔄 LOOP PRINCIPAL
+-- 🔄 Loop Principal
 local function Main()
     AntiKick()
-    AntiBan()
-    CreateUI()
 
-    -- Inicializa ESP para jogadores existentes
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            CreateESP(player)
+    -- Cria ESP para jogadores existentes
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            CreateESP(player.Character, true)
+        end
+    end
+
+    -- Cria ESP para NPCs
+    for _, npc in ipairs(workspace.NPCs:GetChildren()) do
+        if npc:FindFirstChild("HumanoidRootPart") then
+            CreateESP(npc, false)
         end
     end
 
     -- Detecta novos jogadores
     Players.PlayerAdded:Connect(function(player)
-        CreateESP(player)
+        player.CharacterAdded:Connect(function(character)
+            CreateESP(character, true)
+        end)
     end)
 
-    Players.PlayerRemoving:Connect(function(player)
-        if ESPObjects[player] then
-            for _, obj in pairs(ESPObjects[player]) do
-                if typeof(obj) == "Instance" then
-                    obj:Destroy()
-                end
-            end
-            ESPObjects[player] = nil
+    -- Detecta novos NPCs
+    workspace.NPCs.ChildAdded:Connect(function(npc)
+        if npc:FindFirstChild("HumanoidRootPart") then
+            CreateESP(npc, false)
         end
     end)
 
-    -- Loop de renderização
-    RunService.RenderStepped:Connect(function()
-        -- 🎯 AIMBOT
-        if Settings.Aimbot.Enabled and (not IS_MOBILE or UserInputService:IsMouseButtonPressed(Enum.UserInputType.Touch)) then
-            local target = GetClosestTarget()
-            if target and target.Character then
-                AimAt(target.Character[Settings.Aimbot.HitPart])
-            end
+    -- Loop de atualização
+    RunService.Heartbeat:Connect(function()
+        if Config.Aimbot.Enabled and UserInputService:IsKeyDown(Config.Aimbot.Keybind) then
+            AimAt(GetClosestTarget())
         end
 
-        -- 👁️🗨️ ESP
-        UpdateESP()
+        if Config.ESP.Enabled then
+            UpdateESP()
+        end
+
+        if Config.AutoFarm.Enabled then
+            AutoFarm()
+        end
+
+        if Config.Hacks.Flight then
+            FlightHack()
+        end
+
+        if Config.Hacks.InfiniteEnergy then
+            InfiniteEnergy()
+        end
     end)
 end
 
--- ▶️ INICIALIZAÇÃO
-local success, err = pcall(Main)
-if not success then
-    warn("Erro no script:", err)
-end
+-- ▶️ Inicialização
+Main()
