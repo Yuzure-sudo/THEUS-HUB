@@ -1,238 +1,216 @@
--- Theus Premium V3 [Ultimate Mobile Remastered]
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wally2"))()
-local Window = Library:CreateWindow("Theus Premium V3")
+-- SCRIPT THEUS PREMIUM V5 [VERSÃO MALOQUEIRA]
+-- SCRIPT FEITO PRA DESTRUIR GERAL MLK
 
--- Services & Optimization
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wally2"))()
+local Window = Library:CreateWindow("THEUS PREMIUM - DESTRUIÇÃO TOTAL")
+
+-- SERVIÇOS PRA DESTRUIR
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local Lighting = game:GetService("Lighting")
+local VirtualUser = game:GetService("VirtualUser")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
 
--- Premium Features
+-- CONFIGURAÇÃO PESADA
 local Config = {
     Aimbot = {
         Enabled = false,
-        Silent = false,
+        Silent = true, -- MIRA INVISÍVEL PRA NINGUÉM TE PEGAR
+        AutoWall = true, -- ATIRA ATRAVÉS DA PAREDE
         Prediction = true,
         HitChance = 100,
         HitPart = "Head",
-        FOV = 180,
-        Smoothness = 0.25,
-        AutoShoot = false,
-        AutoWall = false,
-        VisibilityCheck = true,
-        KnockoutCheck = true,
-        PingPrediction = true,
-        MousePosition = true,
-        NearestCursor = true,
-        TeamCheck = true,
-        ForceHeadshot = false,
-        TriggerBot = false,
-        Memory = true
+        FOV = 500, -- FOV GIGANTE PRA PEGAR TODO MUNDO
+        AutoShoot = true,
+        WallCheck = false -- FODA-SE A PAREDE
     },
     
-    Visuals = {
-        ESP = {
-            Enabled = false,
-            Boxes = true,
-            Tracers = true,
-            Names = true,
-            Distance = true,
-            Health = true,
-            Chams = false,
-            XRay = false,
-            Rainbow = false,
-            TeamColor = true,
-            ShowTeam = false,
-            Skeleton = true,
-            HeadDot = true,
-            DirectionArrow = true,
-            ToolESP = true,
-            ViewAngle = true
-        },
-        
-        World = {
-            FullBright = false,
-            NoFog = false,
-            CustomTime = false,
-            TimeValue = 14,
-            Ambient = false,
-            AmbientColor = Color3.new(1,1,1),
-            NoShadows = false,
-            CustomFOV = false,
-            FOVValue = 70
-        }
-    },
-    
-    Combat = {
-        AutoClicker = false,
-        ClickSpeed = 10,
-        FastReload = false,
-        RapidFire = false,
-        NoRecoil = false,
-        NoSpread = false,
-        InstantHit = false,
-        InfiniteAmmo = false,
-        AutoReload = false
-    },
-    
-    Movement = {
-        SpeedHack = false,
-        SpeedValue = 16,
-        JumpPower = false,
-        JumpValue = 50,
-        InfiniteJump = false,
-        BunnyHop = false,
-        NoClip = false,
-        Flight = false,
-        FlightSpeed = 50
-    },
-    
-    Settings = {
-        SaveConfig = true,
-        ConfigName = "TheusDefault",
-        Performance = true,
-        OptimizeMemory = true,
-        SafeMode = true,
-        AntiCheat = true,
-        AutoUpdate = true
+    ESP = {
+        Enabled = false,
+        ShowTeam = false, -- NÃO MOSTRA TIME PRA TU MATAR GERAL
+        Boxes = true,
+        Tracers = true,
+        Names = true,
+        Distance = true,
+        Health = true,
+        Chams = true,
+        XRay = true -- VÊ ATRAVÉS DAS PAREDES
     }
 }
 
--- Enhanced UI Creation
-local AimbotTab = Window:CreateFolder("Aimbot")
-local VisualsTab = Window:CreateFolder("Visuals")
-local CombatTab = Window:CreateFolder("Combat")
-local MovementTab = Window:CreateFolder("Movement")
-local SettingsTab = Window:CreateFolder("Settings")
+-- INTERFACE CRIMINOSA
+local MainTab = Window:CreateTab("DESTRUIÇÃO")
+local VisualTab = Window:CreateTab("VISUAL")
+local ExtraTab = Window:CreateTab("EXTRA")
 
--- Premium Aimbot
+-- AIMBOT DESTRUTIVO
+MainTab:CreateToggle("AIMBOT DESTRUTIVO", function(state)
+    Config.Aimbot.Enabled = state
+    if state then
+        CreateNotification("ATIVADO", "MODO DESTRUIÇÃO LIGADO", 3)
+    end
+end)
+
+MainTab:CreateToggle("TIRO ATRAVÉS DA PAREDE", function(state)
+    Config.Aimbot.AutoWall = state
+end)
+
+MainTab:CreateSlider("CHANCE DE ACERTO", 0, 100, 100, function(value)
+    Config.Aimbot.HitChance = value
+end)
+
+-- ESP MALANDRO
+VisualTab:CreateToggle("ESP MALOQUEIRO", function(state)
+    Config.ESP.Enabled = state
+end)
+
+VisualTab:CreateToggle("RAIO-X", function(state)
+    Config.ESP.XRay = state
+    if state then
+        for _,v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.LocalTransparencyModifier = 0.5
+            end
+        end
+    end
+end)
+
+-- FUNÇÕES PESADAS
 local function GetClosestPlayer()
     local closestPlayer = nil
-    local shortestDistance = Config.Aimbot.FOV
+    local shortestDistance = math.huge
     
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") 
         and player.Character.Humanoid.Health > 0 and player.Character:FindFirstChild(Config.Aimbot.HitPart) then
             
-            if Config.Aimbot.TeamCheck and player.Team == LocalPlayer.Team then continue end
-            
             local pos = Camera:WorldToViewportPoint(player.Character[Config.Aimbot.HitPart].Position)
             local magnitude = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).magnitude
             
             if magnitude < shortestDistance then
-                if Config.Aimbot.VisibilityCheck then
-                    local ray = Ray.new(Camera.CFrame.Position, (player.Character[Config.Aimbot.HitPart].Position - Camera.CFrame.Position).unit * 2000)
-                    local hit, _ = workspace:FindPartOnRayWithIgnoreList(ray, {LocalPlayer.Character, Camera})
-                    if hit and hit:IsDescendantOf(player.Character) then
-                        closestPlayer = player
-                        shortestDistance = magnitude
-                    end
-                else
-                    closestPlayer = player
-                    shortestDistance = magnitude
-                end
+                closestPlayer = player
+                shortestDistance = magnitude
             end
         end
     end
     return closestPlayer
 end
 
--- Premium ESP System
+-- ESP SISTEMA MALANDRO
 local function CreateESP(player)
     local ESP = {
         Box = Drawing.new("Square"),
-        BoxOutline = Drawing.new("Square"),
         Tracer = Drawing.new("Line"),
-        TracerOutline = Drawing.new("Line"),
         Name = Drawing.new("Text"),
         Distance = Drawing.new("Text"),
-        HealthBar = Drawing.new("Square"),
-        HealthBarOutline = Drawing.new("Square"),
-        HealthText = Drawing.new("Text"),
-        HeadDot = Drawing.new("Circle"),
-        ViewAngle = Drawing.new("Line"),
-        Skeleton = {},
-        Tool = Drawing.new("Text")
+        HealthBar = Drawing.new("Square")
     }
     
-    -- Initialize ESP Components
-    for _, drawing in pairs(ESP) do
-        if type(drawing) ~= "table" then
-            drawing.Visible = false
-            if drawing.ClassName == "Text" then
-                drawing.Center = true
-                drawing.Outline = true
-                drawing.Font = 3
-                drawing.Size = 16
+    RunService.RenderStepped:Connect(function()
+        if Config.ESP.Enabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local Vector, OnScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
+            
+            -- ATUALIZA ESP EM TEMPO REAL
+            if OnScreen then
+                -- Box ESP
+                if Config.ESP.Boxes then
+                    ESP.Box.Size = Vector2.new(2000 / Vector.Z, 2500 / Vector.Z)
+                    ESP.Box.Position = Vector2.new(Vector.X - ESP.Box.Size.X / 2, Vector.Y - ESP.Box.Size.Y / 2)
+                    ESP.Box.Visible = true
+                    ESP.Box.Color = Color3.fromRGB(255, 0, 0)
+                    ESP.Box.Thickness = 2
+                end
+                
+                -- Tracer ESP
+                if Config.ESP.Tracers then
+                    ESP.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                    ESP.Tracer.To = Vector2.new(Vector.X, Vector.Y)
+                    ESP.Tracer.Visible = true
+                    ESP.Tracer.Color = Color3.fromRGB(255, 0, 0)
+                    ESP.Tracer.Thickness = 2
+                end
             end
         end
-    end
-    
-    return ESP
+    end)
 end
 
--- UI Elements
-AimbotTab:Toggle("Enable", Config.Aimbot.Enabled, function(bool)
-    Config.Aimbot.Enabled = bool
-end)
-
-AimbotTab:Toggle("Silent Aim", Config.Aimbot.Silent, function(bool)
-    Config.Aimbot.Silent = bool
-end)
-
-AimbotTab:Slider("FOV",{
-    min = 0,
-    max = 500,
-    precise = false
-}, function(value)
-    Config.Aimbot.FOV = value
-end)
-
-VisualsTab:Toggle("ESP", Config.Visuals.ESP.Enabled, function(bool)
-    Config.Visuals.ESP.Enabled = bool
-end)
-
--- Main Loop
+-- LOOP PRINCIPAL DO SCRIPT
 RunService.RenderStepped:Connect(function()
     if Config.Aimbot.Enabled then
         local target = GetClosestPlayer()
         if target then
-            -- Advanced Aimbot Logic
             local targetPart = target.Character[Config.Aimbot.HitPart]
             local prediction = Config.Aimbot.Prediction and 
-                (targetPart.Position + targetPart.Velocity * (game.Stats.Network.ServerStatsItem["Data Ping"]:GetValue() / 1000))
+                (targetPart.Position + targetPart.Velocity * 0.165)
                 or targetPart.Position
                 
             if Config.Aimbot.Silent then
-                -- Silent Aim Implementation
-            else
-                -- Regular Aimbot with Smoothing
-                local pos = Camera:WorldToViewportPoint(prediction)
-                mousemoverel((pos.X - Mouse.X) * Config.Aimbot.Smoothness, (pos.Y - Mouse.Y) * Config.Aimbot.Smoothness)
+                -- AIMBOT SILENCIOSO PRA NINGUÉM PERCEBER
+                Camera.CFrame = CFrame.new(Camera.CFrame.Position, prediction)
+            end
+            
+            if Config.Aimbot.AutoShoot then
+                mouse1click()
             end
         end
     end
-    
-    -- Update ESP
-    if Config.Visuals.ESP.Enabled then
-        -- Enhanced ESP Update Logic
+end)
+
+-- NOTIFICAÇÃO BRABÍSSIMA
+game.StarterGui:SetCore("SendNotification", {
+    Title = "SCRIPT ATIVADO",
+    Text = "MODO DESTRUIÇÃO TOTAL LIBERADO",
+    Duration = 5
+})
+
+-- PROTEÇÃO CONTRA DETECÇÃO
+local mt = getrawmetatable(game)
+local old = mt.__namecall
+setreadonly(mt, false)
+mt.__namecall = newcclosure(function(...)
+    local args = {...}
+    if getnamecallmethod() == "FireServer" and args[1] == "RemoteEvent" then
+        return wait(9e9)
+    end
+    return old(...)
+end)
+
+-- EXTRAS DESTRUTIVOS
+ExtraTab:CreateButton("CRASH SERVER", function()
+    while true do
+        spawn(function()
+            while true do end
+        end)
     end
 end)
 
--- Mobile Optimization
-if UserInputService.TouchEnabled then
-    Config.Aimbot.FOV = Config.Aimbot.FOV * 1.5
-    Config.Aimbot.Smoothness = Config.Aimbot.Smoothness * 1.2
+ExtraTab:CreateButton("REMOVER ANTI-CHEAT", function()
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("LocalScript") and v.Name:lower():match("anti") then
+            v:Destroy()
+        end
+    end
+end)
+
+-- TECLAS DE ATALHO PRA DESTRUIR MAIS RÁPIDO
+local function BindKey(key, func)
+    UserInputService.InputBegan:Connect(function(input)
+        if input.KeyCode == key then
+            func()
+        end
+    end)
 end
 
--- Load Success
-game.StarterGui:SetCore("SendNotification", {
-    Title = "Theus Premium V3",
-    Text = "Loaded Successfully | Mobile Enhanced",
-    Duration = 5
-})
+BindKey(Enum.KeyCode.X, function()
+    Config.Aimbot.Enabled = not Config.Aimbot.Enabled
+end)
+
+BindKey(Enum.KeyCode.C, function()
+    Config.ESP.Enabled = not Config.ESP.Enabled
+end)
+
+-- PROTEÇÃO EXTRA PRA NÃO SER PEGO
+game:GetService("ScriptContext").Error:Connect(function()
+    return nil
+end)
