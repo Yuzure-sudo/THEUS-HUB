@@ -16,88 +16,61 @@ flyForce.Parent = rootPart
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = player.PlayerGui
 
+-- Botão On/Off
 local flyButton = Instance.new("TextButton")
 flyButton.Size = UDim2.new(0, 100, 0, 50)
-flyButton.Position = UDim2.new(0, 10, 1, -60)
-flyButton.Text = "Fly"
+flyButton.Position = UDim2.new(1, -110, 1, -60)
+flyButton.Text = "Off"
 flyButton.Parent = screenGui
-
-local moveUpButton = Instance.new("TextButton")
-moveUpButton.Size = UDim2.new(0, 50, 0, 50)
-moveUpButton.Position = UDim2.new(0, 120, 1, -60)
-moveUpButton.Text = "↑"
-moveUpButton.Parent = screenGui
-
-local moveDownButton = Instance.new("TextButton")
-moveDownButton.Size = UDim2.new(0, 50, 0, 50)
-moveDownButton.Position = UDim2.new(0, 180, 1, -60)
-moveDownButton.Text = "↓"
-moveDownButton.Parent = screenGui
-
-local moveLeftButton = Instance.new("TextButton")
-moveLeftButton.Size = UDim2.new(0, 50, 0, 50)
-moveLeftButton.Position = UDim2.new(0, 240, 1, -60)
-moveLeftButton.Text = "←"
-moveLeftButton.Parent = screenGui
-
-local moveRightButton = Instance.new("TextButton")
-moveRightButton.Size = UDim2.new(0, 50, 0, 50)
-moveRightButton.Position = UDim2.new(0, 300, 1, -60)
-moveRightButton.Text = "→"
-moveRightButton.Parent = screenGui
 
 -- Função para ativar/desativar o fly
 local function toggleFly()
-    flying = not flying
-    if flying then
-        humanoid:ChangeState(Enum.HumanoidStateType.Physics)
-        flyForce.Velocity = Vector3.new(0, 0, 0)
-    else
-        humanoid:ChangeState(Enum.HumanoidStateType.Landed)
-        flyForce.Velocity = Vector3.new(0, 0, 0)
-    end
+ flying = not flying
+ if flying then
+ humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+ flyForce.Velocity = Vector3.new(0, 0, 0)
+ flyButton.Text = "On"
+ else
+ humanoid:ChangeState(Enum.HumanoidStateType.Landed)
+ flyForce.Velocity = Vector3.new(0, 0, 0)
+ flyButton.Text = "Off"
+ end
 end
 
--- Eventos dos botões
+-- Evento do botão On/Off
 flyButton.MouseButton1Click:Connect(toggleFly)
 
+-- Controle do analógico do Roblox
 local moveDirection = Vector3.new(0, 0, 0)
 
-moveUpButton.MouseButton1Down:Connect(function()
-    moveDirection = Vector3.new(0, 0, -1)
+userInputService.TouchMoved:Connect(function(touch)
+ if flying then
+ local touchPosition = touch.Position
+ local screenSize = workspace.CurrentCamera.ViewportSize
+ local relativePosition = Vector2.new(
+ touchPosition.X / screenSize.X,
+ touchPosition.Y / screenSize.Y
+ )
+ moveDirection = Vector3.new(
+ (relativePosition.X - 0.5) * 2,
+ 0,
+ (relativePosition.Y - nSize.Y
+ )
+ moveDirection = Vector3.new(
+ (relativePosition.X - 0.5) * 2,
+ 0,
+ (relativePosition.Y - 0.5) * 2
+ )
+ end
 end)
 
-moveUpButton.MouseButton1Up:Connect(function()
-    moveDirection = Vector3.new(0, 0, 0)
-end)
-
-moveDownButton.MouseButton1Down:Connect(function()
-    moveDirection = Vector3.new(0, 0, 1)
-end)
-
-moveDownButton.MouseButton1Up:Connect(function()
-    moveDirection = Vector3.new(0, 0, 0)
-end)
-
-moveLeftButton.MouseButton1Down:Connect(function()
-    moveDirection = Vector3.new(-1, 0, 0)
-end)
-
-moveLeftButton.MouseButton1Up:Connect(function()
-    moveDirection = Vector3.new(0, 0, 0)
-end)
-
-moveRightButton.MouseButton1Down:Connect(function()
-    moveDirection = Vector3.new(1, 0, 0)
-end)
-
-moveRightButton.MouseButton1Up:Connect(function()
-    moveDirection = Vector3.new(0, 0, 0)
+userInputService.TouchEnded:Connect(function()
+ moveDirection = Vector3.new(0, 0, 0)
 end)
 
 -- Movimento de fly
 runService.Heartbeat:Connect(function()
-    if flying then
-        flyForce.Velocity = moveDirection * flySpeed
-    end
+ if flying then
+ flyForce.Velocity = moveDirection * flySpeed
+ end
 end)
