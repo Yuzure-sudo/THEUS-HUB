@@ -1,4 +1,4 @@
-local player = game.Players.LocalPlayer
+
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local rootPart = character:WaitForChild("HumanoidRootPart")
@@ -7,25 +7,21 @@ local runService = game:GetService("RunService")
 local players = game:GetService("Players")
 local camera = workspace.CurrentCamera
 
--- Configurações do Aimbot
-local aimbotActive = false
+
 local aimbotRange = 1000
 local aimbotSmoothness = 0.1
 
--- Configurações do ESP
-local espActive = false
+
 local espBoxColor = Color3.new(1, 0, 0)
 local espTextColor = Color3.new(1, 1, 1)
 local espTextSize = 14
 local espTextFont = Enum.Font.SourceSansBold
 
--- Função para calcular a distância entre dois pontos
-local function calculateDistance(position1, position2)
+
     return (position1 - position2).Magnitude
 end
 
--- Função para encontrar o jogador mais próximo
-local function findClosestPlayer()
+
     local closestPlayer = nil
     local closestDistance = aimbotRange
 
@@ -42,18 +38,15 @@ local function findClosestPlayer()
     return closestPlayer
 end
 
--- Função para ativar/desativar o Aimbot
-local function toggleAimbot()
+
     aimbotActive = not aimbotActive
 end
 
--- Função para ativar/desativar o ESP
 local function toggleESP()
     espActive = not espActive
 end
 
--- Loop principal do Aimbot
-runService.Heartbeat:Connect(function()
+
     if aimbotActive then
         local closestPlayer = findClosestPlayer()
         if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -66,8 +59,7 @@ runService.Heartbeat:Connect(function()
     end
 end)
 
--- Loop principal do ESP
-runService.Heartbeat:Connect(function()
+
     if espActive then
         for _, player in pairs(players:GetPlayers()) do
             if player ~= player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
@@ -100,9 +92,10 @@ runService.Heartbeat:Connect(function()
     end
 end)
 
--- Interface de usuário
+
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = player.PlayerGui
+
 
 -- Botão de Aimbot
 local aimButton = Instance.new("TextButton")
