@@ -1,59 +1,72 @@
---[[  
-  KING LEGACY GOD MODE | AUTO-FARM | INFINITE BELI | TELEPORT | AIMBOT  
-  ATUALIZADO E TESTADO (VERSÃO MAIS RECENTE)  
---]]  
 
-local Players = game:GetService("Players")  
-local LocalPlayer = Players.LocalPlayer  
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()  
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
 
--- GOD MODE (INVENCÍVEL)  
-Character:FindFirstChildOfClass("Humanoid").Health = math.huge  
-Character:FindFirstChildOfClass("Humanoid").MaxHealth = math.huge  
+local flying = false
+local flySpeed = 50
 
--- INFINITE BELI (DINHEIRO INFINITO)  
-while true do  
-    wait(0.5)  
-    game:GetService("ReplicatedStorage").RemoteFunctions.BeliFunction:InvokeServer(999999999)  
-end  
+-- Função para ativar/desativar o fly
+local function toggleFly()
+    flying = not flying
+    if flying then
+        humanoid:ChangeState(Enum.HumanoidStateType.Flying)
+    else
+        humanoid:ChangeState(Enum.HumanoidStateType.Landed)
+    end
+end
 
--- AUTO-FARM (MATAR MOBS AUTOMATICAMENTE)  
-for _, mob in pairs(game:GetService("Workspace").Mobs:GetChildren()) do  
-    if mob:FindFirstChild("Humanoid") then  
-        Character.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame  
-        game:GetService("VirtualInputManager"):SendKeyEvent(true, "X", false, nil) -- ATAQUE AUTOMÁTICO  
-    end  
-end  
+-- Controle de toque para mobile
+local touchStartPosition = nil
+local touchEndPosition = nil
+local isFlyingButtonHeld = false
 
--- TELEPORT (IR PARA QUALQUER ILHA)  
-local function TeleportToIsland(islandName)  
-    local island = game:GetService("Workspace").Islands:FindFirstChild(islandName)  
-    if island then  
-        Character.HumanoidRootPart.CFrame = island.CFrame + Vector3.new(0, 10, 0)  
-    end  
-end  
+userInputService.TouchStarted:Connect(function(touch)
+    touchStartPosition = touch.Position
+    -- Verifica se o toque foi em uma área específica (botão de fly)
+    if touchStartPosition.X < 100 and touchStartPosition.Y > 500 then
+        isFlyingButtonHeld = true
+        toggleFly()
+    end
+end)
 
-TeleportToIsland("Skull Island") -- TROCA PRA QUALQUER ILHA  
+userInputService.TouchEnded:Connect(function(touch)
+    touchEndPosition = touch.Position
+    if isFlyingButtonHeld then
+        isFlyingButtonHeld = false
+        toggleFly()
+    end
+end)
 
--- AIMBOT (MIRA AUTOMÁTICA EM PLAYERS)  
-local function GetClosestPlayer()  
-    local closestPlayer, closestDistance = nil, math.huge  
-    for _, player in pairs(Players:GetPlayers()) do  
-        if player ~= LocalPlayer and player.Character then  
-            local distance = (player.Character.HumanoidRootPart.Position - Character.HumanoidRootPart.Position).Magnitude  
-            if distance < closestDistance then  
-                closestPlayer = player  
-                closestDistance = distance  
-            end  
-        end  
-    end  
-    return closestPlayer  
-end  
+-- Movimento de fly
+runService.Heartbeat:Connect(function()
+    if flying then
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+        if rootPart then
+            local moveDirection = Vector3.new(0, 0, 0)
 
-game:GetService("RunService").RenderStepped:Connect(function()  
-    local target = GetClosestPlayer()  
-    if target then  
-        Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -5)  
-        game:GetService("VirtualInputManager"):SendKeyEvent(true, "X", false, nil) -- ATAQUE DIRETO  
-    end  
-end)  
+            -- Controles de movimento (exemplo: touch ou teclado)
+            if userInputService:IsKeyDown(Enum.KeyCode.W) then
+                moveDirection = moveDirection + Vector3.new(0, 0, -1)
+            end
+            if userInputService:IsKeyDown(Enum.KeyCode.S) then
+                moveDirection = moveDirection + Vector3.new(0, 0, 1)
+            end
+            if userInputService:IsKeyDown(Enum.KeyCode.A) then
+                moveDirection = moveDirection + Vector3.new(-1, 0, 0)
+            end
+            if userInputService:IsKeyDown(Enum.KeyCode.D) then
+                moveDirection = moveDirection + Vector3.new(1, 0, 0)
+            end
+
+            -- Aplica o movimento
+            if moveDirection.Magnitude > 0 then
+                rootPart.Velocity = moveDirection.Unit * flySpeed
+            else
+                rootPart.Velocity = Vector3.new(0, 0, 0)
+            end
+        end
+    end
+end)
