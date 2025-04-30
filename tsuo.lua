@@ -7,6 +7,10 @@ local runService = game:GetService("RunService")
 
 local flying = false
 local flySpeed = 50
+local dashSpeed = 100
+local dashCooldown = 2
+local lastDash = 0
+
 local flyForce = Instance.new("BodyVelocity")
 flyForce.Velocity = Vector3.new(0, 0, 0)
 flyForce.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
@@ -47,6 +51,16 @@ flyButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 flyButton.BorderSizePixel = 0
 flyButton.Parent = screenGui
 
+-- Botão Dash
+local dashButton = Instance.new("TextButton")
+dashButton.Size = UDim2.new(0, 100, 0, 50)
+dashButton.Position = UDim2.new(1, -110, 1, -120)
+dashButton.Text = "Dash"
+dashButton.TextColor3 = Color3.new(1, 1, 1)
+dashButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.8)
+dashButton.BorderSizePixel = 0
+dashButton.Parent = screenGui
+
 -- Função para ativar/desativar o fly
 local function toggleFly()
  flying = not flying
@@ -64,8 +78,23 @@ local function toggleFly()
  end
 end
 
+-- Função para dash
+local function dash()
+ if tick() - lastDash >= dashCooldown then
+ lastDash = tick()
+ local camera = workspace.CurrentCamera
+ local forward = camera.CFrame.LookVector
+ flyForce.Velocity = forward * dashSpeed
+ wait(0.2)
+ flyForce.Velocity = Vector3.new(0, 0, 0)
+ end
+end
+
 -- Evento do botão On/Off
 flyButton.MouseButton1Click:Connect(toggleFly)
+
+-- Evento do botão Dash
+dashButton.MouseButton1Click:Connect(dash)
 
 -- Controle do analógico virtual
 local joystickActive = false
@@ -78,8 +107,6 @@ end)
 
 joystickButton.MouseButton1Up:Connect(function()
  joystickActive = false
- joystickButton.Position = UDim2.new(0.5, t(function()
- joystickActive = false
  joystickButton.Position = UDim2.new(0.5, -25, 0.5, -25)
  moveDirection = Vector3.new(0, 0, 0)
 end)
@@ -91,6 +118,10 @@ userInputService.TouchMoved:Connect(function(touch)
  local frameSize = joystickFrame.AbsoluteSize
  local relativePosition = Vector2.new(
  (touchPosition.X - framePosition.X) / frameSize.X,
+ (touchPosition.Y - framePosition.Y) / frameSize.Y
+ )
+ relativePosition = Vector2.new(
+ math.clamp(relativePosition.X, 0, (touchPosition.X - framePosition.X) / frameSize.X,
  (touchPosition.Y - framePosition.Y) / frameSize.Y
  )
  relativePosition = Vector2.new(
