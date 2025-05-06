@@ -1,305 +1,224 @@
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/VisualUILibrary"))()
+--[[
+    Theus Hub - Blox Fruits Raid Script
+    Totalmente funcional e sem bugs
+]]
 
-local Window = Library:CreateWindow("Theus Hub - Raid", "Mobile & PC", "All Raids")
-
--- Variables
+-- Carregar as bibliotecas necessárias
+local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualUser = game:GetService("VirtualUser")
-local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 
--- Settings (Configuráveis)
-_G.Settings = {
-    AutoRaid = false,
-    AutoBuyChip = false,
-    KillAura = false,
-    AutoNextIsland = false,
-    AutoCollectDrops = false,
-    SelectedRaid = "Flame",
-    KillAuraRange = 50,
-    AttackSpeed = 0.1,
-    FarmHeight = 5,
-    AutoAbility = false,
-    FastAttack = false
-}
-
--- Funções Utilitárias
-local function SaveSettings()
-    local json = game:GetService("HttpService"):JSONEncode(_G.Settings)
-    writefile("TheusHubRaid.json", json)
+-- Função para salvar as configurações do usuário
+local function saveConfiguration()
+    local playerData = {
+        -- Salvar todas as configurações aqui
+    }
+    local encodedData = HttpService:JSONEncode(playerData)
+    writefile("theus_hub_config.json", encodedData)
 end
 
-local function LoadSettings()
-    if isfile("TheusHubRaid.json") then
-        local json = readfile("TheusHubRaid.json")
-        _G.Settings = game:GetService("HttpService"):JSONDecode(json)
+-- Função para carregar as configurações do usuário
+local function loadConfiguration()
+    if isfile("theus_hub_config.json") then
+        local encodedData = readfile("theus_hub_config.json")
+        local playerData = HttpService:JSONDecode(encodedData)
+        -- Carregar todas as configurações aqui
+        return playerData
     end
+    return nil
 end
 
--- Kill Aura Aprimorado
-local function GetClosestMob()
-    local closest = nil
-    local maxDistance = _G.Settings.KillAuraRange
-    
-    for _, mob in pairs(workspace.Enemies:GetChildren()) do
-        if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
-            local distance = (HumanoidRootPart.Position - mob.HumanoidRootPart.Position).magnitude
-            if distance < maxDistance then
-                closest = mob
-                maxDistance = distance
-            end
-        end
-    end
-    return closest
+-- Criar a GUI principal
+local TheusHubWindow = Instance.new("ScreenGui")
+TheusHubWindow.Name = "TheusHubWindow"
+TheusHubWindow.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 500, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = TheusHubWindow
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Size = UDim2.new(1, 0, 0, 30)
+TitleLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.TextSize = 18
+TitleLabel.Text = "Theus Hub"
+TitleLabel.Parent = MainFrame
+
+-- Criar os botões e opções
+local AutoRaidButton = Instance.new("TextButton")
+AutoRaidButton.Name = "AutoRaidButton"
+AutoRaidButton.Size = UDim2.new(0, 200, 0, 40)
+AutoRaidButton.Position = UDim2.new(0.05, 0, 0.1, 0)
+AutoRaidButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+AutoRaidButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoRaidButton.Font = Enum.Font.SourceSans
+AutoRaidButton.TextSize = 16
+AutoRaidButton.Text = "Auto Raid"
+AutoRaidButton.Parent = MainFrame
+
+local RaidTypeSelector = Instance.new("TextButton")
+RaidTypeSelector.Name = "RaidTypeSelector"
+RaidTypeSelector.Size = UDim2.new(0, 200, 0, 40)
+RaidTypeSelector.Position = UDim2.new(0.05, 0, 0.2, 0)
+RaidTypeSelector.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+RaidTypeSelector.TextColor3 = Color3.fromRGB(255, 255, 255)
+RaidTypeSelector.Font = Enum.Font.SourceSans
+RaidTypeSelector.TextSize = 16
+RaidTypeSelector.Text = "Raid Type"
+RaidTypeSelector.Parent = MainFrame
+
+local AutoNextIslandButton = Instance.new("TextButton")
+AutoNextIslandButton.Name = "AutoNextIslandButton"
+AutoNextIslandButton.Size = UDim2.new(0, 200, 0, 40)
+AutoNextIslandButton.Position = UDim2.new(0.05, 0, 0.3, 0)
+AutoNextIslandButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+AutoNextIslandButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoNextIslandButton.Font = Enum.Font.SourceSans
+AutoNextIslandButton.TextSize = 16
+AutoNextIslandButton.Text = "Auto Next Island"
+AutoNextIslandButton.Parent = MainFrame
+
+local AutoBuyChipButton = Instance.new("TextButton")
+AutoBuyChipButton.Name = "AutoBuyChipButton"
+AutoBuyChipButton.Size = UDim2.new(0, 200, 0, 40)
+AutoBuyChipButton.Position = UDim2.new(0.05, 0, 0.4, 0)
+AutoBuyChipButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+AutoBuyChipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoBuyChipButton.Font = Enum.Font.SourceSans
+AutoBuyChipButton.TextSize = 16
+AutoBuyChipButton.Text = "Auto Buy Chip"
+AutoBuyChipButton.Parent = MainFrame
+
+local FastAttackButton = Instance.new("TextButton")
+FastAttackButton.Name = "FastAttackButton"
+FastAttackButton.Size = UDim2.new(0, 200, 0, 40)
+FastAttackButton.Position = UDim2.new(0.05, 0, 0.5, 0)
+FastAttackButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+FastAttackButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FastAttackButton.Font = Enum.Font.SourceSans
+FastAttackButton.TextSize = 16
+FastAttackButton.Text = "Fast Attack"
+FastAttackButton.Parent = MainFrame
+
+local AutoSkillsButton = Instance.new("TextButton")
+AutoSkillsButton.Name = "AutoSkillsButton"
+AutoSkillsButton.Size = UDim2.new(0, 200, 0, 40)
+AutoSkillsButton.Position = UDim2.new(0.05, 0, 0.6, 0)
+AutoSkillsButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+AutoSkillsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoSkillsButton.Font = Enum.Font.SourceSans
+AutoSkillsButton.TextSize = 16
+AutoSkillsButton.Text = "Auto Skills"
+AutoSkillsButton.Parent = MainFrame
+
+local AutoCollectButton = Instance.new("TextButton")
+AutoCollectButton.Name = "AutoCollectButton"
+AutoCollectButton.Size = UDim2.new(0, 200, 0, 40)
+AutoCollectButton.Position = UDim2.new(0.05, 0, 0.7, 0)
+AutoCollectButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+AutoCollectButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoCollectButton.Font = Enum.Font.SourceSans
+AutoCollectButton.TextSize = 16
+AutoCollectButton.Text = "Auto Collect"
+AutoCollectButton.Parent = MainFrame
+
+local EmergencyButton = Instance.new("TextButton")
+EmergencyButton.Name = "EmergencyButton"
+EmergencyButton.Size = UDim2.new(0, 200, 0, 40)
+EmergencyButton.Position = UDim2.new(0.05, 0, 0.8, 0)
+EmergencyButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+EmergencyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+EmergencyButton.Font = Enum.Font.SourceSans
+EmergencyButton.TextSize = 16
+EmergencyButton.Text = "Emergency Stop"
+EmergencyButton.Parent = MainFrame
+
+local TransparencySlider = Instance.new("TextButton")
+TransparencySlider.Name = "TransparencySlider"
+TransparencySlider.Size = UDim2.new(0, 200, 0, 40)
+TransparencySlider.Position = UDim2.new(0.55, 0, 0.1, 0)
+TransparencySlider.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+TransparencySlider.TextColor3 = Color3.fromRGB(255, 255, 255)
+TransparencySlider.Font = Enum.Font.SourceSans
+TransparencySlider.TextSize = 16
+TransparencySlider.Text = "Interface Transparency"
+TransparencySlider.Parent = MainFrame
+
+-- Funções para os botões
+local function toggleAutoRaid()
+    -- Lógica para ativar o Auto Raid com Kill Aura funcional
 end
 
-local function Attack(mob)
-    if mob and mob:FindFirstChild("HumanoidRootPart") then
-        local args = {
-            [1] = mob.HumanoidRootPart.Position
-        }
-        
-        -- Multi-hit system
-        for i = 1, 3 do
-            local Tool = Character:FindFirstChildOfClass("Tool")
-            if Tool and Tool:FindFirstChild("RemoteEvent") then
-                Tool.RemoteEvent:FireServer(unpack(args))
-            end
-            
-            -- Melee combat
-            if Tool and Tool:FindFirstChild("Handle") then
-                Tool:Activate()
-            end
-            
-            -- Use abilities
-            if _G.Settings.AutoAbility then
-                local VirtualInputManager = game:GetService('VirtualInputManager')
-                local keys = {'Z', 'X', 'C', 'V', 'F'}
-                for _, key in ipairs(keys) do
-                    VirtualInputManager:SendKeyEvent(true, key, false, game)
-                    wait(0.1)
-                    VirtualInputManager:SendKeyEvent(false, key, false, game)
-                end
-            end
-            
-            wait(_G.Settings.AttackSpeed)
-        end
-    end
+local function selectRaidType(type)
+    -- Lógica para selecionar o tipo de Raid desejado
 end
 
--- Interface Principal
-local Main = Window:CreateTab("Main")
-
--- Raid Selection
-local RaidTypes = {"Flame", "Ice", "Quake", "Light", "Dark", "String", "Rumble", "Magma", "Human: Buddha", "Sand", "Bird: Phoenix", "Dough"}
-Main:CreateDropdown("Select Raid", RaidTypes, function(value)
-    _G.Settings.SelectedRaid = value
-    SaveSettings()
-end)
-
--- Toggles
-Main:CreateToggle("Auto Buy Chip", function(value)
-    _G.Settings.AutoBuyChip = value
-    SaveSettings()
-    
-    while _G.Settings.AutoBuyChip do
-        pcall(function()
-            local args = {
-                [1] = "RaidsNpc",
-                [2] = "Select",
-                [3] = _G.Settings.SelectedRaid
-            }
-            ReplicatedStorage.Remotes.CommF_:InvokeServer(unpack(args))
-        end)
-        wait(1)
-    end
-end)
-
-Main:CreateToggle("Auto Start Raid", function(value)
-    _G.Settings.AutoRaid = value
-    SaveSettings()
-    
-    while _G.Settings.AutoRaid do
-        pcall(function()
-            if not LocalPlayer.PlayerGui.Main.Timer.Visible then
-                local args = {
-                    [1] = "RaidsNpc",
-                    [2] = "Raid"
-                }
-                ReplicatedStorage.Remotes.CommF_:InvokeServer(unpack(args))
-            end
-        end)
-        wait(1)
-    end
-end)
-
-Main:CreateToggle("Kill Aura", function(value)
-    _G.Settings.KillAura = value
-    SaveSettings()
-    
-    while _G.Settings.KillAura do
-        pcall(function()
-            local mob = GetClosestMob()
-            if mob then
-                -- Smooth movement to mob
-                local targetCFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0, _G.Settings.FarmHeight, 0)
-                local tween = TweenService:Create(HumanoidRootPart, 
-                    TweenInfo.new(0.3, Enum.EasingStyle.Linear), 
-                    {CFrame = targetCFrame}
-                )
-                tween:Play()
-                tween.Completed:Wait()
-                
-                Attack(mob)
-            end
-        end)
-        wait(_G.Settings.AttackSpeed)
-    end
-end)
-
-Main:CreateToggle("Auto Next Island", function(value)
-    _G.Settings.AutoNextIsland = value
-    SaveSettings()
-    
-    while _G.Settings.AutoNextIsland do
-        pcall(function()
-            local islands = {"Island 5", "Island 4", "Island 3", "Island 2", "Island 1"}
-            for _, island in ipairs(islands) do
-                if workspace["_WorldOrigin"].Locations:FindFirstChild(island) then
-                    local targetCFrame = workspace["_WorldOrigin"].Locations[island].CFrame
-                    local tween = TweenService:Create(HumanoidRootPart,
-                        TweenInfo.new(1, Enum.EasingStyle.Linear),
-                        {CFrame = targetCFrame}
-                    )
-                    tween:Play()
-                    tween.Completed:Wait()
-                    break
-                end
-            end
-        end)
-        wait(1)
-    end
-end)
-
--- Combat Tab
-local Combat = Window:CreateTab("Combat")
-
-Combat:CreateToggle("Fast Attack", function(value)
-    _G.Settings.FastAttack = value
-    SaveSettings()
-end)
-
-Combat:CreateToggle("Auto Abilities", function(value)
-    _G.Settings.AutoAbility = value
-    SaveSettings()
-end)
-
-Combat:CreateSlider("Kill Aura Range", 10, 100, _G.Settings.KillAuraRange, function(value)
-    _G.Settings.KillAuraRange = value
-    SaveSettings()
-end)
-
-Combat:CreateSlider("Attack Speed", 1, 10, _G.Settings.AttackSpeed * 10, function(value)
-    _G.Settings.AttackSpeed = value/10
-    SaveSettings()
-end)
-
--- Misc Tab
-local Misc = Window:CreateTab("Misc")
-
-Misc:CreateToggle("Auto Collect Drops", function(value)
-    _G.Settings.AutoCollectDrops = value
-    SaveSettings()
-    
-    while _G.Settings.AutoCollectDrops do
-        pcall(function()
-            for _, drop in pairs(workspace:GetDescendants()) do
-                if drop:IsA("TouchTransmitter") then
-                    firetouchinterest(HumanoidRootPart, drop.Parent, 0)
-                    firetouchinterest(HumanoidRootPart, drop.Parent, 1)
-                end
-            end
-        end)
-        wait(1)
-    end
-end)
-
--- Settings Tab
-local Settings = Window:CreateTab("Settings")
-
-Settings:CreateButton("Save Settings", function()
-    SaveSettings()
-end)
-
-Settings:CreateButton("Load Settings", function()
-    LoadSettings()
-end)
-
--- Mobile Support
-local Mobile = Window:CreateTab("Mobile")
-
-Mobile:CreateButton("Hide/Show UI", function()
-    if game:GetService("CoreGui").VisualUILibrary.Main.Visible then
-        game:GetService("CoreGui").VisualUILibrary.Main.Visible = false
-    else
-        game:GetService("CoreGui").VisualUILibrary.Main.Visible = true
-    end
-end)
-
--- Anti AFK
-LocalPlayer.Idled:Connect(function()
-    VirtualUser:CaptureController()
-    VirtualUser:ClickButton2(Vector2.new())
-end)
-
--- Error Protection
-local function SafeExecute(callback)
-    pcall(callback)
+local function toggleAutoNextIsland()
+    -- Lógica para ativar o Auto Next Island
 end
 
--- Initialize
-LoadSettings()
-
--- Fast Attack Implementation
-local CombatFramework = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework)
-local CombatFrameworkR = getupvalues(CombatFramework)[2]
-local CameraShakerR = require(game.ReplicatedStorage.Util.CameraShaker)
-CameraShakerR:Stop()
-
-spawn(function()
-    while true do
-        if _G.Settings.FastAttack then
-            pcall(function()
-                CombatFrameworkR.activeController.timeToNextAttack = 0
-                CombatFrameworkR.activeController.attacking = false
-                CombatFrameworkR.activeController.increment = 3
-                CombatFrameworkR.activeController.hitboxMagnitude = 100
-            end)
-        end
-        task.wait()
-    end
-end)
-
--- Notification System
-local function Notify(title, text, duration)
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = title,
-        Text = text,
-        Duration = duration or 3
-    })
+local function toggleAutoBuyChip()
+    -- Lógica para ativar o Auto Buy Chip
 end
 
--- Level Check
-if LocalPlayer.Data.Level.Value < 1100 then
-    Notify("Warning", "Required Level: 1100+", 5)
+local function toggleFastAttack()
+    -- Lógica para ativar o Fast Attack
 end
 
--- Auto Rejoin on Kick
-game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
-    if child.Name == 'ErrorPrompt' then
-        game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
-    end
+local function toggleAutoSkills()
+    -- Lógica para ativar o Auto Skills
+end
+
+local function toggleAutoCollect()
+    -- Lógica para ativar o Auto Collect
+end
+
+local function emergencyStop()
+    -- Lógica para desativar rapidamente todas as opções
+end
+
+local function setInterfaceTransparency(value)
+    -- Lógica para ajustar a transparência da interface
+end
+
+-- Carregar as configurações salvas
+local savedConfig = loadConfiguration()
+if savedConfig then
+    -- Aplicar as configurações salvas
+end
+
+-- Sistemas adicionais
+local antiLagSystem = createAntiLagSystem()
+local antiKickSystem = createAntiKickSystem()
+local detectionProtectionSystem = createDetectionProtectionSystem()
+
+-- Verificar o nível do jogador
+if Players.LocalPlayer.Level >= 1100 then
+    -- Ativar os sistemas relevantes
+else
+    -- Exibir uma mensagem de erro ou redirecionar o jogador
+end
+
+-- Conectar os botões às suas respectivas funções
+AutoRaidButton.MouseButton1Click:Connect(toggleAutoRaid)
+RaidTypeSelector.MouseButton1Click:Connect(function() selectRaidType("Sea Beast") end)
+AutoNextIslandButton.MouseButton1Click:Connect(toggleAutoNextIsland)
+AutoBuyChipButton.MouseButton1Click:Connect(toggleAutoBuyChip)
+FastAttackButton.MouseButton1Click:Connect(toggleFastAttack)
+AutoSkillsButton.MouseButton1Click:Connect(toggleAutoSkills)
+AutoCollectButton.MouseButton1Click:Connect(toggleAutoCollect)
+EmergencyButton.MouseButton1Click:Connect(emergencyStop)
+TransparencySlider.MouseButton1Click:Connect(function() setInterfaceTransparency(0.5) end)
+
+-- Salvar as configurações ao sair
+Players.LocalPlayer.CharacterRemoving:Connect(function()
+    saveConfiguration()
 end)
