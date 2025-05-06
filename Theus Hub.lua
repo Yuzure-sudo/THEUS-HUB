@@ -1,224 +1,305 @@
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Theus Hub - Raid", "Midnight")
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/VisualUILibrary"))()
 
--- Main
-local Main = Window:NewTab("Main")
-local MainSection = Main:NewSection("Raid Selection")
+local Window = Library:CreateWindow("Theus Hub - Raid", "Mobile & PC", "All Raids")
 
 -- Variables
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
+local TweenService = game:GetService("TweenService")
 
--- Raid Types
-local raidTypes = {
-    "Flame",
-    "Ice",
-    "Quake",
-    "Light",
-    "Dark",
-    "String",
-    "Rumble",
-    "Magma",
-    "Human: Buddha",
-    "Sand",
-    "Bird: Phoenix",
-    "Dough"
+-- Settings (Configuráveis)
+_G.Settings = {
+    AutoRaid = false,
+    AutoBuyChip = false,
+    KillAura = false,
+    AutoNextIsland = false,
+    AutoCollectDrops = false,
+    SelectedRaid = "Flame",
+    KillAuraRange = 50,
+    AttackSpeed = 0.1,
+    FarmHeight = 5,
+    AutoAbility = false,
+    FastAttack = false
 }
 
--- Dropdown for Raid Selection
-local selectedRaid = "Flame"
-MainSection:NewDropdown("Select Raid", "Choose your raid type", raidTypes, function(value)
-    selectedRaid = value
-end)
+-- Funções Utilitárias
+local function SaveSettings()
+    local json = game:GetService("HttpService"):JSONEncode(_G.Settings)
+    writefile("TheusHubRaid.json", json)
+end
 
--- Auto Functions
-MainSection:NewToggle("Auto Buy Chip", "Automatically buys raid chip", function(state)
-    getgenv().AutoBuyChip = state
-    while getgenv().AutoBuyChip do
-        local args = {
-            [1] = "RaidsNpc",
-            [2] = "Select",
-            [3] = selectedRaid
-        }
-        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
-        wait(1)
+local function LoadSettings()
+    if isfile("TheusHubRaid.json") then
+        local json = readfile("TheusHubRaid.json")
+        _G.Settings = game:GetService("HttpService"):JSONDecode(json)
     end
-end)
+end
 
-MainSection:NewToggle("Auto Start Raid", "Automatically starts raid", function(state)
-    getgenv().AutoStartRaid = state
-    while getgenv().AutoStartRaid do
-        if game:GetService("Players")["LocalPlayer"].PlayerGui.Main.Timer.Visible == false then
-            local args = {
-                [1] = "RaidsNpc",
-                [2] = "Raid"
-            }
-            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
-        end
-        wait(1)
-    end
-end)
-
--- Kill Aura with Advanced Features
-local CombatSection = Main:NewSection("Combat")
-
+-- Kill Aura Aprimorado
 local function GetClosestMob()
-    local closestMob = nil
-    local shortestDistance = math.huge
+    local closest = nil
+    local maxDistance = _G.Settings.KillAuraRange
     
     for _, mob in pairs(workspace.Enemies:GetChildren()) do
         if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
             local distance = (HumanoidRootPart.Position - mob.HumanoidRootPart.Position).magnitude
-            if distance < shortestDistance then
-                closestMob = mob
-                shortestDistance = distance
+            if distance < maxDistance then
+                closest = mob
+                maxDistance = distance
             end
         end
     end
-    
-    return closestMob
+    return closest
 end
 
--- Enhanced Kill Aura
-CombatSection:NewToggle("Kill Aura", "Advanced kill aura with multiple attack patterns", function(state)
-    getgenv().KillAura = state
-    while getgenv().KillAura do
-        local mob = GetClosestMob()
-        if mob then
-            -- Dynamic positioning
-            local randomOffset = Vector3.new(
-                math.random(-2, 2),
-                math.random(3, 5),
-                math.random(-2, 2)
-            )
-            HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame * CFrame.new(randomOffset)
-            
-            -- Multi-hit system
-            for i = 1, 3 do
-                local args = {
-                    [1] = mob.HumanoidRootPart.Position
-                }
-                local Tool = Character:FindFirstChildOfClass("Tool")
-                if Tool and Tool:FindFirstChild("RemoteEvent") then
-                    Tool.RemoteEvent:FireServer(unpack(args))
-                end
-                wait(0.1)
+local function Attack(mob)
+    if mob and mob:FindFirstChild("HumanoidRootPart") then
+        local args = {
+            [1] = mob.HumanoidRootPart.Position
+        }
+        
+        -- Multi-hit system
+        for i = 1, 3 do
+            local Tool = Character:FindFirstChildOfClass("Tool")
+            if Tool and Tool:FindFirstChild("RemoteEvent") then
+                Tool.RemoteEvent:FireServer(unpack(args))
             end
+            
+            -- Melee combat
+            if Tool and Tool:FindFirstChild("Handle") then
+                Tool:Activate()
+            end
+            
+            -- Use abilities
+            if _G.Settings.AutoAbility then
+                local VirtualInputManager = game:GetService('VirtualInputManager')
+                local keys = {'Z', 'X', 'C', 'V', 'F'}
+                for _, key in ipairs(keys) do
+                    VirtualInputManager:SendKeyEvent(true, key, false, game)
+                    wait(0.1)
+                    VirtualInputManager:SendKeyEvent(false, key, false, game)
+                end
+            end
+            
+            wait(_G.Settings.AttackSpeed)
         end
-        wait(0.1)
+    end
+end
+
+-- Interface Principal
+local Main = Window:CreateTab("Main")
+
+-- Raid Selection
+local RaidTypes = {"Flame", "Ice", "Quake", "Light", "Dark", "String", "Rumble", "Magma", "Human: Buddha", "Sand", "Bird: Phoenix", "Dough"}
+Main:CreateDropdown("Select Raid", RaidTypes, function(value)
+    _G.Settings.SelectedRaid = value
+    SaveSettings()
+end)
+
+-- Toggles
+Main:CreateToggle("Auto Buy Chip", function(value)
+    _G.Settings.AutoBuyChip = value
+    SaveSettings()
+    
+    while _G.Settings.AutoBuyChip do
+        pcall(function()
+            local args = {
+                [1] = "RaidsNpc",
+                [2] = "Select",
+                [3] = _G.Settings.SelectedRaid
+            }
+            ReplicatedStorage.Remotes.CommF_:InvokeServer(unpack(args))
+        end)
+        wait(1)
     end
 end)
 
--- Auto Next Island with Visual Feedback
-local TeleportSection = Main:NewSection("Auto Island")
-
-TeleportSection:NewToggle("Auto Next Island", "Automatically moves to next island with improved pathfinding", function(state)
-    getgenv().AutoNextIsland = state
-    while getgenv().AutoNextIsland do
-        local islands = {"Island 5", "Island 4", "Island 3", "Island 2", "Island 1"}
-        for _, island in ipairs(islands) do
-            if game:GetService("Workspace")["_WorldOrigin"].Locations:FindFirstChild(island) then
-                local islandCFrame = game:GetService("Workspace")["_WorldOrigin"].Locations:FindFirstChild(island).CFrame
-                
-                -- Smooth teleportation
-                local steps = 10
-                local startPos = HumanoidRootPart.Position
-                local endPos = islandCFrame.Position
-                
-                for i = 1, steps do
-                    local progress = i / steps
-                    local newPos = startPos:Lerp(endPos, progress)
-                    HumanoidRootPart.CFrame = CFrame.new(newPos)
-                    wait(0.03)
-                end
-                
-                break
+Main:CreateToggle("Auto Start Raid", function(value)
+    _G.Settings.AutoRaid = value
+    SaveSettings()
+    
+    while _G.Settings.AutoRaid do
+        pcall(function()
+            if not LocalPlayer.PlayerGui.Main.Timer.Visible then
+                local args = {
+                    [1] = "RaidsNpc",
+                    [2] = "Raid"
+                }
+                ReplicatedStorage.Remotes.CommF_:InvokeServer(unpack(args))
             end
-        end
+        end)
+        wait(1)
+    end
+end)
+
+Main:CreateToggle("Kill Aura", function(value)
+    _G.Settings.KillAura = value
+    SaveSettings()
+    
+    while _G.Settings.KillAura do
+        pcall(function()
+            local mob = GetClosestMob()
+            if mob then
+                -- Smooth movement to mob
+                local targetCFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0, _G.Settings.FarmHeight, 0)
+                local tween = TweenService:Create(HumanoidRootPart, 
+                    TweenInfo.new(0.3, Enum.EasingStyle.Linear), 
+                    {CFrame = targetCFrame}
+                )
+                tween:Play()
+                tween.Completed:Wait()
+                
+                Attack(mob)
+            end
+        end)
+        wait(_G.Settings.AttackSpeed)
+    end
+end)
+
+Main:CreateToggle("Auto Next Island", function(value)
+    _G.Settings.AutoNextIsland = value
+    SaveSettings()
+    
+    while _G.Settings.AutoNextIsland do
+        pcall(function()
+            local islands = {"Island 5", "Island 4", "Island 3", "Island 2", "Island 1"}
+            for _, island in ipairs(islands) do
+                if workspace["_WorldOrigin"].Locations:FindFirstChild(island) then
+                    local targetCFrame = workspace["_WorldOrigin"].Locations[island].CFrame
+                    local tween = TweenService:Create(HumanoidRootPart,
+                        TweenInfo.new(1, Enum.EasingStyle.Linear),
+                        {CFrame = targetCFrame}
+                    )
+                    tween:Play()
+                    tween.Completed:Wait()
+                    break
+                end
+            end
+        end)
+        wait(1)
+    end
+end)
+
+-- Combat Tab
+local Combat = Window:CreateTab("Combat")
+
+Combat:CreateToggle("Fast Attack", function(value)
+    _G.Settings.FastAttack = value
+    SaveSettings()
+end)
+
+Combat:CreateToggle("Auto Abilities", function(value)
+    _G.Settings.AutoAbility = value
+    SaveSettings()
+end)
+
+Combat:CreateSlider("Kill Aura Range", 10, 100, _G.Settings.KillAuraRange, function(value)
+    _G.Settings.KillAuraRange = value
+    SaveSettings()
+end)
+
+Combat:CreateSlider("Attack Speed", 1, 10, _G.Settings.AttackSpeed * 10, function(value)
+    _G.Settings.AttackSpeed = value/10
+    SaveSettings()
+end)
+
+-- Misc Tab
+local Misc = Window:CreateTab("Misc")
+
+Misc:CreateToggle("Auto Collect Drops", function(value)
+    _G.Settings.AutoCollectDrops = value
+    SaveSettings()
+    
+    while _G.Settings.AutoCollectDrops do
+        pcall(function()
+            for _, drop in pairs(workspace:GetDescendants()) do
+                if drop:IsA("TouchTransmitter") then
+                    firetouchinterest(HumanoidRootPart, drop.Parent, 0)
+                    firetouchinterest(HumanoidRootPart, drop.Parent, 1)
+                end
+            end
+        end)
         wait(1)
     end
 end)
 
 -- Settings Tab
-local Settings = Window:NewTab("Settings")
-local SettingsSection = Settings:NewSection("Configuration")
+local Settings = Window:CreateTab("Settings")
 
--- Kill Aura Settings
-SettingsSection:NewSlider("Kill Aura Range", "Adjust the kill aura range", 100, 10, function(value)
-    getgenv().KillAuraRange = value
+Settings:CreateButton("Save Settings", function()
+    SaveSettings()
 end)
 
-SettingsSection:NewSlider("Attack Speed", "Adjust attack speed", 10, 1, function(value)
-    getgenv().AttackSpeed = value/10
+Settings:CreateButton("Load Settings", function()
+    LoadSettings()
 end)
 
--- Auto Farm Height
-SettingsSection:NewSlider("Farm Height", "Adjust farming height", 20, 1, function(value)
-    getgenv().FarmHeight = value
-end)
+-- Mobile Support
+local Mobile = Window:CreateTab("Mobile")
 
--- Misc Features
-local Misc = Window:NewTab("Misc")
-local MiscSection = Misc:NewSection("Extra Features")
-
-MiscSection:NewToggle("Auto Collect Drops", "Automatically collects drops", function(state)
-    getgenv().AutoCollect = state
-    while getgenv().AutoCollect do
-        for _, drop in pairs(workspace.Map:GetDescendants()) do
-            if drop:IsA("TouchTransmitter") then
-                firetouchinterest(HumanoidRootPart, drop.Parent, 0)
-                firetouchinterest(HumanoidRootPart, drop.Parent, 1)
-            end
-        end
-        wait(1)
+Mobile:CreateButton("Hide/Show UI", function()
+    if game:GetService("CoreGui").VisualUILibrary.Main.Visible then
+        game:GetService("CoreGui").VisualUILibrary.Main.Visible = false
+    else
+        game:GetService("CoreGui").VisualUILibrary.Main.Visible = true
     end
 end)
 
--- Stats Display
-local Stats = Window:NewTab("Stats")
-local StatsSection = Stats:NewSection("Raid Information")
-
-local function UpdateStats()
-    while wait(1) do
-        if game:GetService("Players")["LocalPlayer"].PlayerGui.Main.Timer.Visible then
-            local timeLeft = game:GetService("Players")["LocalPlayer"].PlayerGui.Main.Timer.Text
-            StatsSection:UpdateLabel("Time Left: " .. timeLeft)
-        end
-    end
-end
-coroutine.wrap(UpdateStats)()
-
--- Anti AFK and Protection
-local VirtualUser = game:GetService('VirtualUser')
-Players.LocalPlayer.Idled:Connect(function()
+-- Anti AFK
+LocalPlayer.Idled:Connect(function()
     VirtualUser:CaptureController()
     VirtualUser:ClickButton2(Vector2.new())
 end)
 
--- Error Handling
+-- Error Protection
 local function SafeExecute(callback)
-    local success, error = pcall(callback)
-    if not success then
-        warn("Error: " .. error)
-    end
+    pcall(callback)
 end
 
--- Initialize Protection
-SafeExecute(function()
-    -- Anti Cheat Bypass
-    local mt = getrawmetatable(game)
-    setreadonly(mt, false)
-    local old = mt.__namecall
-    mt.__namecall = newcclosure(function(self, ...)
-        local args = {...}
-        if getnamecallmethod() == "FireServer" then
-            if tostring(self) == "Banned" then
-                return
-            end
+-- Initialize
+LoadSettings()
+
+-- Fast Attack Implementation
+local CombatFramework = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework)
+local CombatFrameworkR = getupvalues(CombatFramework)[2]
+local CameraShakerR = require(game.ReplicatedStorage.Util.CameraShaker)
+CameraShakerR:Stop()
+
+spawn(function()
+    while true do
+        if _G.Settings.FastAttack then
+            pcall(function()
+                CombatFrameworkR.activeController.timeToNextAttack = 0
+                CombatFrameworkR.activeController.attacking = false
+                CombatFrameworkR.activeController.increment = 3
+                CombatFrameworkR.activeController.hitboxMagnitude = 100
+            end)
         end
-        return old(self, ...)
-    end)
-    setreadonly(mt, true)
+        task.wait()
+    end
+end)
+
+-- Notification System
+local function Notify(title, text, duration)
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = title,
+        Text = text,
+        Duration = duration or 3
+    })
+end
+
+-- Level Check
+if LocalPlayer.Data.Level.Value < 1100 then
+    Notify("Warning", "Required Level: 1100+", 5)
+end
+
+-- Auto Rejoin on Kick
+game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
+    if child.Name == 'ErrorPrompt' then
+        game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+    end
 end)
