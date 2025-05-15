@@ -1,439 +1,530 @@
--- THEUS-HUB Básico Mobile
--- Script ultra simplificado para executores mobile limitados
+-- THEUS-HUB Mobile | Versão Enhanced ESP
+-- Versão 1.5 - Interface aprimorada e ESP garantido
 
 -- Serviços
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
--- Remove GUI anterior se existir
-if game:GetService("CoreGui"):FindFirstChild("TheusHUB") then
-    game:GetService("CoreGui"):FindFirstChild("TheusHUB"):Destroy()
-end
+-- Limpar GUI anterior se existir
+local previousGUI = CoreGui:FindFirstChild("THEUS_HUB_Mobile")
+if previousGUI then previousGUI:Destroy() end
 
--- Criar GUI simples
-local gui = Instance.new("ScreenGui")
-gui.Name = "TheusHUB"
-gui.ResetOnSpawn = false
-gui.Parent = game:GetService("CoreGui")
+-- Criar nova GUI
+local GUI = Instance.new("ScreenGui")
+GUI.Name = "THEUS_HUB_Mobile"
+GUI.ResetOnSpawn = false
+GUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+GUI.Parent = CoreGui
 
 -- Configurações
-local flyEnabled = false
-local espEnabled = false
-local aimbotEnabled = false
+local Settings = {
+    ESP = {
+        Enabled = false,
+        ShowName = true,
+        ShowDistance = true,
+        ShowHealth = true,
+        TeamCheck = false,
+        TeamColor = true,
+        BoxEnabled = true,
+        TextSize = 14,
+        TextColor = Color3.fromRGB(255, 255, 255),
+        BoxColor = Color3.fromRGB(255, 0, 0),
+        BoxThickness = 1,
+        MaxDistance = 500
+    },
+    Theme = {
+        Background = Color3.fromRGB(25, 25, 35),
+        DarkElement = Color3.fromRGB(35, 35, 45),
+        LightElement = Color3.fromRGB(45, 45, 55),
+        Accent = Color3.fromRGB(0, 175, 225),
+        TextColor = Color3.fromRGB(255, 255, 255),
+        BorderSize = 0
+    }
+}
 
--- Frame principal
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 200, 0, 200)
-frame.Position = UDim2.new(0.1, 0, 0.4, 0)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true
-frame.Parent = gui
-
--- Título
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 30)
-title.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-title.BorderSizePixel = 0
-title.Text = "THEUS-HUB"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 18
-title.Font = Enum.Font.SourceSansBold
-title.Parent = frame
-
--- Botão Fly
-local flyButton = Instance.new("TextButton")
-flyButton.Position = UDim2.new(0, 10, 0, 40)
-flyButton.Size = UDim2.new(1, -20, 0, 40)
-flyButton.BackgroundColor3 = Color3.fromRGB(0, 120, 180)
-flyButton.BorderSizePixel = 0
-flyButton.Text = "FLY"
-flyButton.TextColor3 = Color3.fromRGB(255, 255, 255) 
-flyButton.TextSize = 18
-flyButton.Font = Enum.Font.SourceSansBold
-flyButton.Parent = frame
-
--- Botão ESP
-local espButton = Instance.new("TextButton")
-espButton.Position = UDim2.new(0, 10, 0, 90)
-espButton.Size = UDim2.new(1, -20, 0, 40)
-espButton.BackgroundColor3 = Color3.fromRGB(120, 60, 180)
-espButton.BorderSizePixel = 0
-espButton.Text = "ESP"
-espButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-espButton.TextSize = 18
-espButton.Font = Enum.Font.SourceSansBold
-espButton.Parent = frame
-
--- Botão Aimbot
-local aimbotButton = Instance.new("TextButton")
-aimbotButton.Position = UDim2.new(0, 10, 0, 140)
-aimbotButton.Size = UDim2.new(1, -20, 0, 40)
-aimbotButton.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
-aimbotButton.BorderSizePixel = 0
-aimbotButton.Text = "AIMBOT"
-aimbotButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-aimbotButton.TextSize = 18
-aimbotButton.Font = Enum.Font.SourceSansBold
-aimbotButton.Parent = frame
-
--- Controles para subir/descer (Fly)
-local upButton = Instance.new("TextButton")
-upButton.Size = UDim2.new(0, 60, 0, 60)
-upButton.Position = UDim2.new(0, 220, 0, 40)
-upButton.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
-upButton.BorderSizePixel = 0
-upButton.Text = "SUBIR"
-upButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-upButton.TextSize = 14
-upButton.Font = Enum.Font.SourceSansBold
-upButton.Visible = false
-upButton.Parent = gui
-
-local downButton = Instance.new("TextButton")
-downButton.Size = UDim2.new(0, 60, 0, 60)
-downButton.Position = UDim2.new(0, 220, 0, 110)
-downButton.BackgroundColor3 = Color3.fromRGB(150, 70, 30)
-downButton.BorderSizePixel = 0
-downButton.Text = "DESCER"
-downButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-downButton.TextSize = 14
-downButton.Font = Enum.Font.SourceSansBold
-downButton.Visible = false
-downButton.Parent = gui
-
--- Variáveis para as funções
-local flyGyro, flyVel
-local espFolder = Instance.new("Folder", gui)
-espFolder.Name = "ESPItems"
-
--- Função FLY
-local function enableFly()
-    local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-    
-    local hrp = character:FindFirstChild("HumanoidRootPart")
-    
-    flyGyro = Instance.new("BodyGyro")
-    flyGyro.P = 9e4
-    flyGyro.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-    flyGyro.CFrame = hrp.CFrame
-    flyGyro.Parent = hrp
-    
-    flyVel = Instance.new("BodyVelocity")
-    flyVel.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-    flyVel.Velocity = Vector3.new(0, 0.1, 0)
-    flyVel.Parent = hrp
-    
-    upButton.Visible = true
-    downButton.Visible = true
-    
-    -- Variáveis para controle
-    local isUp = false
-    local isDown = false
-    
-    upButton.MouseButton1Down:Connect(function()
-        isUp = true
-    end)
-    
-    upButton.MouseButton1Up:Connect(function()
-        isUp = false
-    end)
-    
-    downButton.MouseButton1Down:Connect(function()
-        isDown = true
-    end)
-    
-    downButton.MouseButton1Up:Connect(function()
-        isDown = false
-    end)
-    
-    -- Loop do voo
-    RunService:BindToRenderStep("FlyLoop", 1, function()
-        if not flyEnabled then return end
-        
-        local character = LocalPlayer.Character
-        if not character or not character:FindFirstChild("HumanoidRootPart") then
-            disableFly()
-            return
-        end
-        
-        local hrp = character:FindFirstChild("HumanoidRootPart")
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        
-        -- Orientação
-        flyGyro.CFrame = CFrame.new(hrp.Position, hrp.Position + Camera.CFrame.LookVector)
-        
-        -- Movimento
-        local moveDir = humanoid.MoveDirection
-        
-        -- Vertical
-        local ySpeed = 0
-        if isUp then
-            ySpeed = 50
-        elseif isDown then
-            ySpeed = -50
-        end
-        
-        -- Aplicar
-        flyVel.Velocity = Vector3.new(
-            moveDir.X * 50,
-            ySpeed,
-            moveDir.Z * 50
-        )
-    end)
+-- Funções de Utilidade para Interface
+local function AddUICorner(parent, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius or 8)
+    corner.Parent = parent
+    return corner
 end
 
-local function disableFly()
-    RunService:UnbindFromRenderStep("FlyLoop")
+local function MakeElementsDraggable(gui, handle)
+    local dragging
+    local dragInput
+    local dragStart
+    local startPos
     
-    if flyGyro then flyGyro:Destroy() end
-    if flyVel then flyVel:Destroy() end
-    
-    flyGyro = nil
-    flyVel = nil
-    
-    upButton.Visible = false
-    downButton.Visible = false
-end
-
--- Função ESP
-local function enableESP()
-    -- Limpar ESP anterior
-    espFolder:ClearAllChildren()
-    
-    -- ESP para jogadores existentes
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            createPlayerESP(player)
-        end
+    local function update(input)
+        local delta = input.Position - dragStart
+        gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
     
-    -- ESP para novos jogadores
-    Players.PlayerAdded:Connect(function(player)
-        if espEnabled then
-            createPlayerESP(player)
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = gui.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
         end
     end)
     
-    -- Atualizar ESP
-    RunService:BindToRenderStep("ESPLoop", 5, function()
-        if not espEnabled then return end
+    handle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+
+-- Funções para controle de status
+local StatusMessages = {}
+local function ShowStatus(message, color, duration)
+    if StatusLabel then
+        table.insert(StatusMessages, {Message = message, Color = color, Time = os.clock(), Duration = duration or 3})
+    end
+end
+
+local function UpdateStatusMessages()
+    if #StatusMessages > 0 and StatusLabel then
+        local currentTime = os.clock()
+        local message = StatusMessages[1](StatusLabel.Text) = message.Message
+        StatusLabel.TextColor3 = message.Color or Settings.Theme.TextColor
         
-        for _, esp in pairs(espFolder:GetChildren()) do
-            updateESP(esp)
+        if currentTime - message.Time >= message.Duration then
+            table.remove(StatusMessages, 1)
+        end
+    end
+end
+
+-- Criar Interface Principal
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 300, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
+MainFrame.BackgroundColor3 = Settings.Theme.Background
+MainFrame.BorderSizePixel = Settings.Theme.BorderSize
+MainFrame.Active = true
+MainFrame.Parent = GUI
+
+AddUICorner(MainFrame, 10)
+
+-- Barra de Título
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Size = UDim2.new(1, 0, 0, 40)
+TitleBar.BackgroundColor3 = Settings.Theme.DarkElement
+TitleBar.BorderSizePixel = Settings.Theme.BorderSize
+TitleBar.Parent = MainFrame
+
+AddUICorner(TitleBar, 10)
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Size = UDim2.new(1, -40, 1, 0)
+TitleLabel.Position = UDim2.new(0, 15, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "THEUS-HUB Mobile v1.5"
+TitleLabel.TextColor3 = Settings.Theme.TextColor
+TitleLabel.TextSize = 18
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = TitleBar
+
+-- Tornar o frame arrastável
+MakeElementsDraggable(MainFrame, TitleBar)
+
+-- Botão de Fechar
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -35, 0, 5)
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
+CloseButton.BorderSizePixel = 0
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Settings.Theme.TextColor
+CloseButton.TextSize = 16
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Parent = TitleBar
+
+AddUICorner(CloseButton, 15)
+
+-- Container de Conteúdo
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Size = UDim2.new(1, -20, 1, -50)
+ContentFrame.Position = UDim2.new(0, 10, 0, 45)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.BorderSizePixel = 0
+ContentFrame.Parent = MainFrame
+
+-- Criar seção ESP
+local ESPSection = Instance.new("Frame")
+ESPSection.Name = "ESPSection"
+ESPSection.Size = UDim2.new(1, 0, 0, 270)
+ESPSection.BackgroundColor3 = Settings.Theme.LightElement
+ESPSection.BorderSizePixel = 0
+ESPSection.Parent = ContentFrame
+
+AddUICorner(ESPSection, 8)
+
+local ESPTitle = Instance.new("TextLabel")
+ESPTitle.Name = "ESPTitle"
+ESPTitle.Size = UDim2.new(1, 0, 0, 30)
+ESPTitle.BackgroundTransparency = 1
+ESPTitle.Text = "ESP Configuration"
+ESPTitle.TextColor3 = Settings.Theme.TextColor
+ESPTitle.TextSize = 16
+ESPTitle.Font = Enum.Font.GothamBold
+ESPTitle.Parent = ESPSection
+
+-- Botão principal ESP
+local ESPToggle = Instance.new("TextButton")
+ESPToggle.Name = "ESPToggle"
+ESPToggle.Size = UDim2.new(1, -20, 0, 45)
+ESPToggle.Position = UDim2.new(0, 10, 0, 35)
+ESPToggle.BackgroundColor3 = Settings.Theme.Accent
+ESPToggle.BorderSizePixel = 0
+ESPToggle.Text = "ACTIVATE ESP"
+ESPToggle.TextColor3 = Settings.Theme.TextColor
+ESPToggle.TextSize = 18
+ESPToggle.Font = Enum.Font.GothamBold
+ESPToggle.Parent = ESPSection
+
+AddUICorner(ESPToggle, 8)
+
+-- Opções do ESP (checkboxes)
+local function CreateToggleOption(text, position, defaultValue)
+    local optionFrame = Instance.new("Frame")
+    optionFrame.Name = text .. "Option"
+    optionFrame.Size = UDim2.new(1, -20, 0, 30)
+    optionFrame.Position = position
+    optionFrame.BackgroundTransparency = 1
+    optionFrame.Parent = ESPSection
+    
+    local optionLabel = Instance.new("TextLabel")
+    optionLabel.Size = UDim2.new(0, 150, 1, 0)
+    optionLabel.BackgroundTransparency = 1
+    optionLabel.Text = text
+    optionLabel.TextColor3 = Settings.Theme.TextColor
+    optionLabel.TextSize = 16
+    optionLabel.Font = Enum.Font.Gotham
+    optionLabel.TextXAlignment = Enum.TextXAlignment.Left
+    optionLabel.Parent = optionFrame
+    
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Name = "ToggleButton"
+    toggleButton.Size = UDim2.new(0, 30, 0, 30)
+    toggleButton.Position = UDim2.new(1, -30, 0, 0)
+    toggleButton.BackgroundColor3 = defaultValue and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(200, 70, 70)
+    toggleButton.BorderSizePixel = 0
+    toggleButton.Text = defaultValue and "ON" or "OFF"
+    toggleButton.TextColor3 = Settings.Theme.TextColor
+    toggleButton.TextSize = 14
+    toggleButton.Font = Enum.Font.GothamBold
+    toggleButton.Parent = optionFrame
+    
+    AddUICorner(toggleButton, 6)
+    
+    local value = defaultValue
+    
+    toggleButton.MouseButton1Click:Connect(function()
+        value = not value
+        toggleButton.Text = value and "ON" or "OFF"
+        toggleButton.BackgroundColor3 = value and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(200, 70, 70)
+        
+        -- Atualizar configuração
+        local settingPath = text:gsub(" ", "")
+        if settingPath == "Names" then
+            Settings.ESP.ShowName = value
+        elseif settingPath == "Distance" then
+            Settings.ESP.ShowDistance = value
+        elseif settingPath == "Health" then
+            Settings.ESP.ShowHealth = value
+        elseif settingPath == "TeamCheck" then
+            Settings.ESP.TeamCheck = value
+        elseif settingPath == "TeamColor" then
+            Settings.ESP.TeamColor = value
+        elseif settingPath == "Boxes" then
+            Settings.ESP.BoxEnabled = value
         end
     end)
-end
-
-local function disableESP()
-    RunService:UnbindFromRenderStep("ESPLoop")
-    espFolder:ClearAllChildren()
-end
-
-function createPlayerESP(player)
-    local esp = Instance.new("BillboardGui")
-    esp.Name = "ESP_" .. player.Name
-    esp.AlwaysOnTop = true
-    esp.Size = UDim2.new(0, 100, 0, 40)
-    esp.StudsOffset = Vector3.new(0, 3, 0)
-    esp.Player = player.Name
-    esp.Parent = espFolder
     
+    return optionFrame, toggleButton, value
+end
+
+-- Criar as opções do ESP
+local option1, toggle1 = CreateToggleOption("Names", UDim2.new(0, 10, 0, 90), Settings.ESP.ShowName)
+local option2, toggle2 = CreateToggleOption("Distance", UDim2.new(0, 10, 0, 125), Settings.ESP.ShowDistance)
+local option3, toggle3 = CreateToggleOption("Health", UDim2.new(0, 10, 0, 160), Settings.ESP.ShowHealth)
+local option4, toggle4 = CreateToggleOption("Team Check", UDim2.new(0, 10, 0, 195), Settings.ESP.TeamCheck)
+local option5, toggle5 = CreateToggleOption("Team Color", UDim2.new(0, 10, 0, 230), Settings.ESP.TeamColor)
+
+-- Status da aplicação
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Name = "StatusLabel"
+StatusLabel.Size = UDim2.new(1, 0, 0, 30)
+StatusLabel.Position = UDim2.new(0, 0, 1, -30)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "Ready to use"
+StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+StatusLabel.TextSize = 14
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.Parent = MainFrame
+
+-- Sistema de ESP Aprimorado
+local ESPContainer = Instance.new("Folder")
+ESPContainer.Name = "ESPElements"
+ESPContainer.Parent = GUI
+
+-- Função para criar o ESP para um jogador
+function CreatePlayerESP(player)
+    if player == LocalPlayer then return end
+    
+    -- Criamos um container para armazenar todos os elementos do ESP para esse jogador
+    local espFolder = Instance.new("Folder")
+    espFolder.Name = "ESP_" .. player.Name
+    espFolder.Parent = ESPContainer
+    
+    -- Texto principal (nome + distância + vida)
+    local billboardGui = Instance.new("BillboardGui")
+    billboardGui.Name = "ESPBillboard"
+    billboardGui.AlwaysOnTop = true
+    billboardGui.Size = UDim2.new(0, 200, 0, 50)
+    billboardGui.StudsOffset = Vector3.new(0, 3, 0)
+    billboardGui.Parent = espFolder
+    
+    -- Nome do jogador
     local nameLabel = Instance.new("TextLabel")
     nameLabel.Name = "NameLabel"
+    nameLabel.Size = UDim2.new(1, 0, 0, Settings.ESP.TextSize)
     nameLabel.BackgroundTransparency = 1
-    nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
     nameLabel.Text = player.Name
-    nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    nameLabel.TextColor3 = Settings.ESP.TextColor
     nameLabel.TextStrokeTransparency = 0.5
-    nameLabel.TextSize = 12
+    nameLabel.TextSize = Settings.ESP.TextSize
     nameLabel.Font = Enum.Font.SourceSansBold
-    nameLabel.Parent = esp
-    
-    local distLabel = Instance.new("TextLabel")
-    distLabel.Name = "DistLabel"
-    distLabel.BackgroundTransparency = 1
-    distLabel.Position = UDim2.new(0, 0, 0.5, 0)
-    distLabel.Size = UDim2.new(1, 0, 0.5, 0)
-    distLabel.Text = "0m"
-    distLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    distLabel.TextStrokeTransparency = 0.5
-    distLabel.TextSize = 10
-    distLabel.Font = Enum.Font.SourceSans
-    distLabel.Parent = esp
-end
-
-function updateESP(esp)
-    local playerName = esp.Player
-    local player = Players:FindFirstChild(playerName)
-    
-    if not player then
-        esp.Enabled = false
-        return
-    end
-    
-    local character = player.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then
-        esp.Enabled = false
-        return
-    end
-    
-    local hrp = character:FindFirstChild("HumanoidRootPart")
+    nameLabel.Parent = billboardGui
     
     -- Distância
-    local distance = (hrp.Position - Camera.CFrame.Position).Magnitude
-    if distance > 1000 then
-        esp.Enabled = false
+    local distanceLabel = Instance.new("TextLabel")
+    distanceLabel.Name = "DistanceLabel"
+    distanceLabel.Size = UDim2.new(1, 0, 0, Settings.ESP.TextSize)
+    distanceLabel.Position = UDim2.new(0, 0, 0, Settings.ESP.TextSize)
+    distanceLabel.BackgroundTransparency = 1
+    distanceLabel.Text = "0m"
+    distanceLabel.TextColor3 = Settings.ESP.TextColor
+    distanceLabel.TextStrokeTransparency = 0.5
+    distanceLabel.TextSize = Settings.ESP.TextSize - 2
+    distanceLabel.Font = Enum.Font.SourceSans
+    distanceLabel.Parent = billboardGui
+    
+    -- Vida
+    local healthLabel = Instance.new("TextLabel")
+    healthLabel.Name = "HealthLabel"
+    healthLabel.Size = UDim2.new(1, 0, 0, Settings.ESP.TextSize)
+    healthLabel.Position = UDim2.new(0, 0, 0, Settings.ESP.TextSize * 2)
+    healthLabel.BackgroundTransparency = 1
+    healthLabel.Text = "100 HP"
+    healthLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+    healthLabel.TextStrokeTransparency = 0.5
+    healthLabel.TextSize = Settings.ESP.TextSize - 2
+    healthLabel.Font = Enum.Font.SourceSans
+    healthLabel.Parent = billboardGui
+    
+    return espFolder
+end
+
+-- Função para atualizar o ESP de um jogador
+function UpdatePlayerESP(espFolder)
+    local playerName = espFolder.Name:sub(5) -- Remover "ESP_" do nome
+    local player = Players:FindFirstChild(playerName)
+    
+    -- Verificar se o jogador ainda existe
+    if not player then
+        espFolder:Destroy()
         return
     end
     
-    esp.Enabled = true
-    esp.Adornee = hrp
-    
-    -- Atualizar distância
-    local distLabel = esp:FindFirstChild("DistLabel")
-    if distLabel then
-        distLabel.Text = math.floor(distance) .. "m"
+    -- Verificar se o personagem existe
+    local character = player.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") or not character:FindFirstChildOfClass("Humanoid") then
+        for _, item in pairs(espFolder:GetChildren()) do
+            item.Enabled = false
+        end
+        return
     end
     
-    -- Atualizar cor
-    local nameLabel = esp:FindFirstChild("NameLabel")
-    if nameLabel and player.Team then
-        nameLabel.TextColor3 = player.TeamColor.Color
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    
+    -- Verificar se está dentro da distância máxima
+    local distance = (hrp.Position - Camera.CFrame.Position).Magnitude
+    if distance > Settings.ESP.MaxDistance then
+        for _, item in pairs(espFolder:GetChildren()) do
+            item.Enabled = false
+        end
+        return
     end
-end
-
--- Função Aimbot
-local isAiming = false
-
-local function enableAimbot()
-    -- Evento para toques
-    UserInputService.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            isAiming = true
+    
+    -- Verificar time se necessário
+    if Settings.ESP.TeamCheck and player.Team == LocalPlayer.Team then
+        for _, item in pairs(espFolder:GetChildren()) do
+            item.Enabled = false
         end
-    end)
+        return
+    end
     
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            isAiming = false
-        end
-    end)
-    
-    -- Loop do aimbot
-    RunService:BindToRenderStep("AimbotLoop", 1, function()
-        if not aimbotEnabled or not isAiming then return end
+    -- Atualizar billboard
+    local billboard = espFolder:FindFirstChild("ESPBillboard")
+    if billboard then
+        billboard.Enabled = true
+        billboard.Adornee = hrp
         
-        local target = getClosestPlayer()
-        if not target then return end
-        
-        local character = target.Character
-        if not character or not character:FindFirstChild("Head") then return end
-        
-        local head = character:FindFirstChild("Head")
-        
-        -- Mirar no alvo
-        Camera.CFrame = CFrame.new(Camera.CFrame.Position, head.Position)
-    end)
-end
-
-local function disableAimbot()
-    RunService:UnbindFromRenderStep("AimbotLoop")
-end
-
-function getClosestPlayer()
-    local closest = nil
-    local maxDist = 500
-    
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            local character = player.Character
-            if character and character:FindFirstChild("Head") then
-                local head = character:FindFirstChild("Head")
-                local pos, onScreen = Camera:WorldToScreenPoint(head.Position)
-                
-                if onScreen then
-                    local dist = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
-                    
-                    if dist < maxDist then
-                        maxDist = dist
-                        closest = player
-                    end
-                end
+        -- Atualizar nome
+        local nameLabel = billboard:FindFirstChild("NameLabel")
+        if nameLabel then
+            nameLabel.Visible = Settings.ESP.ShowName
+            
+            -- Cor baseada no time se ativado
+            if Settings.ESP.TeamColor and player.Team then
+                nameLabel.TextColor3 = player.TeamColor.Color
+            else
+                nameLabel.TextColor3 = Settings.ESP.TextColor
             end
         end
+        
+        -- Atualizar distância
+        local distanceLabel = billboard:FindFirstChild("DistanceLabel")
+        if distanceLabel then
+            distanceLabel.Visible = Settings.ESP.ShowDistance
+            distanceLabel.Text = math.floor(distance) .. "m"
+        end
+        
+        -- Atualizar vida
+        local healthLabel = billboard:FindFirstChild("HealthLabel")
+        if healthLabel and humanoid then
+            healthLabel.Visible = Settings.ESP.ShowHealth
+            
+            local health = math.floor(humanoid.Health)
+            local maxHealth = math.floor(humanoid.MaxHealth)
+            healthLabel.Text = health .. " HP"
+            
+            -- Cor baseada na porcentagem de vida
+            local healthPercent = health / maxHealth
+            healthLabel.TextColor3 = Color3.fromRGB(
+                255 * (1 - healthPercent),
+                255 * healthPercent,
+                50
+            )
+        end
     end
-    
-    return closest
 end
 
--- Conectar botões
-flyButton.MouseButton1Click:Connect(function()
-    flyEnabled = not flyEnabled
+-- Gerenciamento do ESP
+function EnableESP()
+    -- Limpar ESP existente
+    ESPContainer:ClearAllChildren()
     
-    if flyEnabled then
-        flyButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
-        flyButton.Text = "FLY [ON]"
-        enableFly()
+    -- Criar ESP para jogadores existentes
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            CreatePlayerESP(player)
+        end
+    end
+    
+    -- Lidar com jogadores que entram no jogo
+    local playerAddedConnection = Players.PlayerAdded:Connect(function(player)
+        CreatePlayerESP(player)
+    end)
+    
+    -- Lidar com jogadores que saem do jogo
+    local playerRemovingConnection = Players.PlayerRemoving:Connect(function(player)
+        local espFolder = ESPContainer:FindFirstChild("ESP_" .. player.Name)
+        if espFolder then
+            espFolder:Destroy()
+        end
+    end)
+    
+    -- Atualizar ESP em tempo real
+    RunService:BindToRenderStep("ESPUpdate", 5, function()
+        if not Settings.ESP.Enabled then return end
+        
+        for _, espFolder in pairs(ESPContainer:GetChildren()) do
+            UpdatePlayerESP(espFolder)
+        end
+        
+        -- Atualizar mensagens de status
+        UpdateStatusMessages()
+    end)
+    
+    -- Guardar as conexões para desconectar depois
+    ESPContainer:SetAttribute("PlayerAddedConnection", playerAddedConnection)
+    ESPContainer:SetAttribute("PlayerRemovingConnection", playerRemovingConnection)
+    
+    ShowStatus("ESP Ativado com Sucesso", Color3.fromRGB(100, 255, 100))
+    ESPToggle.Text = "DISABLE ESP"
+    ESPToggle.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
+end
+
+function DisableESP()
+    -- Desconectar eventos
+    local playerAddedConnection = ESPContainer:GetAttribute("PlayerAddedConnection")
+    local playerRemovingConnection = ESPContainer:GetAttribute("PlayerRemovingConnection")
+    
+    if playerAddedConnection then
+        playerAddedConnection:Disconnect()
+    end
+    
+    if playerRemovingConnection then
+        playerRemovingConnection:Disconnect()
+    end
+    
+    -- Parar o loop de atualização
+    RunService:UnbindFromRenderStep("ESPUpdate")
+    
+    -- Limpar elementos ESP
+    ESPContainer:ClearAllChildren()
+    
+    ShowStatus("ESP Desativado", Color3.fromRGB(255, 150, 100))
+    ESPToggle.Text = "ACTIVATE ESP"
+    ESPToggle.BackgroundColor3 = Settings.Theme.Accent
+end
+
+-- Conectar botões a funções
+ESPToggle.MouseButton1Click:Connect(function()
+    Settings.ESP.Enabled = not Settings.ESP.Enabled
+    
+    if Settings.ESP.Enabled then
+        EnableESP()
     else
-        flyButton.BackgroundColor3 = Color3.fromRGB(0, 120, 180)
-        flyButton.Text = "FLY"
-        disableFly()
+        DisableESP()
     end
 end)
 
-espButton.MouseButton1Click:Connect(function()
-    espEnabled = not espEnabled
-    
-    if espEnabled then
-        espButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
-        espButton.Text = "ESP [ON]"
-        enableESP()
-    else
-        espButton.BackgroundColor3 = Color3.fromRGB(120, 60, 180)
-        espButton.Text = "ESP"
-        disableESP()
+CloseButton.MouseButton1Click:Connect(function()
+    if Settings.ESP.Enabled then
+        DisableESP()
     end
+    
+    GUI:Destroy()
 end)
 
-aimbotButton.MouseButton1Click:Connect(function()
-    aimbotEnabled = not aimbotEnabled
-    
-    if aimbotEnabled then
-        aimbotButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
-        aimbotButton.Text = "AIMBOT [ON]"
-        enableAimbot()
-    else
-        aimbotButton.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
-        aimbotButton.Text = "AIMBOT"
-        disableAimbot()
-    end
-end)
-
--- Mensagem de carregamento
-local status = Instance.new("TextLabel")
-status.Position = UDim2.new(0, 0, 1, 5)
-status.Size = UDim2.new(1, 0, 0, 20)
-status.BackgroundTransparency = 1
-status.Text = "Script Carregado!"
-status.TextColor3 = Color3.fromRGB(100, 255, 100)
-status.TextSize = 14
-status.Font = Enum.Font.SourceSans
-status.Parent = frame
-
--- Mensagem sobre o autor no canto da tela
-local watermark = Instance.new("TextLabel")
-watermark.Position = UDim2.new(0, 5, 1, -25)
-watermark.Size = UDim2.new(0, 150, 0, 20)
-watermark.BackgroundTransparency = 1
-watermark.Text = "THEUS-HUB Mobile v1.0"
-watermark.TextColor3 = Color3.fromRGB(200, 200, 200)
-watermark.TextSize = 12
-watermark.TextXAlignment = Enum.TextXAlignment.Left
-watermark.Font = Enum.Font.SourceSans
-watermark.Parent = gui
+-- Inicializar
+ShowStatus("THEUS-HUB Mobile v1.5 Carregado", Color3.fromRGB(100, 255, 100), 3)
