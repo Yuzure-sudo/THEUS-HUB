@@ -1,24 +1,30 @@
--- // Wirtz Script | Powered by Rayfield
--- // Made with love by @wirtz.dev
+-- // Wirtz Script | Versão Standalone
+-- // Todos os recursos em um único script, sem dependências externas
 
--- // Services
+-- // Serviços
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+
+-- // Variáveis locais
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+local Mouse = LocalPlayer:GetMouse()
 
--- // Check if Rayfield exists
-local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
-
--- // Anti-detection measures
-for i,v in next, getconnections(game:GetService("Players").LocalPlayer.Idled) do
+-- // Anti-AFK
+for i,v in next, getconnections(LocalPlayer.Idled) do
     v:Disable()
 end
 
--- // Configuration
+-- // Limpar GUIs existentes
+pcall(function()
+    if game:GetService("CoreGui"):FindFirstChild("WirtzScript") then
+        game:GetService("CoreGui"):FindFirstChild("WirtzScript"):Destroy()
+    end
+end)
+
+-- // Configurações
 local Config = {
     ESP = {
         Enabled = false,
@@ -27,21 +33,15 @@ local Config = {
         ShowInfo = true,
         MaxDistance = 2000,
         BoxColor = Color3.fromRGB(255, 0, 0),
-        BoxThickness = 1,
-        TextColor = Color3.fromRGB(255, 255, 255),
-        TextSize = 14,
-        TextOutline = true
+        TextColor = Color3.fromRGB(255, 255, 255)
     },
     Aimbot = {
         Enabled = false,
         TeamCheck = true,
         TargetPart = "Head",
-        Sensitivity = 1,
+        Sensitivity = 0.8,
         FOV = 100,
-        ShowFOV = true,
-        FOVColor = Color3.fromRGB(255, 255, 255),
-        Prediction = true,
-        AutoShoot = false
+        ShowFOV = true
     },
     Fly = {
         Enabled = false,
@@ -50,424 +50,814 @@ local Config = {
     }
 }
 
--- // Utilities
-local Utilities = {}
+-- // Criar GUI Principal
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "WirtzScript"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- Check if player exists and is valid
-function Utilities:ValidatePlayer(player)
-    return player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") 
-           and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0
+-- Tentar adicionar à CoreGui (mais seguro)
+pcall(function()
+    ScreenGui.Parent = game:GetService("CoreGui")
+end)
+-- Fallback para PlayerGui
+if not ScreenGui.Parent then
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 end
 
--- Calculate distance between two points
-function Utilities:CalculateDistance(point1, point2)
-    return (point1 - point2).Magnitude
+-- // GUI Principal
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 300, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true -- Permitir arrastar
+MainFrame.Parent = ScreenGui
+
+-- Arredondar bordas
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+-- // Barra de título
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Size = UDim2.new(1, 0, 0, 40)
+TitleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+-- Arredondar barra de título
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 8)
+TitleCorner.Parent = TitleBar
+
+-- Correção visual para a barra de título
+local TitleFix = Instance.new("Frame")
+TitleFix.Name = "TitleFix"
+TitleFix.Size = UDim2.new(1, 0, 0.5, 0)
+TitleFix.Position = UDim2.new(0, 0, 0.5, 0)
+TitleFix.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+TitleFix.BorderSizePixel = 0
+TitleFix.Parent = TitleBar
+
+-- Título
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Size = UDim2.new(1, -50, 1, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "WIRTZ SCRIPT"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 18
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Position = UDim2.new(0, 15, 0, 0)
+TitleLabel.Parent = TitleBar
+
+-- Botão de fechar
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -40, 0, 5)
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
+CloseButton.BorderSizePixel = 0
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 16
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Parent = TitleBar
+
+-- Arredondar botão de fechar
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 8)
+CloseCorner.Parent = CloseButton
+
+-- // Abas de navegação
+local TabsFrame = Instance.new("Frame")
+TabsFrame.Name = "TabsFrame"
+TabsFrame.Size = UDim2.new(1, 0, 0, 40)
+TabsFrame.Position = UDim2.new(0, 0, 0, 40)
+TabsFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+TabsFrame.BorderSizePixel = 0
+TabsFrame.Parent = MainFrame
+
+-- Botões de aba
+local function CreateTabButton(name, position, selected)
+    local tabButton = Instance.new("TextButton")
+    tabButton.Name = name .. "Tab"
+    tabButton.Size = UDim2.new(0.333, 0, 1, 0)
+    tabButton.Position = position
+    tabButton.BackgroundColor3 = selected and Color3.fromRGB(45, 45, 50) or Color3.fromRGB(35, 35, 40)
+    tabButton.BorderSizePixel = 0
+    tabButton.Text = name
+    tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    tabButton.TextSize = 14
+    tabButton.Font = Enum.Font.GothamSemibold
+    tabButton.Parent = TabsFrame
+    return tabButton
 end
 
--- Check if a player is behind a wall
-function Utilities:IsVisible(targetPos)
-    local rayParams = RaycastParams.new()
-    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
-    rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
+local ESPTab = CreateTabButton("ESP", UDim2.new(0, 0, 0, 0), true)
+local AimbotTab = CreateTabButton("AIMBOT", UDim2.new(0.333, 0, 0, 0), false)
+local FlyTab = CreateTabButton("FLY", UDim2.new(0.666, 0, 0, 0), false)
+
+-- // Conteúdo da aba
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Size = UDim2.new(1, 0, 1, -80)
+ContentFrame.Position = UDim2.new(0, 0, 0, 80)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Parent = MainFrame
+
+-- Páginas das abas
+local ESPPage = Instance.new("Frame")
+ESPPage.Name = "ESPPage"
+ESPPage.Size = UDim2.new(1, 0, 1, 0)
+ESPPage.BackgroundTransparency = 1
+ESPPage.Visible = true
+ESPPage.Parent = ContentFrame
+
+local AimbotPage = Instance.new("Frame")
+AimbotPage.Name = "AimbotPage"
+AimbotPage.Size = UDim2.new(1, 0, 1, 0)
+AimbotPage.BackgroundTransparency = 1
+AimbotPage.Visible = false
+AimbotPage.Parent = ContentFrame
+
+local FlyPage = Instance.new("Frame")
+FlyPage.Name = "FlyPage"
+FlyPage.Size = UDim2.new(1, 0, 1, 0)
+FlyPage.BackgroundTransparency = 1
+FlyPage.Visible = false
+FlyPage.Parent = ContentFrame
+
+-- Função para alternar abas
+local function SwitchTab(tab)
+    ESPTab.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+    AimbotTab.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+    FlyTab.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
     
-    local direction = targetPos - Camera.CFrame.Position
-    local result = workspace:Raycast(Camera.CFrame.Position, direction.Unit * math.min(direction.Magnitude, 1000), rayParams)
+    ESPPage.Visible = false
+    AimbotPage.Visible = false
+    FlyPage.Visible = false
     
-    return result == nil
+    if tab == "ESP" then
+        ESPTab.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+        ESPPage.Visible = true
+    elseif tab == "AIMBOT" then
+        AimbotTab.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+        AimbotPage.Visible = true
+    elseif tab == "FLY" then
+        FlyTab.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+        FlyPage.Visible = true
+    end
 end
 
--- // ESP System
-local ESPManager = {
-    Objects = {},
-    DrawingObjects = {},
-    Enabled = false
-}
+-- Conectar eventos dos botões de aba
+ESPTab.MouseButton1Click:Connect(function() SwitchTab("ESP") end)
+AimbotTab.MouseButton1Click:Connect(function() SwitchTab("AIMBOT") end)
+FlyTab.MouseButton1Click:Connect(function() SwitchTab("FLY") end)
 
--- Create ESP for a player
-function ESPManager:CreateESP(player)
-    if player == LocalPlayer then return end
+-- // Função para criar Toggle
+local function CreateToggle(parent, name, position, defaultState, callback)
+    local toggle = Instance.new("Frame")
+    toggle.Name = name .. "Toggle"
+    toggle.Size = UDim2.new(1, -20, 0, 40)
+    toggle.Position = position
+    toggle.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+    toggle.BorderSizePixel = 0
+    toggle.Parent = parent
     
-    -- Create ESP Objects
-    local objects = {}
+    local toggleCorner = Instance.new("UICorner")
+    toggleCorner.CornerRadius = UDim.new(0, 6)
+    toggleCorner.Parent = toggle
     
-    -- Try to use Drawing API (more efficient if available)
-    local success, error = pcall(function()
-        if Drawing then
-            -- Box
-            local box = Drawing.new("Square")
-            box.Visible = false
-            box.Color = Config.ESP.BoxColor
-            box.Thickness = Config.ESP.BoxThickness
-            box.Transparency = 1
-            box.Filled = false
-            
-            -- Name text
-            local name = Drawing.new("Text")
-            name.Visible = false
-            name.Center = true
-            name.Outline = Config.ESP.TextOutline
-            name.Font = 2
-            name.Size = Config.ESP.TextSize
-            name.Color = Config.ESP.TextColor
-            name.Text = player.Name
-            
-            -- Health text
-            local health = Drawing.new("Text")
-            health.Visible = false
-            health.Center = true
-            health.Outline = Config.ESP.TextOutline
-            health.Font = 2
-            health.Size = Config.ESP.TextSize
-            health.Color = Config.ESP.TextColor
-            health.Text = "100 HP"
-            
-            -- Distance text
-            local distance = Drawing.new("Text")
-            distance.Visible = false
-            distance.Center = true
-            distance.Outline = Config.ESP.TextOutline
-            distance.Font = 2
-            distance.Size = Config.ESP.TextSize
-            distance.Color = Config.ESP.TextColor
-            distance.Text = "0m"
-            
-            self.DrawingObjects[player.Name] = {
-                Box = box,
-                Name = name,
-                Health = health,
-                Distance = distance
-            }
-            
-            return true -- Drawing API available
+    local label = Instance.new("TextLabel")
+    label.Name = "Label"
+    label.Size = UDim2.new(1, -60, 1, 0)
+    label.Position = UDim2.new(0, 10, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextSize = 14
+    label.Font = Enum.Font.GothamSemibold
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = toggle
+    
+    local switch = Instance.new("Frame")
+    switch.Name = "Switch"
+    switch.Size = UDim2.new(0, 40, 0, 20)
+    switch.Position = UDim2.new(1, -50, 0.5, -10)
+    switch.BackgroundColor3 = defaultState and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(60, 60, 65)
+    switch.BorderSizePixel = 0
+    switch.Parent = toggle
+    
+    local switchCorner = Instance.new("UICorner")
+    switchCorner.CornerRadius = UDim.new(0, 10)
+    switchCorner.Parent = switch
+    
+    local knob = Instance.new("Frame")
+    knob.Name = "Knob"
+    knob.Size = UDim2.new(0, 16, 0, 16)
+    knob.Position = UDim2.new(defaultState and 1 or 0, defaultState and -18 or 2, 0.5, -8)
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    knob.BorderSizePixel = 0
+    knob.Parent = switch
+    
+    local knobCorner = Instance.new("UICorner")
+    knobCorner.CornerRadius = UDim.new(0, 8)
+    knobCorner.Parent = knob
+    
+    local button = Instance.new("TextButton")
+    button.Name = "Button"
+    button.Size = UDim2.new(1, 0, 1, 0)
+    button.BackgroundTransparency = 1
+    button.Text = ""
+    button.Parent = toggle
+    
+    local toggled = defaultState
+    
+    button.MouseButton1Click:Connect(function()
+        toggled = not toggled
+        knob.Position = UDim2.new(toggled and 1 or 0, toggled and -18 or 2, 0.5, -8)
+        switch.BackgroundColor3 = toggled and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(60, 60, 65)
+        
+        if callback then
+            callback(toggled)
         end
-        return false -- Drawing API not available
     end)
     
-    -- Fallback to BillboardGui if Drawing API is not available
-    if not success or not error then
-        -- ESP container
-        local esp = Instance.new("BillboardGui")
-        esp.Name = "ESP"
-        esp.AlwaysOnTop = true
-        esp.Size = UDim2.new(4, 0, 5.5, 0)
-        esp.StudsOffset = Vector3.new(0, 0.5, 0)
-        esp.Adornee = player.Character.HumanoidRootPart
-        
-        -- Frame for ESP
-        local frame = Instance.new("Frame")
-        frame.BackgroundColor3 = Config.ESP.BoxColor
-        frame.BackgroundTransparency = 0.5
-        frame.Size = UDim2.new(1, 0, 1, 0)
-        frame.BorderSizePixel = 0
-        frame.Parent = esp
-        
-        -- Player name
-        local name = Instance.new("TextLabel")
-        name.Size = UDim2.new(1, 0, 0.25, 0)
-        name.Position = UDim2.new(0, 0, -0.25, 0)
-        name.BackgroundTransparency = 1
-        name.Text = player.Name
-        name.TextColor3 = Config.ESP.TextColor
-        name.TextSize = Config.ESP.TextSize
-        name.Font = Enum.Font.SourceSansBold
-        name.Parent = esp
-        
-        -- Health text
-        local health = Instance.new("TextLabel")
-        health.Size = UDim2.new(1, 0, 0.2, 0)
-        health.Position = UDim2.new(0, 0, 1, 0)
-        health.BackgroundTransparency = 1
-        health.Text = "100 HP"
-        health.TextColor3 = Color3.fromRGB(0, 255, 0)
-        health.TextSize = Config.ESP.TextSize
-        health.Font = Enum.Font.SourceSansBold
-        health.Parent = esp
-        
-        -- Distance text
-        local distance = Instance.new("TextLabel")
-        distance.Size = UDim2.new(1, 0, 0.2, 0)
-        distance.Position = UDim2.new(0, 0, 1.2, 0)
-        distance.BackgroundTransparency = 1
-        distance.Text = "0m"
-        distance.TextColor3 = Config.ESP.TextColor
-        distance.TextSize = Config.ESP.TextSize
-        distance.Font = Enum.Font.SourceSansBold
-        distance.Parent = esp
-        
-        objects.ESP = esp
-        objects.Frame = frame
-        objects.Name = name
-        objects.Health = health
-        objects.Distance = distance
-        
-        esp.Parent = game.CoreGui
-    end
-    
-    self.Objects[player.Name] = objects
+    return {
+        Instance = toggle,
+        GetValue = function() return toggled end,
+        SetValue = function(value)
+            toggled = value
+            knob.Position = UDim2.new(toggled and 1 or 0, toggled and -18 or 2, 0.5, -8)
+            switch.BackgroundColor3 = toggled and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(60, 60, 65)
+            
+            if callback then
+                callback(toggled)
+            end
+        end
+    }
 end
 
--- Update ESP visuals
-function ESPManager:UpdateESP()
+-- // Função para criar Slider
+local function CreateSlider(parent, name, position, min, max, default, callback)
+    local slider = Instance.new("Frame")
+    slider.Name = name .. "Slider"
+    slider.Size = UDim2.new(1, -20, 0, 60)
+    slider.Position = position
+    slider.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+    slider.BorderSizePixel = 0
+    slider.Parent = parent
+    
+    local sliderCorner = Instance.new("UICorner")
+    sliderCorner.CornerRadius = UDim.new(0, 6)
+    sliderCorner.Parent = slider
+    
+    local label = Instance.new("TextLabel")
+    label.Name = "Label"
+    label.Size = UDim2.new(1, -20, 0, 20)
+    label.Position = UDim2.new(0, 10, 0, 5)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextSize = 14
+    label.Font = Enum.Font.GothamSemibold
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = slider
+    
+    local valueLabel = Instance.new("TextLabel")
+    valueLabel.Name = "Value"
+    valueLabel.Size = UDim2.new(0, 50, 0, 20)
+    valueLabel.Position = UDim2.new(1, -60, 0, 5)
+    valueLabel.BackgroundTransparency = 1
+    valueLabel.Text = tostring(default)
+    valueLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    valueLabel.TextSize = 14
+    valueLabel.Font = Enum.Font.GothamSemibold
+    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    valueLabel.Parent = slider
+    
+    local sliderBG = Instance.new("Frame")
+    sliderBG.Name = "SliderBG"
+    sliderBG.Size = UDim2.new(1, -20, 0, 8)
+    sliderBG.Position = UDim2.new(0, 10, 0, 35)
+    sliderBG.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    sliderBG.BorderSizePixel = 0
+    sliderBG.Parent = slider
+    
+    local sliderBGCorner = Instance.new("UICorner")
+    sliderBGCorner.CornerRadius = UDim.new(0, 4)
+    sliderBGCorner.Parent = sliderBG
+    
+    local sliderFill = Instance.new("Frame")
+    sliderFill.Name = "SliderFill"
+    sliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+    sliderFill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+    sliderFill.BorderSizePixel = 0
+    sliderFill.Parent = sliderBG
+    
+    local sliderFillCorner = Instance.new("UICorner")
+    sliderFillCorner.CornerRadius = UDim.new(0, 4)
+    sliderFillCorner.Parent = sliderFill
+    
+    local sliderButton = Instance.new("TextButton")
+    sliderButton.Name = "SliderButton"
+    sliderButton.Size = UDim2.new(1, 0, 1, 0)
+    sliderButton.BackgroundTransparency = 1
+    sliderButton.Text = ""
+    sliderButton.Parent = sliderBG
+    
+    local value = default
+    
+    local function updateSlider(xPos)
+        local relativePos = math.clamp((xPos - sliderBG.AbsolutePosition.X) / sliderBG.AbsoluteSize.X, 0, 1)
+        local newValue = min + (max - min) * relativePos
+        newValue = math.floor(newValue * 10) / 10 -- Arredondar para 1 casa decimal
+        
+        value = newValue
+        valueLabel.Text = tostring(newValue)
+        sliderFill.Size = UDim2.new(relativePos, 0, 1, 0)
+        
+        if callback then
+            callback(newValue)
+        end
+    end
+    
+    sliderButton.MouseButton1Down:Connect(function(x)
+        updateSlider(x)
+        
+        local moveCon
+        local upCon
+        
+        moveCon = UserInputService.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement then
+                updateSlider(input.Position.X)
+            end
+        end)
+        
+        upCon = UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                moveCon:Disconnect()
+                upCon:Disconnect()
+            end
+        end)
+    end)
+    
+    return {
+        Instance = slider,
+        GetValue = function() return value end,
+        SetValue = function(newValue)
+            value = math.clamp(newValue, min, max)
+            valueLabel.Text = tostring(value)
+            sliderFill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+            
+            if callback then
+                callback(value)
+            end
+        end
+    }
+end
+
+-- // ESP CONTROLS
+local ESPToggle = CreateToggle(ESPPage, "ESP Master", UDim2.new(0, 10, 0, 10), false, function(value)
+    Config.ESP.Enabled = value
+    if value then EnableESP() else DisableESP() end
+end)
+
+local ESPTeamToggle = CreateToggle(ESPPage, "Team Check", UDim2.new(0, 10, 0, 60), true, function(value)
+    Config.ESP.TeamCheck = value
+end)
+
+local ESPBoxToggle = CreateToggle(ESPPage, "Show Boxes", UDim2.new(0, 10, 0, 110), true, function(value)
+    Config.ESP.ShowBox = value
+end)
+
+local ESPInfoToggle = CreateToggle(ESPPage, "Show Info", UDim2.new(0, 10, 0, 160), true, function(value)
+    Config.ESP.ShowInfo = value
+end)
+
+local MaxDistanceSlider = CreateSlider(ESPPage, "Max Distance", UDim2.new(0, 10, 0, 210), 100, 5000, 2000, function(value)
+    Config.ESP.MaxDistance = value
+end)
+
+-- // AIMBOT CONTROLS
+local AimbotToggle = CreateToggle(AimbotPage, "Aimbot Master", UDim2.new(0, 10, 0, 10), false, function(value)
+    Config.Aimbot.Enabled = value
+    if value then EnableAimbot() else DisableAimbot() end
+end)
+
+local AimbotTeamToggle = CreateToggle(AimbotPage, "Team Check", UDim2.new(0, 10, 0, 60), true, function(value)
+    Config.Aimbot.TeamCheck = value
+end)
+
+local AimbotFOVToggle = CreateToggle(AimbotPage, "Show FOV", UDim2.new(0, 10, 0, 110), true, function(value)
+    Config.Aimbot.ShowFOV = value
+    if FOVCircle then
+        FOVCircle.Visible = value and Config.Aimbot.Enabled
+    end
+end)
+
+local AimbotSensSlider = CreateSlider(AimbotPage, "Aimbot Strength", UDim2.new(0, 10, 0, 160), 0.1, 1, 0.8, function(value)
+    Config.Aimbot.Sensitivity = value
+end)
+
+local AimbotFOVSlider = CreateSlider(AimbotPage, "FOV Size", UDim2.new(0, 10, 0, 230), 50, 400, 100, function(value)
+    Config.Aimbot.FOV = value
+    if FOVCircle then
+        FOVCircle.Radius = value
+    end
+end)
+
+-- // FLY CONTROLS
+local FlyToggle = CreateToggle(FlyPage, "Fly Master", UDim2.new(0, 10, 0, 10), false, function(value)
+    Config.Fly.Enabled = value
+    if value then EnableFly() else DisableFly() end
+end)
+
+local FlySpeedSlider = CreateSlider(FlyPage, "Fly Speed", UDim2.new(0, 10, 0, 60), 10, 200, 80, function(value)
+    Config.Fly.Speed = value
+end)
+
+local FlyVerticalSlider = CreateSlider(FlyPage, "Vertical Speed", UDim2.new(0, 10, 0, 130), 10, 200, 70, function(value)
+    Config.Fly.VerticalSpeed = value
+end)
+
+-- Info de controles
+local flyInfo = Instance.new("TextLabel")
+flyInfo.Name = "FlyInfo"
+flyInfo.Size = UDim2.new(1, -20, 0, 40)
+flyInfo.Position = UDim2.new(0, 10, 0, 200)
+flyInfo.BackgroundTransparency = 1
+flyInfo.Text = "Controles de voo aparecerão na lateral da tela quando ativado."
+flyInfo.TextColor3 = Color3.fromRGB(200, 200, 200)
+flyInfo.TextSize = 12
+flyInfo.Font = Enum.Font.Gotham
+flyInfo.TextWrapped = true
+flyInfo.Parent = FlyPage
+
+-- // Botão de fechar
+CloseButton.MouseButton1Click:Connect(function()
+    -- Limpar tudo
+    DisableESP()
+    DisableAimbot()
+    DisableFly()
+    ScreenGui:Destroy()
+end)
+
+-- // CONTROLES DE VOO
+local FlyControlsGui = Instance.new("ScreenGui")
+FlyControlsGui.Name = "FlyControls"
+FlyControlsGui.Enabled = false
+
+pcall(function()
+    FlyControlsGui.Parent = game:GetService("CoreGui")
+end)
+if not FlyControlsGui.Parent then
+    FlyControlsGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- Botão para subir
+local UpButton = Instance.new("TextButton")
+UpButton.Name = "UpButton"
+UpButton.Size = UDim2.new(0, 80, 0, 80)
+UpButton.Position = UDim2.new(0, 10, 0.5, -90)
+UpButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+UpButton.BorderSizePixel = 0
+UpButton.Text = "↑"
+UpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+UpButton.TextSize = 30
+UpButton.Font = Enum.Font.GothamBold
+UpButton.AutoButtonColor = true
+UpButton.Parent = FlyControlsGui
+
+local UpCorner = Instance.new("UICorner")
+UpCorner.CornerRadius = UDim.new(0, 10)
+UpCorner.Parent = UpButton
+
+-- Botão para descer
+local DownButton = Instance.new("TextButton")
+DownButton.Name = "DownButton"
+DownButton.Size = UDim2.new(0, 80, 0, 80)
+DownButton.Position = UDim2.new(0, 10, 0.5, 10)
+DownButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+DownButton.BorderSizePixel = 0
+DownButton.Text = "↓"
+DownButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+DownButton.TextSize = 30
+DownButton.Font = Enum.Font.GothamBold
+DownButton.AutoButtonColor = true
+DownButton.Parent = FlyControlsGui
+
+local DownCorner = Instance.new("UICorner")
+DownCorner.CornerRadius = UDim.new(0, 10)
+DownCorner.Parent = DownButton
+
+-- // ESP SYSTEM
+local ESPFolder = Instance.new("Folder")
+ESPFolder.Name = "ESPItems"
+ESPFolder.Parent = ScreenGui
+
+-- Criar ESP para um jogador
+local function CreateESP(player)
+    if player == LocalPlayer then return end
+    
+    local esp = Instance.new("BillboardGui")
+    esp.Name = "ESP_" .. player.Name
+    esp.AlwaysOnTop = true
+    esp.Size = UDim2.new(4, 0, 5.5, 0)
+    esp.StudsOffset = Vector3.new(0, 0.5, 0)
+    esp.Adornee = nil -- Será definido no update
+    esp.Parent = ESPFolder
+    
+    -- Box
+    local box = Instance.new("Frame")
+    box.Name = "Box"
+    box.Size = UDim2.new(1, 0, 1, 0)
+    box.BackgroundTransparency = 0.5
+    box.BackgroundColor3 = Config.ESP.BoxColor
+    box.BorderSizePixel = 0
+    box.Visible = Config.ESP.ShowBox
+    box.Parent = esp
+    
+    local boxCorner = Instance.new("UICorner")
+    boxCorner.CornerRadius = UDim.new(0, 4)
+    boxCorner.Parent = box
+    
+    -- Nome
+    local name = Instance.new("TextLabel")
+    name.Name = "Name"
+    name.Size = UDim2.new(1, 0, 0, 20)
+    name.Position = UDim2.new(0, 0, 0, -25)
+    name.BackgroundTransparency = 1
+    name.Text = player.Name
+    name.TextColor3 = Config.ESP.TextColor
+    name.TextSize = 14
+    name.Font = Enum.Font.GothamBold
+    name.TextStrokeTransparency = 0.5
+    name.Visible = Config.ESP.ShowInfo
+    name.Parent = esp
+    
+    -- Saúde
+    local health = Instance.new("TextLabel")
+    health.Name = "Health"
+    health.Size = UDim2.new(1, 0, 0, 20)
+    health.Position = UDim2.new(0, 0, 1, 5)
+    health.BackgroundTransparency = 1
+    health.Text = "100 HP"
+    health.TextColor3 = Color3.fromRGB(0, 255, 0)
+    health.TextSize = 14
+    health.Font = Enum.Font.Gotham
+    health.TextStrokeTransparency = 0.5
+    health.Visible = Config.ESP.ShowInfo
+    health.Parent = esp
+    
+    -- Distância
+    local distance = Instance.new("TextLabel")
+    distance.Name = "Distance"
+    distance.Size = UDim2.new(1, 0, 0, 20)
+    distance.Position = UDim2.new(0, 0, 1, 25)
+    distance.BackgroundTransparency = 1
+    distance.Text = "0m"
+    distance.TextColor3 = Config.ESP.TextColor
+    distance.TextSize = 14
+    distance.Font = Enum.Font.Gotham
+    distance.TextStrokeTransparency = 0.5
+    distance.Visible = Config.ESP.ShowInfo
+    distance.Parent = esp
+    
+    return esp
+end
+
+-- Atualizar ESP
+local function UpdateESP()
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
-            -- Check if ESP objects exist
-            local objects = self.Objects[player.Name]
-            local drawingObjects = self.DrawingObjects[player.Name]
+            local esp = ESPFolder:FindFirstChild("ESP_" .. player.Name)
             
-            if (objects or drawingObjects) and Utilities:ValidatePlayer(player) then
-                -- Team check
-                if Config.ESP.TeamCheck and player.Team == LocalPlayer.Team then
-                    self:HideESP(player.Name)
-                    continue
-                end
-                
-                -- Check if ESP should be visible
+            if not esp and Config.ESP.Enabled then
+                esp = CreateESP(player)
+            end
+            
+            if esp then
                 local character = player.Character
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                local hrp = character.HumanoidRootPart
-                
-                -- Calculate distance
-                local distance = Utilities:CalculateDistance(Camera.CFrame.Position, hrp.Position)
-                
-                -- Distance check
-                if distance > Config.ESP.MaxDistance then
-                    self:HideESP(player.Name)
+                if not character or not character:FindFirstChild("HumanoidRootPart") or not character:FindFirstChildOfClass("Humanoid") then
+                    esp.Enabled = false
                     continue
                 end
                 
-                -- Update Drawing API objects
-                if drawingObjects then
-                    local vector, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-                    
-                    if onScreen then
-                        -- Calculate box size based on distance
-                        local size = 5000 / distance
-                        local boxSize = Vector2.new(size, size * 1.5)
-                        local boxPosition = Vector2.new(vector.X - size / 2, vector.Y - size / 2)
-                        
-                        -- Update box
-                        drawingObjects.Box.Size = boxSize
-                        drawingObjects.Box.Position = boxPosition
-                        drawingObjects.Box.Visible = Config.ESP.ShowBox and self.Enabled
-                        
-                        -- Update name
-                        drawingObjects.Name.Position = Vector2.new(vector.X, boxPosition.Y - 16)
-                        drawingObjects.Name.Visible = Config.ESP.ShowInfo and self.Enabled
-                        
-                        -- Update health
-                        drawingObjects.Health.Text = math.floor(humanoid.Health) .. " HP"
-                        drawingObjects.Health.Position = Vector2.new(vector.X, boxPosition.Y + boxSize.Y + 2)
-                        drawingObjects.Health.Color = Color3.fromRGB(
-                            255 * (1 - humanoid.Health / humanoid.MaxHealth),
-                            255 * (humanoid.Health / humanoid.MaxHealth),
-                            0
-                        )
-                        drawingObjects.Health.Visible = Config.ESP.ShowInfo and self.Enabled
-                        
-                        -- Update distance
-                        drawingObjects.Distance.Text = math.floor(distance) .. "m"
-                        drawingObjects.Distance.Position = Vector2.new(vector.X, boxPosition.Y + boxSize.Y + 18)
-                        drawingObjects.Distance.Visible = Config.ESP.ShowInfo and self.Enabled
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                local hrp = character:FindFirstChild("HumanoidRootPart")
+                
+                -- Verificar equipe
+                if Config.ESP.TeamCheck and player.Team == LocalPlayer.Team then
+                    esp.Enabled = false
+                    continue
+                end
+                
+                -- Verificar distância
+                local distance = (Camera.CFrame.Position - hrp.Position).Magnitude
+                if distance > Config.ESP.MaxDistance then
+                    esp.Enabled = false
+                    continue
+                end
+                
+                -- Atualizar ESP
+                esp.Adornee = hrp
+                esp.Enabled = true
+                
+                -- Atualizar componentes
+                local box = esp:FindFirstChild("Box")
+                local nameLabel = esp:FindFirstChild("Name")
+                local healthLabel = esp:FindFirstChild("Health")
+                local distanceLabel = esp:FindFirstChild("Distance")
+                
+                if box then
+                    box.Visible = Config.ESP.ShowBox
+                end
+                
+                if nameLabel then
+                    nameLabel.Visible = Config.ESP.ShowInfo
+                    if player.Team then
+                        nameLabel.TextColor3 = player.TeamColor.Color
                     else
-                        -- Hide ESP if off screen
-                        drawingObjects.Box.Visible = false
-                        drawingObjects.Name.Visible = false
-                        drawingObjects.Health.Visible = false
-                        drawingObjects.Distance.Visible = false
+                        nameLabel.TextColor3 = Config.ESP.TextColor
                     end
-                elseif objects then
-                    -- Update instance-based ESP
-                    objects.ESP.Adornee = hrp
-                    objects.ESP.Enabled = self.Enabled
+                end
+                
+                if healthLabel and humanoid then
+                    healthLabel.Visible = Config.ESP.ShowInfo
+                    local hp = math.floor(humanoid.Health)
+                    local maxHp = math.floor(humanoid.MaxHealth)
+                    healthLabel.Text = hp .. " HP"
                     
-                    -- Update health
-                    objects.Health.Text = math.floor(humanoid.Health) .. " HP"
-                    objects.Health.TextColor3 = Color3.fromRGB(
-                        255 * (1 - humanoid.Health / humanoid.MaxHealth),
-                        255 * (humanoid.Health / humanoid.MaxHealth),
+                    -- Cor baseada na saúde
+                    local healthRatio = hp / maxHp
+                    healthLabel.TextColor3 = Color3.fromRGB(
+                        255 * (1 - healthRatio),
+                        255 * healthRatio,
                         0
                     )
-                    
-                    -- Update distance
-                    objects.Distance.Text = math.floor(distance) .. "m"
-                    
-                    -- Update visibility
-                    objects.Frame.Visible = Config.ESP.ShowBox
-                    objects.Name.Visible = Config.ESP.ShowInfo
-                    objects.Health.Visible = Config.ESP.ShowInfo
-                    objects.Distance.Visible = Config.ESP.ShowInfo
                 end
-            else
-                -- Player is invalid, hide ESP
-                self:HideESP(player.Name)
+                
+                if distanceLabel then
+                    distanceLabel.Visible = Config.ESP.ShowInfo
+                    distanceLabel.Text = math.floor(distance) .. "m"
+                end
             end
         end
     end
 end
 
--- Hide ESP for a player
-function ESPManager:HideESP(playerName)
-    local objects = self.Objects[playerName]
-    local drawingObjects = self.DrawingObjects[playerName]
-    
-    if objects and objects.ESP then
-        objects.ESP.Enabled = false
-    end
-    
-    if drawingObjects then
-        drawingObjects.Box.Visible = false
-        drawingObjects.Name.Visible = false
-        drawingObjects.Health.Visible = false
-        drawingObjects.Distance.Visible = false
-    end
-end
-
--- Clean up ESP objects for a player
-function ESPManager:RemoveESP(player)
-    local objects = self.Objects[player.Name]
-    local drawingObjects = self.DrawingObjects[player.Name]
-    
-    if objects then
-        for _, object in pairs(objects) do
-            if typeof(object) == "Instance" then
-                object:Destroy()
-            end
-        end
-        self.Objects[player.Name] = nil
-    end
-    
-    if drawingObjects then
-        for _, object in pairs(drawingObjects) do
-            pcall(function() object:Remove() end)
-        end
-        self.DrawingObjects[player.Name] = nil
-    end
-end
-
--- Enable ESP
-function ESPManager:Enable()
-    self.Enabled = true
-    
-    -- Create ESP for existing players
+-- Habilitar ESP
+function EnableESP()
+    -- Criar ESP para jogadores existentes
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and not self.Objects[player.Name] and not self.DrawingObjects[player.Name] then
-            self:CreateESP(player)
+        if player ~= LocalPlayer then
+            CreateESP(player)
         end
     end
     
-    -- Update ESP
-    if not self.RenderConnection then
-        self.RenderConnection = RunService.RenderStepped:Connect(function()
-            self:UpdateESP()
+    -- Conectar updates
+    if not ESPUpdateConnection then
+        ESPUpdateConnection = RunService.RenderStepped:Connect(UpdateESP)
+    end
+    
+    -- Criar conexão para novos jogadores
+    if not PlayerAddedConnection then
+        PlayerAddedConnection = Players.PlayerAdded:Connect(function(player)
+            if player ~= LocalPlayer then
+                CreateESP(player)
+            end
+        end)
+    end
+    
+    -- Limpar ESP para jogadores que saem
+    if not PlayerRemovedConnection then
+        PlayerRemovedConnection = Players.PlayerRemoving:Connect(function(player)
+            local esp = ESPFolder:FindFirstChild("ESP_" .. player.Name)
+            if esp then
+                esp:Destroy()
+            end
         end)
     end
 end
 
--- Disable ESP
-function ESPManager:Disable()
-    self.Enabled = false
-    
-    -- Hide all ESP objects
-    for playerName, _ in pairs(self.Objects) do
-        self:HideESP(playerName)
+-- Desabilitar ESP
+function DisableESP()
+    if ESPUpdateConnection then
+        ESPUpdateConnection:Disconnect()
+        ESPUpdateConnection = nil
     end
     
-    for playerName, _ in pairs(self.DrawingObjects) do
-        self:HideESP(playerName)
-    end
-    
-    -- Disconnect render connection
-    if self.RenderConnection then
-        self.RenderConnection:Disconnect()
-        self.RenderConnection = nil
-    end
+    ESPFolder:ClearAllChildren()
 end
 
--- Clean up all ESP objects
-function ESPManager:CleanUp()
-    for playerName, _ in pairs(self.Objects) do
-        local player = Players:FindFirstChild(playerName)
-        if player then
-            self:RemoveESP(player)
-        end
-    end
-    
-    for playerName, _ in pairs(self.DrawingObjects) do
-        local player = Players:FindFirstChild(playerName)
-        if player then
-            self:RemoveESP(player)
-        end
-    end
-    
-    -- Disconnect render connection
-    if self.RenderConnection then
-        self.RenderConnection:Disconnect()
-        self.RenderConnection = nil
-    end
-end
+-- // AIMBOT SYSTEM
+local FOVCircle = nil
+local AimbotActive = false
+local TargetPart = "Head"
 
--- // Aimbot System
-local AimbotManager = {
-    Enabled = false,
-    Aiming = false,
-    Target = nil,
-    FOVCircle = nil
-}
-
--- Create FOV circle
-function AimbotManager:CreateFOVCircle()
+-- Criar círculo FOV
+local function CreateFOVCircle()
+    -- Tentar usar Drawing API
     pcall(function()
         if Drawing then
-            self.FOVCircle = Drawing.new("Circle")
-            self.FOVCircle.Visible = Config.Aimbot.ShowFOV and self.Enabled
-            self.FOVCircle.Color = Config.Aimbot.FOVColor
-            self.FOVCircle.Thickness = 1
-            self.FOVCircle.NumSides = 60
-            self.FOVCircle.Radius = Config.Aimbot.FOV
-            self.FOVCircle.Filled = false
-            self.FOVCircle.Transparency = 1
+            FOVCircle = Drawing.new("Circle")
+            FOVCircle.Visible = Config.Aimbot.ShowFOV and Config.Aimbot.Enabled
+            FOVCircle.Color = Color3.fromRGB(255, 255, 255)
+            FOVCircle.Thickness = 1
+            FOVCircle.NumSides = 60
+            FOVCircle.Radius = Config.Aimbot.FOV
+            FOVCircle.Filled = false
+            FOVCircle.Transparency = 1
+            FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+            
+            return true
         end
+        return false
     end)
-end
-
--- Update FOV circle
-function AimbotManager:UpdateFOVCircle()
-    if self.FOVCircle then
-        self.FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-        self.FOVCircle.Radius = Config.Aimbot.FOV
-        self.FOVCircle.Visible = Config.Aimbot.ShowFOV and self.Enabled
+    
+    -- Se Drawing API não estiver disponível, tentar criar elemento UI
+    if not FOVCircle then
+        local fovGui = Instance.new("ScreenGui")
+        fovGui.Name = "AimbotFOV"
+        
+        pcall(function() fovGui.Parent = game:GetService("CoreGui") end)
+        if not fovGui.Parent then
+            fovGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+        end
+        
+        FOVCircle = Instance.new("Frame")
+        FOVCircle.Name = "Circle"
+        FOVCircle.Size = UDim2.new(0, Config.Aimbot.FOV * 2, 0, Config.Aimbot.FOV * 2)
+        FOVCircle.Position = UDim2.new(0.5, -Config.Aimbot.FOV, 0.5, -Config.Aimbot.FOV)
+        FOVCircle.BackgroundTransparency = 1
+        FOVCircle.BorderSizePixel = 0
+        FOVCircle.Parent = fovGui
+        
+        local circle = Instance.new("UIStroke")
+        circle.Color = Color3.fromRGB(255, 255, 255)
+        circle.Thickness = 1
+        circle.Transparency = 0.5
+        circle.Parent = FOVCircle
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(1, 0)
+        corner.Parent = FOVCircle
     end
 end
 
--- Get closest player for aimbot
-function AimbotManager:GetClosestPlayer()
+-- Atualizar círculo FOV
+local function UpdateFOVCircle()
+    if not FOVCircle then return end
+    
+    if typeof(FOVCircle) == "table" and FOVCircle.Position then
+        FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+        FOVCircle.Radius = Config.Aimbot.FOV
+        FOVCircle.Visible = Config.Aimbot.ShowFOV and Config.Aimbot.Enabled
+    elseif FOVCircle:IsA("Frame") then
+        FOVCircle.Size = UDim2.new(0, Config.Aimbot.FOV * 2, 0, Config.Aimbot.FOV * 2)
+        FOVCircle.Position = UDim2.new(0.5, -Config.Aimbot.FOV, 0.5, -Config.Aimbot.FOV)
+        FOVCircle.Visible = Config.Aimbot.ShowFOV and Config.Aimbot.Enabled
+    end
+end
+
+-- Obter jogador mais próximo do centro da tela
+local function GetClosestPlayer()
     local closestPlayer = nil
     local shortestDistance = Config.Aimbot.FOV
     
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
-            -- Team check
+            -- Verificar equipe
             if Config.Aimbot.TeamCheck and player.Team == LocalPlayer.Team then
                 continue
             end
             
-            if Utilities:ValidatePlayer(player) then
-                local character = player.Character
-                local targetPart = character:FindFirstChild(Config.Aimbot.TargetPart)
+            local character = player.Character
+            if character and character:FindFirstChild(TargetPart) and character:FindFirstChildOfClass("Humanoid") then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
                 
-                if targetPart then
-                    local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                -- Verificar se está vivo
+                if humanoid.Health <= 0 then continue end
+                
+                -- Verificar visibilidade na tela
+                local target = character[TargetPart]
+                local screenPos, onScreen = Camera:WorldToScreenPoint(target.Position)
+                
+                if onScreen then
+                    -- Calcular distância do centro da tela
+                    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                    local screenDistance = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
                     
-                    if onScreen then
-                        local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)).Magnitude
-                        
-                        if distance < shortestDistance then
-                            -- Visibility check (optional)
-                            if Utilities:IsVisible(targetPart.Position) then
-                                closestPlayer = player
-                                shortestDistance = distance
-                            end
-                        end
+                    if screenDistance < shortestDistance then
+                        shortestDistance = screenDistance
+                        closestPlayer = player
                     end
                 end
             end
@@ -477,648 +867,295 @@ function AimbotManager:GetClosestPlayer()
     return closestPlayer
 end
 
--- Predict target position
-function AimbotManager:PredictTargetPosition(target)
-    if not Utilities:ValidatePlayer(target) then return nil end
+-- Predizer posição
+local function PredictPosition(player)
+    local character = player.Character
+    if not character or not character:FindFirstChild(TargetPart) then return nil end
     
-    local targetPart = target.Character:FindFirstChild(Config.Aimbot.TargetPart)
-    if not targetPart then return nil end
+    local targetPart = character[TargetPart]
     
-    -- Simple prediction based on humanoid velocity
-    if Config.Aimbot.Prediction then
-        local humanoid = target.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid and humanoid.MoveDirection.Magnitude > 0 then
-            return targetPart.Position + (humanoid.MoveDirection * 0.2)
-        end
-    end
-    
+    -- Predição básica
     return targetPart.Position
 end
 
--- Aim at target
-function AimbotManager:AimAtTarget(target)
-    if not target or not Utilities:ValidatePlayer(target) then return end
-    
-    local predictedPosition = self:PredictTargetPosition(target)
-    if not predictedPosition then return end
-    
-    -- Calculate aim direction
-    local cameraPosition = Camera.CFrame.Position
-    local aimDirection = (predictedPosition - cameraPosition).Unit
-    
-    -- Create new camera CFrame
-    local newCameraCFrame = CFrame.new(cameraPosition, cameraPosition + aimDirection)
-    
-    -- Smooth aim using sensitivity
-    Camera.CFrame = Camera.CFrame:Lerp(newCameraCFrame, Config.Aimbot.Sensitivity)
-    
-    -- Auto shoot logic (if enabled)
-    if Config.Aimbot.AutoShoot then
-        -- This uses built-in mouse functions, might need adaptation for specific games
-        -- Most executor-level trigger bots work better than this though
-        pcall(function() 
-            mouse1press()
-            task.wait(0.1)
-            mouse1release()
-        end)
-    end
-end
-
--- Enable aimbot
-function AimbotManager:Enable()
-    self.Enabled = true
-    
-    -- Create FOV circle if needed
-    if not self.FOVCircle then
-        self:CreateFOVCircle()
+-- Habilitar Aimbot
+function EnableAimbot()
+    if not FOVCircle then
+        CreateFOVCircle()
     end
     
-    -- Toggle aiming based on input
-    if not self.InputBeganConnection then
-        self.InputBeganConnection = UserInputService.InputBegan:Connect(function(input)
+    -- Atualizar círculo FOV
+    if not FOVUpdateConnection then
+        FOVUpdateConnection = RunService.RenderStepped:Connect(UpdateFOVCircle)
+    end
+    
+    -- Detectar input para ativar mira
+    if not InputBeganConnection then
+        InputBeganConnection = UserInputService.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton2 or input.UserInputType == Enum.UserInputType.Touch then
-                self.Aiming = true
+                AimbotActive = true
             end
         end)
     end
     
-    if not self.InputEndedConnection then
-        self.InputEndedConnection = UserInputService.InputEnded:Connect(function(input)
+    if not InputEndedConnection then
+        InputEndedConnection = UserInputService.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton2 or input.UserInputType == Enum.UserInputType.Touch then
-                self.Aiming = false
+                AimbotActive = false
             end
         end)
     end
     
-    -- Update aimbot
-    if not self.RenderConnection then
-        self.RenderConnection = RunService.RenderStepped:Connect(function()
-            self:UpdateFOVCircle()
+    -- Loop principal do aimbot
+    if not AimbotUpdateConnection then
+        AimbotUpdateConnection = RunService.RenderStepped:Connect(function()
+            if not Config.Aimbot.Enabled or not AimbotActive then return end
             
-            if self.Enabled and self.Aiming then
-                self.Target = self:GetClosestPlayer()
-                if self.Target then
-                    self:AimAtTarget(self.Target)
-                end
-            end
+            local target = GetClosestPlayer()
+            if not target then return end
+            
+            local predictedPosition = PredictPosition(target)
+            if not predictedPosition then return end
+            
+            -- Calcular nova orientação da câmera
+            local cameraPos = Camera.CFrame.Position
+            local newCFrame = CFrame.new(cameraPos, predictedPosition)
+            
+            -- Aplicar aimbot com suavização
+            Camera.CFrame = Camera.CFrame:Lerp(newCFrame, Config.Aimbot.Sensitivity)
         end)
     end
 end
 
--- Disable aimbot
-function AimbotManager:Disable()
-    self.Enabled = false
-    self.Aiming = false
-    self.Target = nil
+-- Desabilitar Aimbot
+function DisableAimbot()
+    AimbotActive = false
     
-    -- Hide FOV circle
-    if self.FOVCircle then
-        self.FOVCircle.Visible = false
+    if InputBeganConnection then
+        InputBeganConnection:Disconnect()
+        InputBeganConnection = nil
     end
     
-    -- Disconnect events
-    if self.InputBeganConnection then
-        self.InputBeganConnection:Disconnect()
-        self.InputBeganConnection = nil
+    if InputEndedConnection then
+        InputEndedConnection:Disconnect()
+        InputEndedConnection = nil
     end
     
-    if self.InputEndedConnection then
-        self.InputEndedConnection:Disconnect()
-        self.InputEndedConnection = nil
+    if AimbotUpdateConnection then
+        AimbotUpdateConnection:Disconnect()
+        AimbotUpdateConnection = nil
     end
     
-    if self.RenderConnection then
-        self.RenderConnection:Disconnect()
-        self.RenderConnection = nil
+    if FOVUpdateConnection then
+        FOVUpdateConnection:Disconnect()
+        FOVUpdateConnection = nil
     end
-end
-
--- Clean up aimbot resources
-function AimbotManager:CleanUp()
-    self:Disable()
     
-    if self.FOVCircle then
-        pcall(function() self.FOVCircle:Remove() end)
-        self.FOVCircle = nil
+    if FOVCircle then
+        if typeof(FOVCircle) == "table" and FOVCircle.Remove then
+            FOVCircle:Remove()
+        elseif typeof(FOVCircle) == "Instance" then
+            FOVCircle.Parent:Destroy()
+        end
+        FOVCircle = nil
     end
 end
 
--- // Fly System
-local FlyManager = {
-    Enabled = false,
-    Gyro = nil,
-    Velocity = nil,
-    FlyControls = nil
-}
+-- // FLY SYSTEM
+local FlyGyro
+local FlyVelocity
+local IsFlying = false
+local FlyPos
+local IsUp = false
+local IsDown = false
 
--- Create fly controls (mobile-friendly)
-function FlyManager:CreateFlyControls()
-    if self.FlyControls then return end
+-- Habilitar Fly
+function EnableFly()
+    IsFlying = true
+    FlyControlsGui.Enabled = true
     
-    -- Create container
-    self.FlyControls = Instance.new("ScreenGui")
-    self.FlyControls.Name = "FlyControls"
-    self.FlyControls.Enabled = false
-    self.FlyControls.ResetOnSpawn = false
-    
-    -- Up button
-    local upButton = Instance.new("TextButton")
-    upButton.Name = "UpButton"
-    upButton.Size = UDim2.new(0, 100, 0, 100)
-    upButton.Position = UDim2.new(0, 10, 0.5, -110)
-    upButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-    upButton.BorderSizePixel = 0
-    upButton.Text = "↑"
-    upButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    upButton.TextSize = 30
-    upButton.Font = Enum.Font.GothamBold
-    upButton.Parent = self.FlyControls
-    
-    -- Corner for up button
-    local upCorner = Instance.new("UICorner")
-    upCorner.CornerRadius = UDim.new(0, 10)
-    upCorner.Parent = upButton
-    
-    -- Down button
-    local downButton = Instance.new("TextButton")
-    downButton.Name = "DownButton"
-    downButton.Size = UDim2.new(0, 100, 0, 100)
-    downButton.Position = UDim2.new(0, 10, 0.5, 10)
-    downButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    downButton.BorderSizePixel = 0
-    downButton.Text = "↓"
-    downButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    downButton.TextSize = 30
-    downButton.Font = Enum.Font.GothamBold
-    downButton.Parent = self.FlyControls
-    
-    -- Corner for down button
-    local downCorner = Instance.new("UICorner")
-    downCorner.CornerRadius = UDim.new(0, 10)
-    downCorner.Parent = downButton
-    
-    -- Button states
-    self.UpPressed = false
-    self.DownPressed = false
-    
-    -- Connect button events
-    upButton.MouseButton1Down:Connect(function()
-        self.UpPressed = true
+    -- Event connections for fly controls
+    UpButton.MouseButton1Down:Connect(function()
+        IsUp = true
     end)
     
-    upButton.MouseButton1Up:Connect(function()
-        self.UpPressed = false
+    UpButton.MouseButton1Up:Connect(function()
+        IsUp = false
     end)
     
-    downButton.MouseButton1Down:Connect(function()
-        self.DownPressed = true
+    DownButton.MouseButton1Down:Connect(function()
+        IsDown = true
     end)
     
-    downButton.MouseButton1Up:Connect(function()
-        self.DownPressed = false
+    DownButton.MouseButton1Up:Connect(function()
+        IsDown = false
     end)
     
-    -- Parent to GUI
-    pcall(function()
-        self.FlyControls.Parent = game.CoreGui
-    end)
-    
-    if not self.FlyControls.Parent then
-        self.FlyControls.Parent = LocalPlayer:WaitForChild("PlayerGui")
-    end
-end
-
--- Enable fly
-function FlyManager:Enable()
-    self.Enabled = true
-    
-    -- Create controls if needed
-    self:CreateFlyControls()
-    
-    -- Show controls
-    if self.FlyControls then
-        self.FlyControls.Enabled = true
-    end
-    
-    -- Apply fly
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     
     local hrp = character:FindFirstChild("HumanoidRootPart")
     
-    -- Create gyro for orientation
-    self.Gyro = Instance.new("BodyGyro")
-    self.Gyro.D = 0
-    self.Gyro.P = 9e4
-    self.Gyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-    self.Gyro.Parent = hrp
+    -- Create gyro and velocity
+    FlyGyro = Instance.new("BodyGyro")
+    FlyGyro.P = 9e4
+    FlyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+    FlyGyro.CFrame = hrp.CFrame
+    FlyGyro.Parent = hrp
     
-    -- Create velocity for movement
-    self.Velocity = Instance.new("BodyVelocity")
-    self.Velocity.Velocity = Vector3.new(0, 0.1, 0)
-    self.Velocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-    self.Velocity.Parent = hrp
+    FlyVelocity = Instance.new("BodyVelocity")
+    FlyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+    FlyVelocity.Velocity = Vector3.new(0, 0.1, 0)
+    FlyVelocity.Parent = hrp
     
-    -- Update fly loop
-    if not self.UpdateConnection then
-        self.UpdateConnection = RunService.RenderStepped:Connect(function()
-            if not self.Enabled then return end
+    -- Main fly loop
+    if not FlyUpdateConnection then
+        FlyUpdateConnection = RunService.RenderStepped:Connect(function()
+            if not IsFlying or not Config.Fly.Enabled then return end
             
             local character = LocalPlayer.Character
             if not character or not character:FindFirstChild("HumanoidRootPart") then
-                self:Disable()
+                DisableFly()
                 return
             end
             
             local hrp = character:FindFirstChild("HumanoidRootPart")
             local humanoid = character:FindFirstChildOfClass("Humanoid")
             
-            -- Update gyro direction
-            self.Gyro.CFrame = CFrame.new(hrp.Position, hrp.Position + Camera.CFrame.LookVector)
+            -- Update orientation
+            FlyGyro.CFrame = CFrame.new(hrp.Position, hrp.Position + Camera.CFrame.LookVector)
             
             -- Calculate vertical speed
             local verticalSpeed = 0
-            if self.UpPressed then
+            if IsUp then
                 verticalSpeed = Config.Fly.VerticalSpeed
-            elseif self.DownPressed then
+            elseif IsDown then
                 verticalSpeed = -Config.Fly.VerticalSpeed
             end
             
             -- Update velocity
-            self.Velocity.Velocity = Vector3.new(
-                humanoid.MoveDirection.X * Config.Fly.Speed,
+            local moveDir = humanoid.MoveDirection
+            FlyVelocity.Velocity = Vector3.new(
+                moveDir.X * Config.Fly.Speed,
                 verticalSpeed,
-                humanoid.MoveDirection.Z * Config.Fly.Speed
+                moveDir.Z * Config.Fly.Speed
             )
         end)
     end
 end
 
--- Disable fly
-function FlyManager:Disable()
-    self.Enabled = false
+-- Desabilitar Fly
+function DisableFly()
+    IsFlying = false
+    FlyControlsGui.Enabled = false
     
-    -- Hide controls
-    if self.FlyControls then
-        self.FlyControls.Enabled = false
-    end
-    
-    -- Clean up physics objects
-    if self.Gyro then
-        self.Gyro:Destroy()
-        self.Gyro = nil
+    if FlyGyro then
+        FlyGyro:Destroy()
+        FlyGyro = nil
     end
     
-    if self.Velocity then
-        self.Velocity:Destroy()
-        self.Velocity = nil
+    if FlyVelocity then
+        FlyVelocity:Destroy()
+        FlyVelocity = nil
     end
     
-    -- Disconnect update loop
-    if self.UpdateConnection then
-        self.UpdateConnection:Disconnect()
-        self.UpdateConnection = nil
+    if FlyUpdateConnection then
+        FlyUpdateConnection:Disconnect()
+        FlyUpdateConnection = nil
     end
-end
-
--- Clean up fly resources
-function FlyManager:CleanUp()
-    self:Disable()
     
-    if self.FlyControls then
-        self.FlyControls:Destroy()
-        self.FlyControls = nil
-    end
-end
+    IsUp = false
+    IsDown = false
+}
 
--- // Create Rayfield Interface
-local Window = Rayfield:CreateWindow({
-    Name = "Wirtz Script",
-    LoadingTitle = "Wirtz Script",
-    LoadingSubtitle = "by @wirtz.dev",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = "WirtzConfigs",
-        FileName = "WirtzScriptConfig"
-    },
-    KeySystem = false -- Set to true if you want to use a key system
-})
+-- // Conexões de Evento
+local ESPUpdateConnection
+local PlayerAddedConnection
+local PlayerRemovedConnection
+local FOVUpdateConnection
+local InputBeganConnection
+local InputEndedConnection
+local AimbotUpdateConnection
+local FlyUpdateConnection
 
--- // ESP Tab
-local ESPTab = Window:CreateTab("ESP", 9734460825) -- Using an ID for ESP icon
-
--- ESP Toggle
-ESPTab:CreateToggle({
-    Name = "ESP Master",
-    CurrentValue = false,
-    Flag = "ESP_Enabled",
-    Callback = function(Value)
-        Config.ESP.Enabled = Value
-        
-        if Value then
-            ESPManager:Enable()
-        else
-            ESPManager:Disable()
-        end
-    end
-})
-
--- ESP Team Check
-ESPTab:CreateToggle({
-    Name = "Team Check",
-    CurrentValue = true,
-    Flag = "ESP_TeamCheck",
-    Callback = function(Value)
-        Config.ESP.TeamCheck = Value
-    end
-})
-
--- ESP Show Box
-ESPTab:CreateToggle({
-    Name = "Show Boxes",
-    CurrentValue = true,
-    Flag = "ESP_ShowBox",
-    Callback = function(Value)
-        Config.ESP.ShowBox = Value
-    end
-})
-
--- ESP Show Info
-ESPTab:CreateToggle({
-    Name = "Show Info (Health, Distance)",
-    CurrentValue = true,
-    Flag = "ESP_ShowInfo",
-    Callback = function(Value)
-        Config.ESP.ShowInfo = Value
-    end
-})
-
--- ESP Distance
-ESPTab:CreateSlider({
-    Name = "Max Distance",
-    Range = {100, 5000},
-    Increment = 100,
-    CurrentValue = 2000,
-    Flag = "ESP_MaxDistance",
-    Callback = function(Value)
-        Config.ESP.MaxDistance = Value
-    end
-})
-
--- ESP Color Picker
-ESPTab:CreateColorPicker({
-    Name = "Box Color",
-    Color = Color3.fromRGB(255, 0, 0),
-    Flag = "ESP_BoxColor",
-    Callback = function(Value)
-        Config.ESP.BoxColor = Value
-    end
-})
-
--- // Aimbot Tab
-local AimbotTab = Window:CreateTab("Aimbot", 9766671152) -- Using an ID for aimbot icon
-
--- Aimbot Toggle
-AimbotTab:CreateToggle({
-    Name = "Aimbot Master",
-    CurrentValue = false,
-    Flag = "Aimbot_Enabled",
-    Callback = function(Value)
-        Config.Aimbot.Enabled = Value
-        
-        if Value then
-            AimbotManager:Enable()
-        else
-            AimbotManager:Disable()
-        end
-    end
-})
-
--- Aimbot Team Check
-AimbotTab:CreateToggle({
-    Name = "Team Check",
-    CurrentValue = true,
-    Flag = "Aimbot_TeamCheck",
-    Callback = function(Value)
-        Config.Aimbot.TeamCheck = Value
-    end
-})
-
--- Aimbot Prediction
-AimbotTab:CreateToggle({
-    Name = "Prediction",
-    CurrentValue = true,
-    Flag = "Aimbot_Prediction",
-    Callback = function(Value)
-        Config.Aimbot.Prediction = Value
-    end
-})
-
--- Aimbot Auto Shoot
-AimbotTab:CreateToggle({
-    Name = "Auto Shoot",
-    CurrentValue = false,
-    Flag = "Aimbot_AutoShoot",
-    Callback = function(Value)
-        Config.Aimbot.AutoShoot = Value
-    end
-})
-
--- Aimbot FOV Toggle
-AimbotTab:CreateToggle({
-    Name = "Show FOV Circle",
-    CurrentValue = true,
-    Flag = "Aimbot_ShowFOV",
-    Callback = function(Value)
-        Config.Aimbot.ShowFOV = Value
-        if AimbotManager.FOVCircle then
-            AimbotManager.FOVCircle.Visible = Value and AimbotManager.Enabled
-        end
-    end
-})
-
--- Aimbot Target Part Dropdown
-AimbotTab:CreateDropdown({
-    Name = "Target Part",
-    Options = {"Head", "HumanoidRootPart", "Torso", "LowerTorso", "UpperTorso"},
-    CurrentOption = "Head",
-    Flag = "Aimbot_TargetPart",
-    Callback = function(Option)
-        Config.Aimbot.TargetPart = Option
-    end
-})
-
--- Aimbot FOV Size
-AimbotTab:CreateSlider({
-    Name = "FOV Size",
-    Range = {10, 500},
-    Increment = 10,
-    CurrentValue = 100,
-    Flag = "Aimbot_FOV",
-    Callback = function(Value)
-        Config.Aimbot.FOV = Value
-    end
-})
-
--- Aimbot Smoothness
-AimbotTab:CreateSlider({
-    Name = "Aim Smoothness",
-    Range = {0.1, 1},
-    Increment = 0.1,
-    CurrentValue = 0.8,
-    Flag = "Aimbot_Sensitivity",
-    Callback = function(Value)
-        Config.Aimbot.Sensitivity = Value
-    end
-})
-
--- Aimbot FOV Color
-AimbotTab:CreateColorPicker({
-    Name = "FOV Circle Color",
-    Color = Color3.fromRGB(255, 255, 255),
-    Flag = "Aimbot_FOVColor",
-    Callback = function(Value)
-        Config.Aimbot.FOVColor = Value
-        if AimbotManager.FOVCircle then
-            AimbotManager.FOVCircle.Color = Value
-        end
-    end
-})
-
--- // Fly Tab
-local FlyTab = Window:CreateTab("Fly", 9768530392) -- Using an ID for fly icon
-
--- Fly Toggle
-FlyTab:CreateToggle({
-    Name = "Fly Master",
-    CurrentValue = false,
-    Flag = "Fly_Enabled",
-    Callback = function(Value)
-        Config.Fly.Enabled = Value
-        
-        if Value then
-            FlyManager:Enable()
-        else
-            FlyManager:Disable()
-        end
-    end
-})
-
--- Fly Speed
-FlyTab:CreateSlider({
-    Name = "Fly Speed",
-    Range = {10, 200},
-    Increment = 5,
-    CurrentValue = 80,
-    Flag = "Fly_Speed",
-    Callback = function(Value)
-        Config.Fly.Speed = Value
-    end
-})
-
--- Vertical Speed
-FlyTab:CreateSlider({
-    Name = "Vertical Speed",
-    Range = {10, 200},
-    Increment = 5,
-    CurrentValue = 70,
-    Flag = "Fly_VerticalSpeed",
-    Callback = function(Value)
-        Config.Fly.VerticalSpeed = Value
-    end
-})
-
--- Fly Controls Info
-FlyTab:CreateSection("Mobile Controls")
-
-FlyTab:CreateParagraph({
-    Title = "Mobile Controls",
-    Content = "When Fly is enabled, control buttons will appear on the left side of your screen. Use these to move up and down. Use your movement keys/stick to move horizontally."
-})
-
--- // Settings Tab
-local SettingsTab = Window:CreateTab("Settings", 9753762469) -- Using an ID for settings icon
-
--- Settings Section
-SettingsTab:CreateSection("Script Settings")
-
--- Keybind to toggle UI
-SettingsTab:CreateKeybind({
-    Name = "Toggle UI",
-    CurrentKeybind = "RightControl",
-    HoldToInteract = false,
-    Flag = "UI_Toggle",
-    Callback = function()
-        -- Toggle UI visibility
-        Rayfield:ToggleWindow()
-    end
-})
-
--- Unload Script Button
-SettingsTab:CreateButton({
-    Name = "Unload Script",
-    Callback = function()
-        -- Clean up all managers
-        ESPManager:CleanUp()
-        AimbotManager:CleanUp()
-        FlyManager:CleanUp()
-        
-        -- Remove player connections
-        for _, connection in pairs({
-            PlayerAddedConnection,
-            PlayerRemovedConnection
-        }) do
-            if connection then
-                connection:Disconnect()
-            end
-        end
-        
-        -- Destroy Rayfield UI
-        Rayfield:Destroy()
-    end
-})
-
--- Credits Section
-SettingsTab:CreateSection("Credits")
-
-SettingsTab:CreateParagraph({
-    Title = "Wirtz Script",
-    Content = "Developed by @wirtz.dev\nVersion 3.0.1"
-})
-
--- // Player Connections
--- Track new players for ESP
-local PlayerAddedConnection = Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer and ESPManager.Enabled then
-        ESPManager:CreateESP(player)
-    end
+-- // Conexão para jogadores que saem
+Players.PlayerRemoving:Connect(function(player)
+    local esp = ESPFolder:FindFirstChild("ESP_" .. player.Name)
+    if esp then esp:Destroy() end
 end)
 
--- Clean up ESP when players leave
-local PlayerRemovedConnection = Players.PlayerRemoving:Connect(function(player)
-    ESPManager:RemoveESP(player)
+-- // Efeito de animação na inicialização
+MainFrame.BackgroundTransparency = 1
+TitleBar.BackgroundTransparency = 1
+TitleLabel.TextTransparency = 1
+
+-- Aparecer gradualmente
+TweenService:Create(MainFrame, TweenInfo.new(0.5), {BackgroundTransparency = 0}):Play()
+TweenService:Create(TitleBar, TweenInfo.new(0.5), {BackgroundTransparency = 0}):Play()
+TweenService:Create(TitleLabel, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
+
+-- // Notificação de inicialização
+local NotifyGui = Instance.new("ScreenGui")
+NotifyGui.Name = "WirtzNotify"
+NotifyGui.DisplayOrder = 100
+pcall(function() NotifyGui.Parent = game:GetService("CoreGui") end)
+if not NotifyGui.Parent then NotifyGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+
+local NotifyFrame = Instance.new("Frame")
+NotifyFrame.Name = "NotifyFrame"
+NotifyFrame.Size = UDim2.new(0, 300, 0, 80)
+NotifyFrame.Position = UDim2.new(0.5, -150, 0, -90)
+NotifyFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+NotifyFrame.BorderSizePixel = 0
+NotifyFrame.Parent = NotifyGui
+
+local NotifyCorner = Instance.new("UICorner")
+NotifyCorner.CornerRadius = UDim.new(0, 8)
+NotifyCorner.Parent = NotifyFrame
+
+local NotifyTitle = Instance.new("TextLabel")
+NotifyTitle.Name = "Title"
+NotifyTitle.Size = UDim2.new(1, -20, 0, 30)
+NotifyTitle.Position = UDim2.new(0, 10, 0, 5)
+NotifyTitle.BackgroundTransparency = 1
+NotifyTitle.Text = "Wirtz Script"
+NotifyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+NotifyTitle.TextSize = 18
+NotifyTitle.Font = Enum.Font.GothamBold
+NotifyTitle.TextXAlignment = Enum.TextXAlignment.Left
+NotifyTitle.Parent = NotifyFrame
+
+local NotifyText = Instance.new("TextLabel")
+NotifyText.Name = "Text"
+NotifyText.Size = UDim2.new(1, -20, 0, 40)
+NotifyText.Position = UDim2.new(0, 10, 0, 35)
+NotifyText.BackgroundTransparency = 1
+NotifyText.Text = "Script carregado com sucesso! Use as abas para acessar os recursos."
+NotifyText.TextColor3 = Color3.fromRGB(200, 200, 200)
+NotifyText.TextSize = 14
+NotifyText.Font = Enum.Font.Gotham
+NotifyText.TextXAlignment = Enum.TextXAlignment.Left
+NotifyText.TextWrapped = true
+NotifyText.Parent = NotifyFrame
+
+-- Animar notificação
+TweenService:Create(NotifyFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(0.5, -150, 0, 10)}):Play()
+
+-- Remover notificação após alguns segundos
+task.delay(5, function()
+    TweenService:Create(NotifyFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(0.5, -150, 0, -90)}):Play()
+    task.wait(0.5)
+    NotifyGui:Destroy()
 end)
 
--- // Notification
-Rayfield:Notify({
-    Title = "Wirtz Script Loaded",
-    Content = "Script successfully loaded! Press RightControl to toggle UI.",
-    Duration = 5,
-    Image = 9734460825,
-    Actions = {
-        Ignore = {
-            Name = "OK",
-            Callback = function() end
-        }
-    }
-})
-
--- // Character Added Connection (for Fly fix)
-LocalPlayer.CharacterAdded:Connect(function(character)
-    -- If fly was enabled, re-enable it
-    if FlyManager.Enabled then
-        task.wait(1) -- Wait for character to fully load
-        FlyManager:Disable()
-        FlyManager:Enable()
-    end
+-- // Limpeza ao sair
+game:GetService("Players").LocalPlayer.OnTeleport:Connect(function()
+    pcall(function()
+        DisableESP()
+        DisableAimbot()
+        DisableFly()
+        ScreenGui:Destroy()
+        FlyControlsGui:Destroy()
+        if NotifyGui then NotifyGui:Destroy() end
+    end)
 end)
