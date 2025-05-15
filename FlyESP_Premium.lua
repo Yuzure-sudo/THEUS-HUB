@@ -1,399 +1,274 @@
--- THEUS-HUB Mobile Edition
--- Script compacto otimizado para dispositivos móveis
+-- THEUS-HUB Básico Mobile
+-- Script ultra simplificado para executores mobile limitados
 
 -- Serviços
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
-local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
--- Verificar se já existe uma GUI anterior
-local ScreenGui = game:GetService("CoreGui"):FindFirstChild("THEUSHUB_Mobile")
-if ScreenGui then ScreenGui:Destroy() end
+-- Remove GUI anterior se existir
+if game:GetService("CoreGui"):FindFirstChild("TheusHUB") then
+    game:GetService("CoreGui"):FindFirstChild("TheusHUB"):Destroy()
+end
 
--- Criar GUI
-ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "THEUSHUB_Mobile"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.Parent = game:GetService("CoreGui")
+-- Criar GUI simples
+local gui = Instance.new("ScreenGui")
+gui.Name = "TheusHUB"
+gui.ResetOnSpawn = false
+gui.Parent = game:GetService("CoreGui")
 
 -- Configurações
-local Config = {
-    Fly = {
-        Enabled = false,
-        Speed = 50
-    },
-    ESP = {
-        Enabled = false,
-        ShowName = true,
-        ShowDistance = true,
-        TeamCheck = false,
-        MaxDistance = 2000
-    },
-    Aimbot = {
-        Enabled = false,
-        TeamCheck = true,
-        TargetPart = "Head",
-        FOV = 150,
-        ShowFOV = true,
-        Smoothness = 0.5
-    }
-}
+local flyEnabled = false
+local espEnabled = false
+local aimbotEnabled = false
 
--- Criar interface principal
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.5, -150, 0.2, 0)
-MainFrame.Size = UDim2.new(0, 300, 0, 300)
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Parent = ScreenGui
+-- Frame principal
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 200)
+frame.Position = UDim2.new(0.1, 0, 0.4, 0)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
 
--- Arredondar cantos
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 10)
-UICorner.Parent = MainFrame
+-- Título
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+title.BorderSizePixel = 0
+title.Text = "THEUS-HUB"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 18
+title.Font = Enum.Font.SourceSansBold
+title.Parent = frame
 
--- Barra de título
-local TitleBar = Instance.new("Frame")
-TitleBar.Name = "TitleBar"
-TitleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-TitleBar.BorderSizePixel = 0
-TitleBar.Size = UDim2.new(1, 0, 0, 40)
-TitleBar.Parent = MainFrame
+-- Botão Fly
+local flyButton = Instance.new("TextButton")
+flyButton.Position = UDim2.new(0, 10, 0, 40)
+flyButton.Size = UDim2.new(1, -20, 0, 40)
+flyButton.BackgroundColor3 = Color3.fromRGB(0, 120, 180)
+flyButton.BorderSizePixel = 0
+flyButton.Text = "FLY"
+flyButton.TextColor3 = Color3.fromRGB(255, 255, 255) 
+flyButton.TextSize = 18
+flyButton.Font = Enum.Font.SourceSansBold
+flyButton.Parent = frame
 
-local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0, 10)
-TitleCorner.Parent = TitleBar
+-- Botão ESP
+local espButton = Instance.new("TextButton")
+espButton.Position = UDim2.new(0, 10, 0, 90)
+espButton.Size = UDim2.new(1, -20, 0, 40)
+espButton.BackgroundColor3 = Color3.fromRGB(120, 60, 180)
+espButton.BorderSizePixel = 0
+espButton.Text = "ESP"
+espButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+espButton.TextSize = 18
+espButton.Font = Enum.Font.SourceSansBold
+espButton.Parent = frame
 
-local TitleText = Instance.new("TextLabel")
-TitleText.Name = "Title"
-TitleText.BackgroundTransparency = 1
-TitleText.Position = UDim2.new(0, 15, 0, 0)
-TitleText.Size = UDim2.new(1, -30, 1, 0)
-TitleText.Font = Enum.Font.GothamBold
-TitleText.Text = "THEUS-HUB MOBILE"
-TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleText.TextSize = 18
-TitleText.TextXAlignment = Enum.TextXAlignment.Left
-TitleText.Parent = TitleBar
+-- Botão Aimbot
+local aimbotButton = Instance.new("TextButton")
+aimbotButton.Position = UDim2.new(0, 10, 0, 140)
+aimbotButton.Size = UDim2.new(1, -20, 0, 40)
+aimbotButton.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+aimbotButton.BorderSizePixel = 0
+aimbotButton.Text = "AIMBOT"
+aimbotButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+aimbotButton.TextSize = 18
+aimbotButton.Font = Enum.Font.SourceSansBold
+aimbotButton.Parent = frame
 
--- Botão de fechar
-local CloseButton = Instance.new("TextButton")
-CloseButton.Name = "CloseButton"
-CloseButton.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
-CloseButton.BorderSizePixel = 0
-CloseButton.Position = UDim2.new(1, -30, 0, 10)
-CloseButton.Size = UDim2.new(0, 20, 0, 20)
-CloseButton.Font = Enum.Font.GothamBold
-CloseButton.Text = "X"
-CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseButton.TextSize = 14
-CloseButton.Parent = TitleBar
+-- Controles para subir/descer (Fly)
+local upButton = Instance.new("TextButton")
+upButton.Size = UDim2.new(0, 60, 0, 60)
+upButton.Position = UDim2.new(0, 220, 0, 40)
+upButton.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+upButton.BorderSizePixel = 0
+upButton.Text = "SUBIR"
+upButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+upButton.TextSize = 14
+upButton.Font = Enum.Font.SourceSansBold
+upButton.Visible = false
+upButton.Parent = gui
 
-local CloseCorner = Instance.new("UICorner")
-CloseCorner.CornerRadius = UDim.new(0, 4)
-CloseCorner.Parent = CloseButton
+local downButton = Instance.new("TextButton")
+downButton.Size = UDim2.new(0, 60, 0, 60)
+downButton.Position = UDim2.new(0, 220, 0, 110)
+downButton.BackgroundColor3 = Color3.fromRGB(150, 70, 30)
+downButton.BorderSizePixel = 0
+downButton.Text = "DESCER"
+downButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+downButton.TextSize = 14
+downButton.Font = Enum.Font.SourceSansBold
+downButton.Visible = false
+downButton.Parent = gui
 
--- Função para criar botões
-local function CreateButton(text, position, color)
-    local button = Instance.new("TextButton")
-    button.Name = text .. "Button"
-    button.BackgroundColor3 = color or Color3.fromRGB(40, 40, 60)
-    button.BorderSizePixel = 0
-    button.Position = position
-    button.Size = UDim2.new(0, 280, 0, 60)
-    button.Font = Enum.Font.GothamBold
-    button.Text = text
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextSize = 20
-    button.Parent = MainFrame
+-- Variáveis para as funções
+local flyGyro, flyVel
+local espFolder = Instance.new("Folder", gui)
+espFolder.Name = "ESPItems"
+
+-- Função FLY
+local function enableFly()
+    local character = LocalPlayer.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = button
+    local hrp = character:FindFirstChild("HumanoidRootPart")
     
-    return button
-end
-
--- Criar botões principais
-local FlyButton = CreateButton("ATIVAR FLY", UDim2.new(0.5, -140, 0, 50), Color3.fromRGB(0, 120, 180))
-local ESPButton = CreateButton("ATIVAR ESP", UDim2.new(0.5, -140, 0, 120), Color3.fromRGB(120, 60, 180))
-local AimbotButton = CreateButton("ATIVAR AIMBOT", UDim2.new(0.5, -140, 0, 190), Color3.fromRGB(180, 60, 60))
-
--- Status
-local StatusLabel = Instance.new("TextLabel")
-StatusLabel.Name = "Status"
-StatusLabel.BackgroundTransparency = 1
-StatusLabel.Position = UDim2.new(0, 10, 0, 260)
-StatusLabel.Size = UDim2.new(1, -20, 0, 30)
-StatusLabel.Font = Enum.Font.GothamSemibold
-StatusLabel.Text = "Status: Pronto"
-StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
-StatusLabel.TextSize = 16
-StatusLabel.TextXAlignment = Enum.TextXAlignment.Center
-StatusLabel.Parent = MainFrame
-
--- Função para atualizar status
-local function UpdateStatus(text, color)
-    StatusLabel.Text = "Status: " .. text
-    StatusLabel.TextColor3 = color or Color3.fromRGB(100, 255, 100)
-end
-
--- Controles para Mobile
-local MobileControls = Instance.new("Frame")
-MobileControls.Name = "MobileControls"
-MobileControls.BackgroundTransparency = 1
-MobileControls.Position = UDim2.new(1, 20, 0.5, -80)
-MobileControls.Size = UDim2.new(0, 70, 0, 160)
-MobileControls.Parent = ScreenGui
-
--- Botão para subir
-local UpButton = Instance.new("TextButton")
-UpButton.Name = "UpButton"
-UpButton.BackgroundColor3 = Color3.fromRGB(0, 150, 120)
-UpButton.BorderSizePixel = 0
-UpButton.Position = UDim2.new(0, 0, 0, 0)
-UpButton.Size = UDim2.new(1, 0, 0, 70)
-UpButton.Font = Enum.Font.GothamBold
-UpButton.Text = "▲"
-UpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-UpButton.TextSize = 30
-UpButton.Parent = MobileControls
-
-local UpCorner = Instance.new("UICorner")
-UpCorner.CornerRadius = UDim.new(0, 8)
-UpCorner.Parent = UpButton
-
--- Botão para descer
-local DownButton = Instance.new("TextButton")
-DownButton.Name = "DownButton"
-DownButton.BackgroundColor3 = Color3.fromRGB(150, 70, 30)
-DownButton.BorderSizePixel = 0
-DownButton.Position = UDim2.new(0, 0, 0, 90)
-DownButton.Size = UDim2.new(1, 0, 0, 70)
-DownButton.Font = Enum.Font.GothamBold
-DownButton.Text = "▼"
-DownButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-DownButton.TextSize = 30
-DownButton.Parent = MobileControls
-
-local DownCorner = Instance.new("UICorner")
-DownCorner.CornerRadius = UDim.new(0, 8)
-DownCorner.Parent = DownButton
-
--- Variáveis para sistemas
-local FlyGyro, FlyVel
-local ESPFolder = Instance.new("Folder", ScreenGui)
-ESPFolder.Name = "ESPElements"
-
--- Círculo FOV para Aimbot
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Visible = false
-FOVCircle.Radius = Config.Aimbot.FOV
-FOVCircle.Color = Color3.fromRGB(255, 255, 255)
-FOVCircle.Thickness = 1
-FOVCircle.Transparency = 0.7
-FOVCircle.NumSides = 36
-FOVCircle.Filled = false
-
--- Sistema de Fly
-function EnableFly()
-    local Character = LocalPlayer.Character
-    if not Character or not Character:FindFirstChild("HumanoidRootPart") then
-        UpdateStatus("Erro: Personagem não encontrado", Color3.fromRGB(255, 100, 100))
-        Config.Fly.Enabled = false
-        return
-    end
+    flyGyro = Instance.new("BodyGyro")
+    flyGyro.P = 9e4
+    flyGyro.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+    flyGyro.CFrame = hrp.CFrame
+    flyGyro.Parent = hrp
     
-    local HRP = Character:FindFirstChild("HumanoidRootPart")
+    flyVel = Instance.new("BodyVelocity")
+    flyVel.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+    flyVel.Velocity = Vector3.new(0, 0.1, 0)
+    flyVel.Parent = hrp
     
-    -- Criar controles de voo
-    FlyGyro = Instance.new("BodyGyro")
-    FlyGyro.P = 9e4
-    FlyGyro.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-    FlyGyro.CFrame = HRP.CFrame
-    FlyGyro.Parent = HRP
+    upButton.Visible = true
+    downButton.Visible = true
     
-    FlyVel = Instance.new("BodyVelocity")
-    FlyVel.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-    FlyVel.Velocity = Vector3.new(0, 0.1, 0)
-    FlyVel.Parent = HRP
+    -- Variáveis para controle
+    local isUp = false
+    local isDown = false
     
-    UpdateStatus("Fly ativado! Use os botões para subir/descer", Color3.fromRGB(100, 200, 255))
-    FlyButton.Text = "DESATIVAR FLY"
-    FlyButton.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
-    
-    -- Variáveis para movimento vertical
-    local isUpPressed = false
-    local isDownPressed = false
-    
-    -- Eventos de toque
-    UpButton.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isUpPressed = true
-        end
+    upButton.MouseButton1Down:Connect(function()
+        isUp = true
     end)
     
-    UpButton.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isUpPressed = false
-        end
+    upButton.MouseButton1Up:Connect(function()
+        isUp = false
     end)
     
-    DownButton.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isDownPressed = true
-        end
+    downButton.MouseButton1Down:Connect(function()
+        isDown = true
     end)
     
-    DownButton.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isDownPressed = false
-        end
+    downButton.MouseButton1Up:Connect(function()
+        isDown = false
     end)
     
-    -- Loop de voo
+    -- Loop do voo
     RunService:BindToRenderStep("FlyLoop", 1, function()
-        if not Config.Fly.Enabled then return end
+        if not flyEnabled then return end
         
-        local Character = LocalPlayer.Character
-        if not Character or not Character:FindFirstChild("HumanoidRootPart") then
-            DisableFly()
+        local character = LocalPlayer.Character
+        if not character or not character:FindFirstChild("HumanoidRootPart") then
+            disableFly()
             return
         end
         
-        local HRP = Character:FindFirstChild("HumanoidRootPart")
-        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
         
-        -- Orientação baseada na câmera
-        FlyGyro.CFrame = CFrame.new(HRP.Position, HRP.Position + Camera.CFrame.LookVector)
+        -- Orientação
+        flyGyro.CFrame = CFrame.new(hrp.Position, hrp.Position + Camera.CFrame.LookVector)
         
-        -- Movimento horizontal (usando o analógico nativo do Roblox)
-        local moveDir = Humanoid.MoveDirection
+        -- Movimento
+        local moveDir = humanoid.MoveDirection
         
-        -- Movimento vertical baseado nos botões
-        local verticalSpeed = 0
-        if isUpPressed then
-            verticalSpeed = Config.Fly.Speed
-        elseif isDownPressed then
-            verticalSpeed = -Config.Fly.Speed
+        -- Vertical
+        local ySpeed = 0
+        if isUp then
+            ySpeed = 50
+        elseif isDown then
+            ySpeed = -50
         end
         
-        -- Aplicar velocidade
-        FlyVel.Velocity = Vector3.new(
-            moveDir.X * Config.Fly.Speed,
-            verticalSpeed,
-            moveDir.Z * Config.Fly.Speed
+        -- Aplicar
+        flyVel.Velocity = Vector3.new(
+            moveDir.X * 50,
+            ySpeed,
+            moveDir.Z * 50
         )
     end)
 end
 
-function DisableFly()
+local function disableFly()
     RunService:UnbindFromRenderStep("FlyLoop")
     
-    if FlyGyro then FlyGyro:Destroy() end
-    if FlyVel then FlyVel:Destroy() end
+    if flyGyro then flyGyro:Destroy() end
+    if flyVel then flyVel:Destroy() end
     
-    FlyGyro = nil
-    FlyVel = nil
+    flyGyro = nil
+    flyVel = nil
     
-    UpdateStatus("Fly desativado", Color3.fromRGB(255, 200, 100))
-    FlyButton.Text = "ATIVAR FLY"
-    FlyButton.BackgroundColor3 = Color3.fromRGB(0, 120, 180)
-    
-    Config.Fly.Enabled = false
+    upButton.Visible = false
+    downButton.Visible = false
 end
 
--- Sistema de ESP
-function EnableESP()
-    ESPFolder:ClearAllChildren()
+-- Função ESP
+local function enableESP()
+    -- Limpar ESP anterior
+    espFolder:ClearAllChildren()
     
-    UpdateStatus("ESP ativado", Color3.fromRGB(100, 255, 100))
-    ESPButton.Text = "DESATIVAR ESP"
-    ESPButton.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
-    
-    -- Criar ESP para jogadores atuais
+    -- ESP para jogadores existentes
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
-            CreatePlayerESP(player)
+            createPlayerESP(player)
         end
     end
     
-    -- Monitorar novos jogadores
+    -- ESP para novos jogadores
     Players.PlayerAdded:Connect(function(player)
-        if Config.ESP.Enabled then
-            CreatePlayerESP(player)
+        if espEnabled then
+            createPlayerESP(player)
         end
     end)
     
-    -- Atualizar ESP constantemente
+    -- Atualizar ESP
     RunService:BindToRenderStep("ESPLoop", 5, function()
-        if not Config.ESP.Enabled then return end
+        if not espEnabled then return end
         
-        for _, esp in pairs(ESPFolder:GetChildren()) do
-            UpdateESP(esp)
+        for _, esp in pairs(espFolder:GetChildren()) do
+            updateESP(esp)
         end
     end)
 end
 
-function DisableESP()
+local function disableESP()
     RunService:UnbindFromRenderStep("ESPLoop")
-    ESPFolder:ClearAllChildren()
-    
-    UpdateStatus("ESP desativado", Color3.fromRGB(255, 200, 100))
-    ESPButton.Text = "ATIVAR ESP"
-    ESPButton.BackgroundColor3 = Color3.fromRGB(120, 60, 180)
-    
-    Config.ESP.Enabled = false
+    espFolder:ClearAllChildren()
 end
 
-function CreatePlayerESP(player)
+function createPlayerESP(player)
     local esp = Instance.new("BillboardGui")
     esp.Name = "ESP_" .. player.Name
     esp.AlwaysOnTop = true
-    esp.Size = UDim2.new(0, 200, 0, 50)
+    esp.Size = UDim2.new(0, 100, 0, 40)
     esp.StudsOffset = Vector3.new(0, 3, 0)
-    esp.Adornee = nil  -- Será definido em UpdateESP
     esp.Player = player.Name
-    esp.Parent = ESPFolder
+    esp.Parent = espFolder
     
-    -- Nome do jogador
     local nameLabel = Instance.new("TextLabel")
     nameLabel.Name = "NameLabel"
     nameLabel.BackgroundTransparency = 1
-    nameLabel.Position = UDim2.new(0, 0, 0, 0)
-    nameLabel.Size = UDim2.new(1, 0, 0, 20)
-    nameLabel.Font = Enum.Font.GothamSemibold
+    nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
     nameLabel.Text = player.Name
     nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    nameLabel.TextStrokeTransparency = 0.3
-    nameLabel.TextSize = 14
+    nameLabel.TextStrokeTransparency = 0.5
+    nameLabel.TextSize = 12
+    nameLabel.Font = Enum.Font.SourceSansBold
     nameLabel.Parent = esp
     
-    -- Distância
-    local distanceLabel = Instance.new("TextLabel")
-    distanceLabel.Name = "DistanceLabel"
-    distanceLabel.BackgroundTransparency = 1
-    distanceLabel.Position = UDim2.new(0, 0, 0, 20)
-    distanceLabel.Size = UDim2.new(1, 0, 0, 20)
-    distanceLabel.Font = Enum.Font.Gotham
-    distanceLabel.Text = "0m"
-    distanceLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    distanceLabel.TextStrokeTransparency = 0.3
-    distanceLabel.TextSize = 12
-    distanceLabel.Parent = esp
-    
-    return esp
+    local distLabel = Instance.new("TextLabel")
+    distLabel.Name = "DistLabel"
+    distLabel.BackgroundTransparency = 1
+    distLabel.Position = UDim2.new(0, 0, 0.5, 0)
+    distLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    distLabel.Text = "0m"
+    distLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    distLabel.TextStrokeTransparency = 0.5
+    distLabel.TextSize = 10
+    distLabel.Font = Enum.Font.SourceSans
+    distLabel.Parent = esp
 end
 
-function UpdateESP(esp)
+function updateESP(esp)
     local playerName = esp.Player
     local player = Players:FindFirstChild(playerName)
     
@@ -408,66 +283,37 @@ function UpdateESP(esp)
         return
     end
     
-    local hrp = character.HumanoidRootPart
+    local hrp = character:FindFirstChild("HumanoidRootPart")
     
-    -- Verificar distância
+    -- Distância
     local distance = (hrp.Position - Camera.CFrame.Position).Magnitude
-    if distance > Config.ESP.MaxDistance then
+    if distance > 1000 then
         esp.Enabled = false
         return
     end
     
-    -- Verificar time se necessário
-    if Config.ESP.TeamCheck and player.Team == LocalPlayer.Team then
-        esp.Enabled = false
-        return
-    end
-    
-    -- Atualizar ESP
     esp.Enabled = true
     esp.Adornee = hrp
     
     -- Atualizar distância
-    local distanceLabel = esp:FindFirstChild("DistanceLabel")
-    if distanceLabel and Config.ESP.ShowDistance then
-        distanceLabel.Visible = true
-        distanceLabel.Text = math.floor(distance) .. "m"
-    elseif distanceLabel then
-        distanceLabel.Visible = false
+    local distLabel = esp:FindFirstChild("DistLabel")
+    if distLabel then
+        distLabel.Text = math.floor(distance) .. "m"
     end
     
-    -- Atualizar nome
+    -- Atualizar cor
     local nameLabel = esp:FindFirstChild("NameLabel")
-    if nameLabel and Config.ESP.ShowName then
-        nameLabel.Visible = true
-        
-        -- Cor com base na equipe
-        if player.Team then
-            nameLabel.TextColor3 = player.TeamColor.Color
-        else
-            nameLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-        end
-    elseif nameLabel then
-        nameLabel.Visible = false
+    if nameLabel and player.Team then
+        nameLabel.TextColor3 = player.TeamColor.Color
     end
 end
 
--- Sistema de Aimbot
-function EnableAimbot()
-    FOVCircle.Visible = Config.Aimbot.ShowFOV
-    FOVCircle.Radius = Config.Aimbot.FOV
-    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    
-    UpdateStatus("Aimbot ativado - Toque e segure para mirar", Color3.fromRGB(255, 150, 150))
-    AimbotButton.Text = "DESATIVAR AIMBOT"
-    AimbotButton.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
-    
-    -- Variável para rastrear estado de mira
-    local isAiming = false
-    
-    -- Para dispositivos móveis, usamos toque segurado para ativar
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if gameProcessed then return end
+-- Função Aimbot
+local isAiming = false
+
+local function enableAimbot()
+    -- Evento para toques
+    UserInputService.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.Touch then
             isAiming = true
         end
@@ -479,152 +325,115 @@ function EnableAimbot()
         end
     end)
     
-    -- Loop principal do Aimbot
+    -- Loop do aimbot
     RunService:BindToRenderStep("AimbotLoop", 1, function()
-        if not Config.Aimbot.Enabled then return end
+        if not aimbotEnabled or not isAiming then return end
         
-        -- Atualizar círculo FOV
-        FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-        FOVCircle.Visible = Config.Aimbot.ShowFOV
+        local target = getClosestPlayer()
+        if not target then return end
         
-        -- Verificar se estamos mirando
-        if not isAiming then return end
+        local character = target.Character
+        if not character or not character:FindFirstChild("Head") then return end
         
-        -- Encontrar alvo mais próximo
-        local closestPlayer = GetClosestPlayerToCursor()
-        if not closestPlayer then return end
+        local head = character:FindFirstChild("Head")
         
         -- Mirar no alvo
-        local character = closestPlayer.Character
-        if not character or not character:FindFirstChild(Config.Aimbot.TargetPart) then return end
-        
-        local targetPart = character:FindFirstChild(Config.Aimbot.TargetPart)
-        
-        -- Calcular nova orientação da câmera
-        local targetPos = targetPart.Position
-        local cameraPos = Camera.CFrame.Position
-        
-        local targetCFrame = CFrame.new(cameraPos, targetPos)
-        
-        -- Aplicar suavização
-        Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, Config.Aimbot.Smoothness)
+        Camera.CFrame = CFrame.new(Camera.CFrame.Position, head.Position)
     end)
 end
 
-function DisableAimbot()
+local function disableAimbot()
     RunService:UnbindFromRenderStep("AimbotLoop")
-    FOVCircle.Visible = false
-    
-    UpdateStatus("Aimbot desativado", Color3.fromRGB(255, 200, 100))
-    AimbotButton.Text = "ATIVAR AIMBOT"
-    AimbotButton.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
-    
-    Config.Aimbot.Enabled = false
 end
 
-function GetClosestPlayerToCursor()
-    local closestPlayer = nil
-    local shortestDistance = Config.Aimbot.FOV
+function getClosestPlayer()
+    local closest = nil
+    local maxDist = 500
     
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
-            -- Verificar time se necessário
-            if Config.Aimbot.TeamCheck and player.Team == LocalPlayer.Team then
-                continue
-            end
-            
             local character = player.Character
-            if not character or not character:FindFirstChild(Config.Aimbot.TargetPart) then
-                continue
-            end
-            
-            -- Verificar se está vivo
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if not humanoid or humanoid.Health <= 0 then
-                continue
-            end
-            
-            -- Obter posição na tela
-            local targetPart = character[Config.Aimbot.TargetPart]
-            local screenPos, onScreen = Camera:WorldToScreenPoint(targetPart.Position)
-            
-            if not onScreen then
-                continue
-            end
-            
-            -- Calcular distância até o centro da tela
-            local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-            local screenDistance = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
-            
-            if screenDistance < shortestDistance then
-                shortestDistance = screenDistance
-                closestPlayer = player
+            if character and character:FindFirstChild("Head") then
+                local head = character:FindFirstChild("Head")
+                local pos, onScreen = Camera:WorldToScreenPoint(head.Position)
+                
+                if onScreen then
+                    local dist = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                    
+                    if dist < maxDist then
+                        maxDist = dist
+                        closest = player
+                    end
+                end
             end
         end
     end
     
-    return closestPlayer
+    return closest
 end
 
--- Conectar botões aos sistemas
-FlyButton.MouseButton1Click:Connect(function()
-    Config.Fly.Enabled = not Config.Fly.Enabled
+-- Conectar botões
+flyButton.MouseButton1Click:Connect(function()
+    flyEnabled = not flyEnabled
     
-    if Config.Fly.Enabled then
-        EnableFly()
+    if flyEnabled then
+        flyButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+        flyButton.Text = "FLY [ON]"
+        enableFly()
     else
-        DisableFly()
+        flyButton.BackgroundColor3 = Color3.fromRGB(0, 120, 180)
+        flyButton.Text = "FLY"
+        disableFly()
     end
 end)
 
-ESPButton.MouseButton1Click:Connect(function()
-    Config.ESP.Enabled = not Config.ESP.Enabled
+espButton.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
     
-    if Config.ESP.Enabled then
-        EnableESP()
+    if espEnabled then
+        espButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+        espButton.Text = "ESP [ON]"
+        enableESP()
     else
-        DisableESP()
+        espButton.BackgroundColor3 = Color3.fromRGB(120, 60, 180)
+        espButton.Text = "ESP"
+        disableESP()
     end
 end)
 
-AimbotButton.MouseButton1Click:Connect(function()
-    Config.Aimbot.Enabled = not Config.Aimbot.Enabled
+aimbotButton.MouseButton1Click:Connect(function()
+    aimbotEnabled = not aimbotEnabled
     
-    if Config.Aimbot.Enabled then
-        EnableAimbot()
+    if aimbotEnabled then
+        aimbotButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+        aimbotButton.Text = "AIMBOT [ON]"
+        enableAimbot()
     else
-        DisableAimbot()
+        aimbotButton.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+        aimbotButton.Text = "AIMBOT"
+        disableAimbot()
     end
 end)
 
--- Botão de fechar
-CloseButton.MouseButton1Click:Connect(function()
-    -- Desativar todas as funcionalidades
-    if Config.Fly.Enabled then DisableFly() end
-    if Config.ESP.Enabled then DisableESP() end
-    if Config.Aimbot.Enabled then DisableAimbot() end
-    
-    -- Remover FOV Circle
-    if FOVCircle then
-        FOVCircle:Remove()
-    end
-    
-    -- Destruir GUI
-    ScreenGui:Destroy()
-end)
+-- Mensagem de carregamento
+local status = Instance.new("TextLabel")
+status.Position = UDim2.new(0, 0, 1, 5)
+status.Size = UDim2.new(1, 0, 0, 20)
+status.BackgroundTransparency = 1
+status.Text = "Script Carregado!"
+status.TextColor3 = Color3.fromRGB(100, 255, 100)
+status.TextSize = 14
+status.Font = Enum.Font.SourceSans
+status.Parent = frame
 
--- Mensagem inicial
-UpdateStatus("Script carregado com sucesso!", Color3.fromRGB(100, 255, 100))
-
--- Informações sobre o script
-local InfoLabel = Instance.new("TextLabel")
-InfoLabel.Name = "InfoLabel"
-InfoLabel.BackgroundTransparency = 1
-InfoLabel.Position = UDim2.new(0, 0, 1, -20)
-InfoLabel.Size = UDim2.new(1, 0, 0, 20)
-InfoLabel.Font = Enum.Font.Gotham
-InfoLabel.Text = "THEUS-HUB Mobile v1.0"
-InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-InfoLabel.TextSize = 12
-InfoLabel.TextXAlignment = Enum.TextXAlignment.Center
-InfoLabel.Parent = MainFrame
+-- Mensagem sobre o autor no canto da tela
+local watermark = Instance.new("TextLabel")
+watermark.Position = UDim2.new(0, 5, 1, -25)
+watermark.Size = UDim2.new(0, 150, 0, 20)
+watermark.BackgroundTransparency = 1
+watermark.Text = "THEUS-HUB Mobile v1.0"
+watermark.TextColor3 = Color3.fromRGB(200, 200, 200)
+watermark.TextSize = 12
+watermark.TextXAlignment = Enum.TextXAlignment.Left
+watermark.Font = Enum.Font.SourceSans
+watermark.Parent = gui
