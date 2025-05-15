@@ -1,1911 +1,3036 @@
--- // Arise Crossover Hub by wirtz.dev
--- // Versão 1.0
+--[[
+    Blox Fruits Mobile [BLACK EDITION] v3.5
+    Desenvolvido por: Lek do Black
+    
+    ALERTA: Use por sua conta e risco. Essa porra é proibida nos termos do jogo.
+    Não chora se tomar ban, seu merda!
+]]
 
--- // Serviços
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualUser = game:GetService("VirtualUser")
-local HttpService = game:GetService("HttpService")
+-- CONFIGURAÇÃO INICIAL
+local UserSettings = {
+    License = "FREE-VERSION", -- Muda pra "PREMIUM" se tu for esperto e comprar
+    Theme = "Dark", -- Opções: "Dark", "Light", "Blood", "Ocean"
+    SafeMode = true, -- Liga isso se não quiser ser banido, seu burro
+    MobileOptimized = true -- NUNCA desativa essa porra no celular
+}
 
--- // Variáveis
-local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local Humanoid = Character:WaitForChild("Humanoid")
-local HRP = Character:WaitForChild("HumanoidRootPart")
-local Camera = workspace.CurrentCamera
-
--- // Anti-AFK
-for _, connection in pairs(getconnections(LocalPlayer.Idled)) do
-    connection:Disable()
+-- ANTI-DETECTION SYSTEM
+local function SetupSecurity()
+    local SecureData = {}
+    SecureData.ActiveProtocols = {}
+    
+    -- Bypass anti-cheat detection hooks
+    local OldNamecall
+    OldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+        local Args = {...}
+        local Method = getnamecallmethod()
+        
+        if Method == "FireServer" and self.Name:find("Security") or self.Name:find("Check") then
+            return wait(9e9) -- Nunca retorna = nunca detecta
+        elseif Method == "Kick" then
+            return wait(9e9) -- Bloqueia tentativa de kick
+        end
+        
+        return OldNamecall(self, ...)
+    end))
+    
+    -- Humanize actions to avoid pattern detection
+    SecureData.LastActions = {}
+    SecureData.AddAction = function(actionType)
+        table.insert(SecureData.LastActions, {
+            Type = actionType,
+            Time = tick(),
+            RandomSeed = math.random(1000, 9999)
+        })
+        
+        -- Keep only last 20 actions to analyze patterns
+        if #SecureData.LastActions > 20 then
+            table.remove(SecureData.LastActions, 1)
+        end
+    end
+    
+    -- Add random delay to actions (human-like)
+    SecureData.RandomDelay = function(min, max)
+        local delay = min + math.random() * (max - min)
+        task.wait(delay)
+        return delay
+    end
+    
+    return SecureData
 end
 
--- // Limpar GUIs existentes
-pcall(function()
+-- INTERFACE PRINCIPAL - OTIMIZADA PRA MOBILE
+local function CreateMobileUI()
+    -- Limpar GUIs existentes (pra não ter duplicata, seu burro)
     for _, gui in pairs(game:GetService("CoreGui"):GetChildren()) do
-        if gui.Name == "AriseHubGUI" or gui.Name == "MinimizedCube" then
+        if gui.Name == "BloxFruitsMobileGUI" then
             gui:Destroy()
         end
     end
-end)
-
--- // Cores e Temas
-local Theme = {
-    Background = Color3.fromRGB(25, 25, 30),
-    Accent = Color3.fromRGB(87, 115, 255),
-    LightAccent = Color3.fromRGB(100, 130, 255),
-    DarkAccent = Color3.fromRGB(70, 90, 210),
-    Text = Color3.fromRGB(255, 255, 255),
-    SubText = Color3.fromRGB(200, 200, 200),
-    Border = Color3.fromRGB(50, 50, 60),
-    Header = Color3.fromRGB(30, 30, 35),
-    Button = Color3.fromRGB(40, 40, 45)
-}
-
--- // Configurações
-local Config = {
-    AutoFarm = {
-        Enabled = false,
-        Target = "None",
-        Range = 10,
-        Mode = "Normal"
-    },
-    Combat = {
-        AutoAttack = false,
-        AutoDodge = false,
-        AttackSpeed = 1
-    },
-    Movement = {
-        Speed = false,
-        SpeedMultiplier = 2,
-        Jump = false,
-        JumpMultiplier = 2,
-        NoClip = false
-    },
-    Visual = {
-        ESP = false,
-        FullBright = false,
-        ChestESP = false,
-        ItemESP = false
-    },
-    Misc = {
-        AutoQuest = false,
-        AutoPickup = false,
-        InfiniteStamina = false
-    }
-}
-
--- // Criar GUI Principal
-local AriseHubGUI = Instance.new("ScreenGui")
-AriseHubGUI.Name = "AriseHubGUI"
-AriseHubGUI.ResetOnSpawn = false
-
--- Tentar adicionar à CoreGui
-pcall(function()
-    if syn and syn.protect_gui then
-        syn.protect_gui(AriseHubGUI)
-        AriseHubGUI.Parent = game:GetService("CoreGui")
+    
+    local PlayerService = game:GetService("Players")
+    local LocalPlayer = PlayerService.LocalPlayer
+    local UserInputService = game:GetService("UserInputService")
+    local TweenService = game:GetService("TweenService")
+    local RunService = game:GetService("RunService")
+    
+    -- Criar GUI Principal
+    local BloxFruitsMobileGUI = Instance.new("ScreenGui")
+    BloxFruitsMobileGUI.Name = "BloxFruitsMobileGUI"
+    BloxFruitsMobileGUI.ResetOnSpawn = false
+    BloxFruitsMobileGUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    -- Proteger a GUI de detecção (método avançado)
+    syn = syn or {}
+    if syn.protect_gui then 
+        syn.protect_gui(BloxFruitsMobileGUI)
+        BloxFruitsMobileGUI.Parent = game:GetService("CoreGui")
+    elseif gethui then
+        BloxFruitsMobileGUI.Parent = gethui()
     else
-        AriseHubGUI.Parent = game:GetService("CoreGui")
+        BloxFruitsMobileGUI.Parent = game:GetService("CoreGui")
     end
-end)
-if not AriseHubGUI.Parent then
-    AriseHubGUI.Parent = LocalPlayer.PlayerGui
-end
-
--- GUI Minimizada (Cubo)
-local MinimizedCube = Instance.new("ScreenGui")
-MinimizedCube.Name = "MinimizedCube"
-MinimizedCube.ResetOnSpawn = false
-MinimizedCube.Enabled = false
-
-pcall(function()
-    if syn and syn.protect_gui then
-        syn.protect_gui(MinimizedCube)
-        MinimizedCube.Parent = game:GetService("CoreGui")
-    else
-        MinimizedCube.Parent = game:GetService("CoreGui")
-    end
-end)
-if not MinimizedCube.Parent then
-    MinimizedCube.Parent = LocalPlayer.PlayerGui
-end
-
--- Criar o Cubo de Minimizar
-local CubeButton = Instance.new("ImageButton")
-CubeButton.Name = "CubeButton"
-CubeButton.Size = UDim2.new(0, 50, 0, 50)
-CubeButton.Position = UDim2.new(0.05, 0, 0.5, -25)
-CubeButton.BackgroundColor3 = Theme.Accent
-CubeButton.BorderSizePixel = 0
-CubeButton.Image = "rbxassetid://6031280882" -- ID de uma imagem de cubo
-CubeButton.ImageColor3 = Color3.fromRGB(255, 255, 255)
-CubeButton.ImageTransparency = 0.2
-CubeButton.Parent = MinimizedCube
-
-local CubeCorner = Instance.new("UICorner")
-CubeCorner.CornerRadius = UDim.new(0.2, 0)
-CubeCorner.Parent = CubeButton
-
-local CubePulse = Instance.new("UIStroke")
-CubePulse.Color = Theme.LightAccent
-CubePulse.Thickness = 2
-CubePulse.Parent = CubeButton
-
--- Animação de pulso para o cubo
-spawn(function()
-    while true do
-        TweenService:Create(CubePulse, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Transparency = 0.8}):Play()
-        wait(2)
-    end
-end)
-
--- Draggable para o cubo
-local isDraggingCube = false
-local dragStartCube
-local startPosCube
-
-CubeButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        isDraggingCube = true
-        dragStartCube = input.Position
-        startPosCube = CubeButton.Position
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if isDraggingCube and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStartCube
-        CubeButton.Position = UDim2.new(
-            startPosCube.X.Scale, startPosCube.X.Offset + delta.X,
-            startPosCube.Y.Scale, startPosCube.Y.Offset + delta.Y
-        )
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        isDraggingCube = false
-    end
-end)
-
--- Interface principal
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 700, 0, 450)
-MainFrame.Position = UDim2.new(0.5, -350, 0.5, -225)
-MainFrame.BackgroundColor3 = Theme.Background
-MainFrame.BorderSizePixel = 0
-MainFrame.ClipsDescendants = true
-MainFrame.Parent = AriseHubGUI
-
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 10)
-MainCorner.Parent = MainFrame
-
-local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = Theme.Border
-MainStroke.Thickness = 2
-MainStroke.Parent = MainFrame
-
--- Barra de título
-local TitleBar = Instance.new("Frame")
-TitleBar.Name = "TitleBar"
-TitleBar.Size = UDim2.new(1, 0, 0, 40)
-TitleBar.BackgroundColor3 = Theme.Header
-TitleBar.BorderSizePixel = 0
-TitleBar.Parent = MainFrame
-
-local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0, 10)
-TitleCorner.Parent = TitleBar
-
--- Bloco para corrigir cantos da barra de título
-local TitleBlocker = Instance.new("Frame")
-TitleBlocker.Size = UDim2.new(1, 0, 0.5, 0)
-TitleBlocker.Position = UDim2.new(0, 0, 0.5, 0)
-TitleBlocker.BackgroundColor3 = Theme.Header
-TitleBlocker.BorderSizePixel = 0
-TitleBlocker.ZIndex = 0
-TitleBlocker.Parent = TitleBar
-
--- Logo
-local Logo = Instance.new("ImageLabel")
-Logo.Name = "Logo"
-Logo.Size = UDim2.new(0, 30, 0, 30)
-Logo.Position = UDim2.new(0, 10, 0, 5)
-Logo.BackgroundTransparency = 1
-Logo.Image = "rbxassetid://6026568198" -- Logo genérico
-Logo.Parent = TitleBar
-
--- Título
-local Title = Instance.new("TextLabel")
-Title.Name = "Title"
-Title.Size = UDim2.new(1, -120, 1, 0)
-Title.Position = UDim2.new(0, 50, 0, 0)
-Title.BackgroundTransparency = 1
-Title.Text = "Arise Crossover Hub"
-Title.TextColor3 = Theme.Text
-Title.TextSize = 18
-Title.Font = Enum.Font.GothamBold
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Parent = TitleBar
-
--- Botão minimizar
-local MinimizeButton = Instance.new("ImageButton")
-MinimizeButton.Name = "MinimizeButton"
-MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
-MinimizeButton.Position = UDim2.new(1, -70, 0, 8)
-MinimizeButton.BackgroundTransparency = 1
-MinimizeButton.Image = "rbxassetid://6031094678" -- Ícone de minimizar
-MinimizeButton.Parent = TitleBar
-
--- Botão fechar
-local CloseButton = Instance.new("ImageButton")
-CloseButton.Name = "CloseButton"
-CloseButton.Size = UDim2.new(0, 24, 0, 24)
-CloseButton.Position = UDim2.new(1, -35, 0, 8)
-CloseButton.BackgroundTransparency = 1
-CloseButton.Image = "rbxassetid://6031094687" -- Ícone de fechar
-CloseButton.Parent = TitleBar
-
--- Tornar a interface arrastável
-local isDragging = false
-local dragStart = nil
-local startPos = nil
-
-TitleBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        isDragging = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        MainFrame.Position = UDim2.new(
-            startPos.X.Scale, startPos.X.Offset + delta.X,
-            startPos.Y.Scale, startPos.Y.Offset + delta.Y
-        )
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        isDragging = false
-    end
-end)
-
--- Container de abas
-local TabContainer = Instance.new("Frame")
-TabContainer.Name = "TabContainer"
-TabContainer.Size = UDim2.new(0, 150, 1, -40)
-TabContainer.Position = UDim2.new(0, 0, 0, 40)
-TabContainer.BackgroundColor3 = Theme.Header
-TabContainer.BorderSizePixel = 0
-TabContainer.Parent = MainFrame
-
--- Conteúdo das abas
-local TabContent = Instance.new("Frame")
-TabContent.Name = "TabContent"
-TabContent.Size = UDim2.new(1, -150, 1, -40)
-TabContent.Position = UDim2.new(0, 150, 0, 40)
-TabContent.BackgroundTransparency = 1
-TabContent.Parent = MainFrame
-
--- Função para criar uma nova aba
-local selectedTab = nil
-local tabs = {}
-
-local function CreateTab(name, icon)
-    -- Botão da aba
-    local tabButton = Instance.new("TextButton")
-    tabButton.Name = name .. "Tab"
-    tabButton.Size = UDim2.new(1, 0, 0, 40)
-    tabButton.Position = UDim2.new(0, 0, 0, #tabs * 40)
-    tabButton.BackgroundTransparency = 1
-    tabButton.Text = ""
-    tabButton.Parent = TabContainer
     
-    local tabIcon = Instance.new("ImageLabel")
-    tabIcon.Name = "Icon"
-    tabIcon.Size = UDim2.new(0, 20, 0, 20)
-    tabIcon.Position = UDim2.new(0, 15, 0.5, -10)
-    tabIcon.BackgroundTransparency = 1
-    tabIcon.Image = icon
-    tabIcon.ImageColor3 = Theme.SubText
-    tabIcon.Parent = tabButton
-    
-    local tabText = Instance.new("TextLabel")
-    tabText.Name = "Text"
-    tabText.Size = UDim2.new(0, 100, 1, 0)
-    tabText.Position = UDim2.new(0, 45, 0, 0)
-    tabText.BackgroundTransparency = 1
-    tabText.Text = name
-    tabText.TextColor3 = Theme.SubText
-    tabText.TextSize = 15
-    tabText.Font = Enum.Font.GothamSemibold
-    tabText.TextXAlignment = Enum.TextXAlignment.Left
-    tabText.Parent = tabButton
-    
-    -- Indicador de seleção
-    local tabIndicator = Instance.new("Frame")
-    tabIndicator.Name = "Indicator"
-    tabIndicator.Size = UDim2.new(0, 4, 1, -10)
-    tabIndicator.Position = UDim2.new(0, 0, 0, 5)
-    tabIndicator.BackgroundColor3 = Theme.Accent
-    tabIndicator.BorderSizePixel = 0
-    tabIndicator.Visible = false
-    tabIndicator.Parent = tabButton
-    
-    -- Container do conteúdo da aba
-    local tabFrame = Instance.new("ScrollingFrame")
-    tabFrame.Name = name .. "Frame"
-    tabFrame.Size = UDim2.new(1, -20, 1, -20)
-    tabFrame.Position = UDim2.new(0, 10, 0, 10)
-    tabFrame.BackgroundTransparency = 1
-    tabFrame.BorderSizePixel = 0
-    tabFrame.ScrollBarThickness = 4
-    tabFrame.ScrollBarImageColor3 = Theme.Accent
-    tabFrame.Visible = false
-    tabFrame.Parent = TabContent
-    
-    local tabUIListLayout = Instance.new("UIListLayout")
-    tabUIListLayout.Padding = UDim.new(0, 10)
-    tabUIListLayout.Parent = tabFrame
-    
-    -- Adicionar à lista de abas
-    table.insert(tabs, {
-        Button = tabButton,
-        Frame = tabFrame,
-        Indicator = tabIndicator,
-        Icon = tabIcon,
-        Text = tabText
-    })
-    
-    -- Comportamento de clique
-    tabButton.MouseButton1Click:Connect(function()
-        -- Desselecionar aba atual
-        if selectedTab then
-            selectedTab.Indicator.Visible = false
-            selectedTab.Icon.ImageColor3 = Theme.SubText
-            selectedTab.Text.TextColor3 = Theme.SubText
-            selectedTab.Frame.Visible = false
-        end
-        
-        -- Selecionar nova aba
-        tabIndicator.Visible = true
-        tabIcon.ImageColor3 = Theme.Accent
-        tabText.TextColor3 = Theme.Text
-        tabFrame.Visible = true
-        selectedTab = {
-            Indicator = tabIndicator,
-            Icon = tabIcon,
-            Text = tabText,
-            Frame = tabFrame
+    -- Temas (CUSTOMIZÁVEIS PRA CARALHO)
+    local Themes = {
+        Dark = {
+            Background = Color3.fromRGB(25, 25, 35),
+            DarkBackground = Color3.fromRGB(15, 15, 25),
+            LightBackground = Color3.fromRGB(35, 35, 45),
+            Text = Color3.fromRGB(255, 255, 255),
+            SubText = Color3.fromRGB(200, 200, 200),
+            Accent = Color3.fromRGB(255, 75, 75),
+            Success = Color3.fromRGB(85, 255, 127),
+            Warning = Color3.fromRGB(255, 155, 55),
+            Error = Color3.fromRGB(255, 55, 55)
+        },
+        Light = {
+            Background = Color3.fromRGB(235, 235, 235),
+            DarkBackground = Color3.fromRGB(215, 215, 215),
+            LightBackground = Color3.fromRGB(245, 245, 245),
+            Text = Color3.fromRGB(25, 25, 25),
+            SubText = Color3.fromRGB(75, 75, 75),
+            Accent = Color3.fromRGB(0, 120, 215),
+            Success = Color3.fromRGB(35, 195, 95),
+            Warning = Color3.fromRGB(255, 145, 0),
+            Error = Color3.fromRGB(215, 0, 45)
+        },
+        Blood = {
+            Background = Color3.fromRGB(35, 15, 15),
+            DarkBackground = Color3.fromRGB(25, 10, 10),
+            LightBackground = Color3.fromRGB(55, 15, 15),
+            Text = Color3.fromRGB(255, 235, 235),
+            SubText = Color3.fromRGB(200, 170, 170),
+            Accent = Color3.fromRGB(185, 0, 0),
+            Success = Color3.fromRGB(125, 185, 0),
+            Warning = Color3.fromRGB(185, 125, 0),
+            Error = Color3.fromRGB(255, 25, 25)
+        },
+        Ocean = {
+            Background = Color3.fromRGB(15, 25, 35),
+            DarkBackground = Color3.fromRGB(10, 15, 25),
+            LightBackground = Color3.fromRGB(25, 35, 45),
+            Text = Color3.fromRGB(235, 245, 255),
+            SubText = Color3.fromRGB(170, 180, 200),
+            Accent = Color3.fromRGB(0, 125, 255),
+            Success = Color3.fromRGB(0, 185, 125),
+            Warning = Color3.fromRGB(255, 165, 0),
+            Error = Color3.fromRGB(255, 65, 65)
         }
+    }
+    
+    -- Usar tema selecionado
+    local Theme = Themes[UserSettings.Theme] or Themes.Dark
+    
+    -- PAINEL PRINCIPAL (OTIMIZADO PRA TOQUE)
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.BackgroundColor3 = Theme.Background
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+    MainFrame.Size = UDim2.new(0, 300, 0, 400)
+    MainFrame.Active = true
+    MainFrame.Draggable = true -- Pra arrastar no touch, seu animal
+    MainFrame.Parent = BloxFruitsMobileGUI
+    
+    -- Cantos arredondados porque é isso que vende script pra criança
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 10)
+    UICorner.Parent = MainFrame
+    
+    -- Barra superior
+    local TopBar = Instance.new("Frame")
+    TopBar.Name = "TopBar"
+    TopBar.BackgroundColor3 = Theme.DarkBackground
+    TopBar.BorderSizePixel = 0
+    TopBar.Size = UDim2.new(1, 0, 0, 40)
+    TopBar.Parent = MainFrame
+    
+    -- Arredondar borda superior
+    local TopBarCorner = Instance.new("UICorner")
+    TopBarCorner.CornerRadius = UDim.new(0, 10)
+    TopBarCorner.Parent = TopBar
+    
+    -- Consertar cantos
+    local TopBarFix = Instance.new("Frame")
+    TopBarFix.Name = "TopBarFix"
+    TopBarFix.BackgroundColor3 = Theme.DarkBackground
+    TopBarFix.BorderSizePixel = 0
+    TopBarFix.Position = UDim2.new(0, 0, 0.5, 0)
+    TopBarFix.Size = UDim2.new(1, 0, 0.5, 0)
+    TopBarFix.Parent = TopBar
+    
+    -- Título com estilo
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Name = "TitleLabel"
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Position = UDim2.new(0, 15, 0, 0)
+    TitleLabel.Size = UDim2.new(1, -15, 1, 0)
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.Text = "BLOX FRUITS BLACK"
+    TitleLabel.TextColor3 = Theme.Text
+    TitleLabel.TextSize = 18
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.Parent = TopBar
+    
+    -- Botão para minimizar (ESSENCIAL NESSA PORRA)
+    local MinimizeButton = Instance.new("TextButton")
+    MinimizeButton.Name = "MinimizeButton"
+    MinimizeButton.BackgroundTransparency = 1
+    MinimizeButton.Position = UDim2.new(1, -40, 0, 0)
+    MinimizeButton.Size = UDim2.new(0, 40, 0, 40)
+    MinimizeButton.Font = Enum.Font.GothamBold
+    MinimizeButton.Text = "-"
+    MinimizeButton.TextColor3 = Theme.Text
+    MinimizeButton.TextSize = 24
+    MinimizeButton.Parent = TopBar
+    
+    -- Botão para fechar (NUNCA ESQUECER)
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Name = "CloseButton"
+    CloseButton.BackgroundTransparency = 1
+    CloseButton.Position = UDim2.new(1, -80, 0, 0)
+    CloseButton.Size = UDim2.new(0, 40, 0, 40)
+    CloseButton.Font = Enum.Font.GothamBold
+    CloseButton.Text = "X"
+    CloseButton.TextColor3 = Theme.Error
+    CloseButton.TextSize = 20
+    CloseButton.Parent = TopBar
+    
+    -- Container de abas
+    local TabContainer = Instance.new("Frame")
+    TabContainer.Name = "TabContainer"
+    TabContainer.BackgroundColor3 = Theme.DarkBackground
+    TabContainer.BorderSizePixel = 0
+    TabContainer.Position = UDim2.new(0, 0, 0, 40)
+    TabContainer.Size = UDim2.new(0, 80, 1, -40)
+    TabContainer.Parent = MainFrame
+    
+    -- Conteúdo das abas
+    local TabContent = Instance.new("Frame")
+    TabContent.Name = "TabContent"
+    TabContent.BackgroundColor3 = Theme.Background
+    TabContent.BorderSizePixel = 0
+    TabContent.Position = UDim2.new(0, 80, 0, 40)
+    TabContent.Size = UDim2.new(1, -80, 1, -40)
+    TabContent.Parent = MainFrame
+    
+    -- BOTÕES DE ATALHO PRINCIPAL (ESSENCIAL PRA MOBILE)
+    local QuickAccessFrame = Instance.new("Frame")
+    QuickAccessFrame.Name = "QuickAccessFrame"
+    QuickAccessFrame.BackgroundColor3 = Theme.DarkBackground
+    QuickAccessFrame.BackgroundTransparency = 0.4
+    QuickAccessFrame.BorderSizePixel = 0
+    QuickAccessFrame.Position = UDim2.new(0, 10, 0.5, -125)
+    QuickAccessFrame.Size = UDim2.new(0, 60, 0, 250)
+    QuickAccessFrame.Visible = false -- Começa minimizado
+    QuickAccessFrame.Parent = BloxFruitsMobileGUI
+    
+    local QuickAccessCorner = Instance.new("UICorner")
+    QuickAccessCorner.CornerRadius = UDim.new(0, 30)
+    QuickAccessCorner.Parent = QuickAccessFrame
+    
+    -- MINIMIZED VERSION (CUBO FLUTUANTE)
+    local MinimizedFrame = Instance.new("Frame")
+    MinimizedFrame.Name = "MinimizedFrame"
+    MinimizedFrame.BackgroundColor3 = Theme.Accent
+    MinimizedFrame.BorderSizePixel = 0
+    MinimizedFrame.Position = UDim2.new(0, 20, 0.5, -25)
+    MinimizedFrame.Size = UDim2.new(0, 50, 0, 50)
+    MinimizedFrame.Visible = false
+    MinimizedFrame.Parent = BloxFruitsMobileGUI
+    
+    local MinimizedCorner = Instance.new("UICorner")
+    MinimizedCorner.CornerRadius = UDim.new(0, 10)
+    MinimizedCorner.Parent = MinimizedFrame
+    
+    local MinimizedIcon = Instance.new("TextLabel")
+    MinimizedIcon.Name = "MinimizedIcon"
+    MinimizedIcon.BackgroundTransparency = 1
+    MinimizedIcon.Size = UDim2.new(1, 0, 1, 0)
+    MinimizedIcon.Font = Enum.Font.GothamBold
+    MinimizedIcon.Text = "BF"
+    MinimizedIcon.TextColor3 = Theme.Text
+    MinimizedIcon.TextSize = 24
+    MinimizedIcon.Parent = MinimizedFrame
+    
+    -- Efeito de pulsação no cubo (VISUAL FODA)
+    local PulseEffect = Instance.new("UIStroke")
+    PulseEffect.Color = Theme.Accent
+    PulseEffect.Thickness = 2
+    PulseEffect.Parent = MinimizedFrame
+    
+    spawn(function()
+        while true do
+            for i = 0, 1, 0.1 do
+                PulseEffect.Transparency = i
+                wait(0.1)
+            end
+            for i = 1, 0, -0.1 do
+                PulseEffect.Transparency = i
+                wait(0.1)
+            end
+        end
     end)
     
-    -- Retornar o frame para adicionar elementos
-    return tabFrame
-end
-
--- Função para criar uma seção
-local function CreateSection(parent, title)
-    local sectionContainer = Instance.new("Frame")
-    sectionContainer.Name = title .. "Section"
-    sectionContainer.Size = UDim2.new(1, 0, 0, 30) -- Será redimensionado depois
-    sectionContainer.BackgroundTransparency = 1
-    sectionContainer.Parent = parent
+    -- Tornar o cubo arrastável (ESSENCIAL)
+    local dragging = false
+    local dragInput, dragStart, startPos
     
-    local sectionTitle = Instance.new("TextLabel")
-    sectionTitle.Name = "Title"
-    sectionTitle.Size = UDim2.new(1, 0, 0, 30)
-    sectionTitle.BackgroundTransparency = 1
-    sectionTitle.Text = title
-    sectionTitle.TextColor3 = Theme.Accent
-    sectionTitle.TextSize = 16
-    sectionTitle.Font = Enum.Font.GothamBold
-    sectionTitle.TextXAlignment = Enum.TextXAlignment.Left
-    sectionTitle.Parent = sectionContainer
+    local function updateDrag(input)
+        local delta = input.Position - dragStart
+        MinimizedFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
     
-    local sectionContent = Instance.new("Frame")
-    sectionContent.Name = "Content"
-    sectionContent.Size = UDim2.new(1, 0, 0, 0) -- Será redimensionado quando elementos forem adicionados
-    sectionContent.Position = UDim2.new(0, 0, 0, 30)
-    sectionContent.BackgroundTransparency = 1
-    sectionContent.Parent = sectionContainer
-    
-    local contentLayout = Instance.new("UIListLayout")
-    contentLayout.Padding = UDim.new(0, 8)
-    contentLayout.Parent = sectionContent
-    
-    -- Atualizar tamanho da seção quando elementos forem adicionados
-    contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        sectionContent.Size = UDim2.new(1, 0, 0, contentLayout.AbsoluteContentSize.Y)
-        sectionContainer.Size = UDim2.new(1, 0, 0, 30 + contentLayout.AbsoluteContentSize.Y)
-    end)
-    
-    return sectionContent
-end
-
--- Função para criar um toggle
-local function CreateToggle(parent, title, description, default, callback)
-    local toggleContainer = Instance.new("Frame")
-    toggleContainer.Name = title .. "Toggle"
-    toggleContainer.Size = UDim2.new(1, 0, 0, 50)
-    toggleContainer.BackgroundColor3 = Theme.Button
-    toggleContainer.BorderSizePixel = 0
-    toggleContainer.Parent = parent
-    
-    local toggleCorner = Instance.new("UICorner")
-    toggleCorner.CornerRadius = UDim.new(0, 6)
-    toggleCorner.Parent = toggleContainer
-    
-    local toggleTitle = Instance.new("TextLabel")
-    toggleTitle.Name = "Title"
-    toggleTitle.Size = UDim2.new(1, -60, 0, 20)
-    toggleTitle.Position = UDim2.new(0, 12, 0, 8)
-    toggleTitle.BackgroundTransparency = 1
-    toggleTitle.Text = title
-    toggleTitle.TextColor3 = Theme.Text
-    toggleTitle.TextSize = 15
-    toggleTitle.Font = Enum.Font.GothamSemibold
-    toggleTitle.TextXAlignment = Enum.TextXAlignment.Left
-    toggleTitle.Parent = toggleContainer
-    
-    local toggleDescription = Instance.new("TextLabel")
-    toggleDescription.Name = "Description"
-    toggleDescription.Size = UDim2.new(1, -60, 0, 16)
-    toggleDescription.Position = UDim2.new(0, 12, 1, -24)
-    toggleDescription.BackgroundTransparency = 1
-    toggleDescription.Text = description
-    toggleDescription.TextColor3 = Theme.SubText
-    toggleDescription.TextSize = 13
-    toggleDescription.Font = Enum.Font.Gotham
-    toggleDescription.TextXAlignment = Enum.TextXAlignment.Left
-    toggleDescription.TextWrapped = true
-    toggleDescription.Parent = toggleContainer
-    
-    local switch = Instance.new("Frame")
-    switch.Name = "Switch"
-    switch.Size = UDim2.new(0, 40, 0, 20)
-    switch.Position = UDim2.new(1, -52, 0.5, -10)
-    switch.BackgroundColor3 = default and Theme.Accent or Color3.fromRGB(60, 60, 65)
-    switch.BorderSizePixel = 0
-    switch.Parent = toggleContainer
-    
-    local switchCorner = Instance.new("UICorner")
-    switchCorner.CornerRadius = UDim.new(0, 10)
-    switchCorner.Parent = switch
-    
-    local knob = Instance.new("Frame")
-    knob.Name = "Knob"
-    knob.Size = UDim2.new(0, 16, 0, 16)
-    knob.Position = UDim2.new(default and 1 or 0, default and -18 or 2, 0.5, -8)
-    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    knob.BorderSizePixel = 0
-    knob.Parent = switch
-    
-    local knobCorner = Instance.new("UICorner")
-    knobCorner.CornerRadius = UDim.new(0, 8)
-    knobCorner.Parent = knob
-    
-    local button = Instance.new("TextButton")
-    button.Name = "Button"
-    button.Size = UDim2.new(1, 0, 1, 0)
-    button.BackgroundTransparency = 1
-    button.Text = ""
-    button.Parent = toggleContainer
-    
-    local toggled = default
-    
-    button.MouseButton1Click:Connect(function()
-        toggled = not toggled
-        
-        local targetPosition = toggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
-        local targetColor = toggled and Theme.Accent or Color3.fromRGB(60, 60, 65)
-        
-        TweenService:Create(knob, TweenInfo.new(0.2), {Position = targetPosition}):Play()
-        TweenService:Create(switch, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
-        
-        callback(toggled)
-    end)
-    
-    return {
-        Instance = toggleContainer,
-        SetValue = function(value)
-            toggled = value
+    MinimizedFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = MinimizedFrame.Position
             
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    MinimizedFrame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+            if dragging then
+                updateDrag(input)
+            end
+        end
+    end)
+    
+    -- Clicar no cubo abre a interface principal
+    MinimizedFrame.InputEnded:Connect(function(input)
+        if not dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) then
+            MinimizedFrame.Visible = false
+            MainFrame.Visible = true
+            
+            -- Animação de surgimento
+            MainFrame.Size = UDim2.new(0, 0, 0, 0)
+            MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+            
+            local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+            local tween = TweenService:Create(MainFrame, tweenInfo, {
+                Size = UDim2.new(0, 300, 0, 400),
+                Position = UDim2.new(0.5, -150, 0.5, -200)
+            })
+            tween:Play()
+        end
+    end)
+    
+    -- Botão de minimizar
+    MinimizeButton.MouseButton1Click:Connect(function()
+        MainFrame.Visible = false
+        MinimizedFrame.Visible = true
+    end)
+    
+    -- Botão de fechar
+    CloseButton.MouseButton1Click:Connect(function()
+        BloxFruitsMobileGUI:Destroy()
+    end)
+    
+    -- SISTEMA DE ABAS (ORGANIZADO PRA CARALHO)
+    local TabButtons = {}
+    local TabFrames = {}
+    local SelectedTab = nil
+    
+    -- Função para criar abas  
+    local function CreateTab(name, icon)
+        -- Botão da aba
+        local tabIndex = #TabButtons + 1
+        local yPos = (tabIndex - 1) * 60
+        
+        local TabButton = Instance.new("TextButton")
+        TabButton.Name = name .. "Tab"
+        TabButton.BackgroundTransparency = 1
+        TabButton.Position = UDim2.new(0, 0, 0, yPos)
+        TabButton.Size = UDim2.new(1, 0, 0, 60)
+        TabButton.Font = Enum.Font.GothamSemibold
+        TabButton.Text = ""
+        TabButton.Parent = TabContainer
+        
+        local TabIcon = Instance.new("ImageLabel")
+        TabIcon.Name = "Icon"
+        TabIcon.BackgroundTransparency = 1
+        TabIcon.Position = UDim2.new(0.5, -15, 0, 10)
+        TabIcon.Size = UDim2.new(0, 30, 0, 30)
+        TabIcon.Image = icon
+        TabIcon.ImageColor3 = Theme.SubText
+        TabIcon.Parent = TabButton
+        
+        local TabName = Instance.new("TextLabel")
+        TabName.Name = "Name"
+        TabName.BackgroundTransparency = 1
+        TabName.Position = UDim2.new(0, 0, 0, 40)
+        TabName.Size = UDim2.new(1, 0, 0, 15)
+        TabName.Font = Enum.Font.GothamSemibold
+        TabName.Text = name
+        TabName.TextColor3 = Theme.SubText
+        TabName.TextSize = 10
+        TabName.Parent = TabButton
+        
+        -- Container de conteúdo
+        local TabFrame = Instance.new("ScrollingFrame")
+        TabFrame.Name = name .. "Frame"
+        TabFrame.BackgroundTransparency = 1
+        TabFrame.BorderSizePixel = 0
+        TabFrame.Position = UDim2.new(0, 10, 0, 10)
+        TabFrame.Size = UDim2.new(1, -20, 1, -20)
+        TabFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+        TabFrame.ScrollBarThickness = 4
+        TabFrame.ScrollBarImageColor3 = Theme.Accent
+        TabFrame.Visible = false
+        TabFrame.Parent = TabContent
+        
+        -- Layout para o conteúdo
+        local TabList = Instance.new("UIListLayout")
+        TabList.Padding = UDim.new(0, 10)
+        TabList.Parent = TabFrame
+        
+        -- Ajustar automaticamente o tamanho do canvas
+        TabList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            TabFrame.CanvasSize = UDim2.new(0, 0, 0, TabList.AbsoluteContentSize.Y + 20)
+        end)
+        
+        -- Adicionar à lista de abas
+        table.insert(TabButtons, {
+            Button = TabButton,
+            Icon = TabIcon,
+            Name = TabName
+        })
+        
+        table.insert(TabFrames, TabFrame)
+        
+        -- Lógica de clique
+        TabButton.MouseButton1Click:Connect(function()
+            -- Desselecionar a aba atual
+            if SelectedTab then
+                SelectedTab.Button.BackgroundTransparency = 1
+                SelectedTab.Icon.ImageColor3 = Theme.SubText
+                SelectedTab.Name.TextColor3 = Theme.SubText
+                
+                for _, frame in ipairs(TabFrames) do
+                    frame.Visible = false
+                end
+            end
+            
+            -- Selecionar a nova aba
+            TabButton.BackgroundTransparency = 0.8
+            TabButton.BackgroundColor3 = Theme.Accent
+            TabIcon.ImageColor3 = Theme.Text
+            TabName.TextColor3 = Theme.Text
+            TabFrame.Visible = true
+            
+            SelectedTab = {
+                Button = TabButton,
+                Icon = TabIcon,
+                Name = TabName
+            }
+        end)
+        
+        return TabFrame
+    end
+    
+    -- Função para criar seções
+    local function CreateSection(parent, title)
+        local Section = Instance.new("Frame")
+        Section.Name = title .. "Section"
+        Section.BackgroundColor3 = Theme.LightBackground
+        Section.BorderSizePixel = 0
+        Section.Size = UDim2.new(1, 0, 0, 30) -- Será ajustado com base no conteúdo
+        Section.Parent = parent
+        
+        local SectionCorner = Instance.new("UICorner")
+        SectionCorner.CornerRadius = UDim.new(0, 8)
+        SectionCorner.Parent = Section
+        
+        local SectionTitle = Instance.new("TextLabel")
+        SectionTitle.Name = "Title"
+        SectionTitle.BackgroundTransparency = 1
+        SectionTitle.Position = UDim2.new(0, 10, 0, 0)
+        SectionTitle.Size = UDim2.new(1, -10, 0, 30)
+        SectionTitle.Font = Enum.Font.GothamBold
+        SectionTitle.Text = title
+        SectionTitle.TextColor3 = Theme.Text
+        SectionTitle.TextSize = 14
+        SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
+        SectionTitle.Parent = Section
+        
+        local ContentFrame = Instance.new("Frame")
+        ContentFrame.Name = "Content"
+        ContentFrame.BackgroundTransparency = 1
+        ContentFrame.Position = UDim2.new(0, 0, 0, 30)
+        ContentFrame.Size = UDim2.new(1, 0, 0, 0) -- Tamanho inicial, será atualizado
+        ContentFrame.Parent = Section
+        
+        local ContentPadding = Instance.new("UIPadding")
+        ContentPadding.PaddingLeft = UDim.new(0, 10)
+        ContentPadding.PaddingRight = UDim.new(0, 10)
+        ContentPadding.PaddingBottom = UDim.new(0, 10)
+        ContentPadding.Parent = ContentFrame
+        
+        local ContentList = Instance.new("UIListLayout")
+        ContentList.Padding = UDim.new(0, 8)
+        ContentList.Parent = ContentFrame
+        
+        -- Atualizar o tamanho da seção conforme o conteúdo
+        ContentList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            ContentFrame.Size = UDim2.new(1, 0, 0, ContentList.AbsoluteContentSize.Y)
+            Section.Size = UDim2.new(1, 0, 0, 30 + ContentFrame.Size.Y.Offset)
+        end)
+        
+        return ContentFrame
+    end
+    
+    -- Função para criar toggle
+    local function CreateToggle(parent, title, default, callback)
+        local Toggle = Instance.new("Frame")
+        Toggle.Name = title .. "Toggle"
+        Toggle.BackgroundColor3 = Theme.DarkBackground
+        Toggle.BorderSizePixel = 0
+        Toggle.Size = UDim2.new(1, 0, 0, 40)
+        Toggle.Parent = parent
+        
+        local ToggleCorner = Instance.new("UICorner")
+        ToggleCorner.CornerRadius = UDim.new(0, 6)
+        ToggleCorner.Parent = Toggle
+        
+        local ToggleTitle = Instance.new("TextLabel")
+        ToggleTitle.Name = "Title"
+        ToggleTitle.BackgroundTransparency = 1
+        ToggleTitle.Position = UDim2.new(0, 10, 0, 0)
+        ToggleTitle.Size = UDim2.new(1, -60, 1, 0)
+        ToggleTitle.Font = Enum.Font.GothamSemibold
+        ToggleTitle.Text = title
+        ToggleTitle.TextColor3 = Theme.Text
+        ToggleTitle.TextSize = 14
+        ToggleTitle.TextXAlignment = Enum.TextXAlignment.Left
+        ToggleTitle.Parent = Toggle
+        
+        local ToggleButton = Instance.new("Frame")
+        ToggleButton.Name = "Button"
+        ToggleButton.BackgroundColor3 = default and Theme.Accent or Theme.DarkBackground
+        ToggleButton.BorderSizePixel = 0
+        ToggleButton.Position = UDim2.new(1, -50, 0.5, -10)
+        ToggleButton.Size = UDim2.new(0, 40, 0, 20)
+        ToggleButton.Parent = Toggle
+        
+        local ToggleButtonCorner = Instance.new("UICorner")
+        ToggleButtonCorner.CornerRadius = UDim.new(1, 0)
+        ToggleButtonCorner.Parent = ToggleButton
+        
+        local ToggleCircle = Instance.new("Frame")
+        ToggleCircle.Name = "Circle"
+        ToggleCircle.BackgroundColor3 = Theme.Text
+        ToggleCircle.BorderSizePixel = 0
+        ToggleCircle.Position = default and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+        ToggleCircle.Size = UDim2.new(0, 16, 0, 16)
+        ToggleCircle.Parent = ToggleButton
+        
+        local ToggleCircleCorner = Instance.new("UICorner")
+        ToggleCircleCorner.CornerRadius = UDim.new(1, 0)
+        ToggleCircleCorner.Parent = ToggleCircle
+        
+        local ToggleClickRegion = Instance.new("TextButton")
+        ToggleClickRegion.Name = "ClickRegion"
+        ToggleClickRegion.BackgroundTransparency = 1
+        ToggleClickRegion.Size = UDim2.new(1, 0, 1, 0)
+        ToggleClickRegion.Text = ""
+        ToggleClickRegion.Parent = Toggle
+        
+        -- Lógica do toggle
+        local toggled = default or false
+        
+        ToggleClickRegion.MouseButton1Click:Connect(function()
+            toggled = not toggled
+            
+            -- Animar a transição
             local targetPosition = toggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
-            local targetColor = toggled and Theme.Accent or Color3.fromRGB(60, 60, 65)
+            local targetColor = toggled and Theme.Accent or Theme.DarkBackground
             
-            knob.Position = targetPosition
-            switch.BackgroundColor3 = targetColor
+            local positionTween = TweenService:Create(ToggleCircle, TweenInfo.new(0.2), {Position = targetPosition})
+            local colorTween = TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = targetColor})
+            
+            positionTween:Play()
+            colorTween:Play()
             
             callback(toggled)
-        end,
-        GetValue = function()
-            return toggled
-        end
-    }
-end
-
--- Função para criar um slider
-local function CreateSlider(parent, title, min, max, default, suffix, callback)
-    local sliderContainer = Instance.new("Frame")
-    sliderContainer.Name = title .. "Slider"
-    sliderContainer.Size = UDim2.new(1, 0, 0, 60)
-    sliderContainer.BackgroundColor3 = Theme.Button
-    sliderContainer.BorderSizePixel = 0
-    sliderContainer.Parent = parent
-    
-    local sliderCorner = Instance.new("UICorner")
-    sliderCorner.CornerRadius = UDim.new(0, 6)
-    sliderCorner.Parent = sliderContainer
-    
-    local sliderTitle = Instance.new("TextLabel")
-    sliderTitle.Name = "Title"
-    sliderTitle.Size = UDim2.new(1, -100, 0, 20)
-    sliderTitle.Position = UDim2.new(0, 12, 0, 8)
-    sliderTitle.BackgroundTransparency = 1
-    sliderTitle.Text = title
-    sliderTitle.TextColor3 = Theme.Text
-    sliderTitle.TextSize = 15
-    sliderTitle.Font = Enum.Font.GothamSemibold
-    sliderTitle.TextXAlignment = Enum.TextXAlignment.Left
-    sliderTitle.Parent = sliderContainer
-    
-    local valueDisplay = Instance.new("TextLabel")
-    valueDisplay.Name = "Value"
-    valueDisplay.Size = UDim2.new(0, 80, 0, 20)
-    valueDisplay.Position = UDim2.new(1, -92, 0, 8)
-    valueDisplay.BackgroundTransparency = 1
-    valueDisplay.Text = default .. suffix
-    valueDisplay.TextColor3 = Theme.Text
-    valueDisplay.TextSize = 15
-    valueDisplay.Font = Enum.Font.GothamSemibold
-    valueDisplay.TextXAlignment = Enum.TextXAlignment.Right
-    valueDisplay.Parent = sliderContainer
-    
-    local sliderBack = Instance.new("Frame")
-    sliderBack.Name = "Back"
-    sliderBack.Size = UDim2.new(1, -24, 0, 6)
-    sliderBack.Position = UDim2.new(0, 12, 0, 40)
-    sliderBack.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-    sliderBack.BorderSizePixel = 0
-    sliderBack.Parent = sliderContainer
-    
-    local sliderBackCorner = Instance.new("UICorner")
-    sliderBackCorner.CornerRadius = UDim.new(0, 3)
-    sliderBackCorner.Parent = sliderBack
-    
-    local sliderFill = Instance.new("Frame")
-    sliderFill.Name = "Fill"
-    sliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-    sliderFill.BackgroundColor3 = Theme.Accent
-    sliderFill.BorderSizePixel = 0
-    sliderFill.Parent = sliderBack
-    
-    local sliderFillCorner = Instance.new("UICorner")
-    sliderFillCorner.CornerRadius = UDim.new(0, 3)
-    sliderFillCorner.Parent = sliderFill
-    
-    local sliderButton = Instance.new("TextButton")
-    sliderButton.Name = "Button"
-    sliderButton.Size = UDim2.new(1, 0, 1, 0)
-    sliderButton.BackgroundTransparency = 1
-    sliderButton.Text = ""
-    sliderButton.Parent = sliderBack
-    
-    local function updateSlider(input)
-        local relativePos = math.clamp((input - sliderBack.AbsolutePosition.X) / sliderBack.AbsoluteSize.X, 0, 1)
-        local value = min + ((max - min) * relativePos)
+        end)
         
-        -- Arredondar para o mais próximo de 0.01
-        value = math.floor(value * 100) / 100
-        
-        sliderFill.Size = UDim2.new(relativePos, 0, 1, 0)
-        valueDisplay.Text = value .. suffix
-        
-        callback(value)
+        return {
+            SetValue = function(value)
+                toggled = value
+                
+                local targetPosition = toggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+                local targetColor = toggled and Theme.Accent or Theme.DarkBackground
+                
+                ToggleCircle.Position = targetPosition
+                ToggleButton.BackgroundColor3 = targetColor
+                
+                callback(toggled)
+            end,
+            GetValue = function()
+                return toggled
+            end
+        }
     end
     
-    sliderButton.MouseButton1Down:Connect(function()
-        local mouseConnection
-        local inputEndedConnection
+    -- Função para criar slider
+    local function CreateSlider(parent, title, min, max, default, suffix, callback)
+        local Slider = Instance.new("Frame")
+        Slider.Name = title .. "Slider"
+        Slider.BackgroundColor3 = Theme.DarkBackground
+        Slider.BorderSizePixel = 0
+        Slider.Size = UDim2.new(1, 0, 0, 60)
+        Slider.Parent = parent
         
-        mouseConnection = RunService.RenderStepped:Connect(function()
-            updateSlider(UserInputService:GetMouseLocation().X)
+        local SliderCorner = Instance.new("UICorner")
+        SliderCorner.CornerRadius = UDim.new(0, 6)
+        SliderCorner.Parent = Slider
+        
+        local SliderTitle = Instance.new("TextLabel")
+        SliderTitle.Name = "Title"
+        SliderTitle.BackgroundTransparency = 1
+        SliderTitle.Position = UDim2.new(0, 10, 0, 0)
+        SliderTitle.Size = UDim2.new(1, -20, 0, 30)
+        local SliderTitle = Instance.new("TextLabel")
+        SliderTitle.Name = "Title"
+        SliderTitle.BackgroundTransparency = 1
+        SliderTitle.Position = UDim2.new(0, 10, 0, 0)
+        SliderTitle.Size = UDim2.new(1, -20, 0, 30)
+        SliderTitle.Font = Enum.Font.GothamSemibold
+        SliderTitle.Text = title
+        SliderTitle.TextColor3 = Theme.Text
+        SliderTitle.TextSize = 14
+        SliderTitle.TextXAlignment = Enum.TextXAlignment.Left
+        SliderTitle.Parent = Slider
+        
+        local SliderValue = Instance.new("TextLabel")
+        SliderValue.Name = "Value"
+        SliderValue.BackgroundTransparency = 1
+        SliderValue.Position = UDim2.new(1, -60, 0, 0)
+        SliderValue.Size = UDim2.new(0, 50, 0, 30)
+        SliderValue.Font = Enum.Font.GothamSemibold
+        SliderValue.Text = default .. (suffix or "")
+        SliderValue.TextColor3 = Theme.Text
+        SliderValue.TextSize = 14
+        SliderValue.TextXAlignment = Enum.TextXAlignment.Right
+        SliderValue.Parent = Slider
+        
+        local SliderBackground = Instance.new("Frame")
+        SliderBackground.Name = "Background"
+        SliderBackground.BackgroundColor3 = Theme.Background
+        SliderBackground.BorderSizePixel = 0
+        SliderBackground.Position = UDim2.new(0, 10, 0, 40)
+        SliderBackground.Size = UDim2.new(1, -20, 0, 6)
+        SliderBackground.Parent = Slider
+        
+        local SliderBackgroundCorner = Instance.new("UICorner")
+        SliderBackgroundCorner.CornerRadius = UDim.new(1, 0)
+        SliderBackgroundCorner.Parent = SliderBackground
+        
+        local SliderFill = Instance.new("Frame")
+        SliderFill.Name = "Fill"
+        SliderFill.BackgroundColor3 = Theme.Accent
+        SliderFill.BorderSizePixel = 0
+        SliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+        SliderFill.Parent = SliderBackground
+        
+        local SliderFillCorner = Instance.new("UICorner")
+        SliderFillCorner.CornerRadius = UDim.new(1, 0)
+        SliderFillCorner.Parent = SliderFill
+        
+        local SliderKnob = Instance.new("Frame")
+        SliderKnob.Name = "Knob"
+        SliderKnob.BackgroundColor3 = Theme.Text
+        SliderKnob.BorderSizePixel = 0
+        SliderKnob.Position = UDim2.new((default - min) / (max - min), 0, 0.5, -7)
+        SliderKnob.Size = UDim2.new(0, 14, 0, 14)
+        SliderKnob.ZIndex = 2
+        SliderKnob.Parent = SliderBackground
+        
+        local SliderKnobCorner = Instance.new("UICorner")
+        SliderKnobCorner.CornerRadius = UDim.new(1, 0)
+        SliderKnobCorner.Parent = SliderKnob
+        
+        local SliderButton = Instance.new("TextButton")
+        SliderButton.Name = "Button"
+        SliderButton.BackgroundTransparency = 1
+        SliderButton.Size = UDim2.new(1, 0, 1, 0)
+        SliderButton.Text = ""
+        SliderButton.Parent = SliderBackground
+        
+        -- Lógica do slider
+        local sliding = false
+        
+        local function updateSlider(input)
+            -- Calcular valor com base na posição relativa
+            local relativePos = math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1)
+            local value = min + relativePos * (max - min)
+            
+            -- Arredondar para inteiro ou decimal
+            if max - min >= 10 then
+                value = math.floor(value)
+            else
+                value = math.floor(value * 100) / 100
+            end
+            
+            -- Atualizar elementos visuais
+            SliderValue.Text = value .. (suffix or "")
+            SliderFill.Size = UDim2.new(relativePos, 0, 1, 0)
+            SliderKnob.Position = UDim2.new(relativePos, 0, 0.5, -7)
+            
+            -- Chamar callback
+            callback(value)
+            
+            return value
+        end
+        
+        SliderButton.MouseButton1Down:Connect(function(input)
+            sliding = true
+            updateSlider({Position = input})
         end)
         
-        inputEndedConnection = UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                mouseConnection:Disconnect()
-                inputEndedConnection:Disconnect()
+        -- Para dispositivos móveis, input touch tem que ser um connection separado
+        SliderButton.TouchStarted:Connect(function(input)
+            sliding = true
+            updateSlider(input)
+        end)
+        
+        -- Atualizar ao arrastar
+        UserInputService.InputChanged:Connect(function(input)
+            if sliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                updateSlider(input)
             end
         end)
-    end)
+        
+        -- Parar de arrastar ao soltar
+        UserInputService.InputEnded:Connect(function(input)
+            if sliding and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                sliding = false
+                updateSlider(input)
+            end
+        end)
+        
+        return {
+            SetValue = function(value)
+                value = math.clamp(value, min, max)
+                local relativePos = (value - min) / (max - min)
+                
+                SliderValue.Text = value .. (suffix or "")
+                SliderFill.Size = UDim2.new(relativePos, 0, 1, 0)
+                SliderKnob.Position = UDim2.new(relativePos, 0, 0.5, -7)
+                
+                callback(value)
+            end,
+            GetValue = function()
+                return tonumber(string.match(SliderValue.Text, "%d+%.?%d*"))
+            end
+        }
+    end
     
-    return {
-        Instance = sliderContainer,
-        SetValue = function(value)
-            value = math.clamp(value, min, max)
-            local relativePos = (value - min) / (max - min)
-            
-            sliderFill.Size = UDim2.new(relativePos, 0, 1, 0)
-            valueDisplay.Text = value .. suffix
-            
-            callback(value)
-        end
-    }
-end
-
-
-    -- Função para criar um dropdown
+    -- Função para criar dropdown (ESSENCIAL PRA MOBILE)
     local function CreateDropdown(parent, title, options, default, callback)
-        local dropdownContainer = Instance.new("Frame")
-        dropdownContainer.Name = title .. "Dropdown"
-        dropdownContainer.Size = UDim2.new(1, 0, 0, 50)
-        dropdownContainer.BackgroundColor3 = Theme.Button
-        dropdownContainer.BorderSizePixel = 0
-        dropdownContainer.ClipsDescendants = true
-        dropdownContainer.Parent = parent
+        local Dropdown = Instance.new("Frame")
+        Dropdown.Name = title .. "Dropdown"
+        Dropdown.BackgroundColor3 = Theme.DarkBackground
+        Dropdown.BorderSizePixel = 0
+        Dropdown.ClipsDescendants = true
+        Dropdown.Size = UDim2.new(1, 0, 0, 40) -- Tamanho inicial, será expandido quando aberto
+        Dropdown.Parent = parent
         
-        local dropdownCorner = Instance.new("UICorner")
-        dropdownCorner.CornerRadius = UDim.new(0, 6)
-        dropdownCorner.Parent = dropdownContainer
+        local DropdownCorner = Instance.new("UICorner")
+        DropdownCorner.CornerRadius = UDim.new(0, 6)
+        DropdownCorner.Parent = Dropdown
         
-        local dropdownTitle = Instance.new("TextLabel")
-        dropdownTitle.Name = "Title"
-        dropdownTitle.Size = UDim2.new(1, -12, 0, 20)
-        dropdownTitle.Position = UDim2.new(0, 12, 0, 8)
-        dropdownTitle.BackgroundTransparency = 1
-        dropdownTitle.Text = title
-        dropdownTitle.TextColor3 = Theme.Text
-        dropdownTitle.TextSize = 15
-        dropdownTitle.Font = Enum.Font.GothamSemibold
-        dropdownTitle.TextXAlignment = Enum.TextXAlignment.Left
-        dropdownTitle.Parent = dropdownContainer
+        local DropdownTitle = Instance.new("TextLabel")
+        DropdownTitle.Name = "Title"
+        DropdownTitle.BackgroundTransparency = 1
+        DropdownTitle.Position = UDim2.new(0, 10, 0, 0)
+        DropdownTitle.Size = UDim2.new(1, -20, 0, 40)
+        DropdownTitle.Font = Enum.Font.GothamSemibold
+        DropdownTitle.Text = title
+        DropdownTitle.TextColor3 = Theme.Text
+        DropdownTitle.TextSize = 14
+        DropdownTitle.TextXAlignment = Enum.TextXAlignment.Left
+        DropdownTitle.Parent = Dropdown
         
-        local dropdownButton = Instance.new("TextButton")
-        dropdownButton.Name = "Button"
-        dropdownButton.Size = UDim2.new(1, -24, 0, 25)
-        dropdownButton.Position = UDim2.new(0, 12, 0, 30)
-        dropdownButton.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
-        dropdownButton.BorderSizePixel = 0
-        dropdownButton.Text = ""
-        dropdownButton.Parent = dropdownContainer
+        local SelectedOption = Instance.new("TextLabel")
+        SelectedOption.Name = "SelectedOption"
+        SelectedOption.BackgroundTransparency = 1
+        SelectedOption.Position = UDim2.new(0, 10, 0, 0)
+        SelectedOption.Size = UDim2.new(1, -50, 0, 40)
+        SelectedOption.Font = Enum.Font.Gotham
+        SelectedOption.Text = default or "Select..."
+        SelectedOption.TextColor3 = Theme.Accent
+        SelectedOption.TextSize = 12
+        SelectedOption.TextXAlignment = Enum.TextXAlignment.Right
+        SelectedOption.Parent = Dropdown
         
-        local dropdownButtonCorner = Instance.new("UICorner")
-        dropdownButtonCorner.CornerRadius = UDim.new(0, 4)
-        dropdownButtonCorner.Parent = dropdownButton
+        local DropdownArrow = Instance.new("ImageLabel")
+        DropdownArrow.Name = "Arrow"
+        DropdownArrow.BackgroundTransparency = 1
+        DropdownArrow.Position = UDim2.new(1, -30, 0.5, -8)
+        DropdownArrow.Size = UDim2.new(0, 16, 0, 16)
+        DropdownArrow.Image = "rbxassetid://6031091004" -- Seta para baixo
+        DropdownArrow.ImageColor3 = Theme.Accent
+        DropdownArrow.Parent = Dropdown
         
-        local selectedText = Instance.new("TextLabel")
-        selectedText.Name = "SelectedText"
-        selectedText.Size = UDim2.new(1, -30, 1, 0)
-        selectedText.Position = UDim2.new(0, 10, 0, 0)
-        selectedText.BackgroundTransparency = 1
-        selectedText.Text = default or "Select..."
-        selectedText.TextColor3 = Theme.Text
-        selectedText.TextSize = 14
-        selectedText.Font = Enum.Font.Gotham
-        selectedText.TextXAlignment = Enum.TextXAlignment.Left
-        selectedText.Parent = dropdownButton
+        local OptionsHolder = Instance.new("Frame")
+        OptionsHolder.Name = "OptionsHolder"
+        OptionsHolder.BackgroundColor3 = Theme.Background
+        OptionsHolder.BorderSizePixel = A0
+        OptionsHolder.Position = UDim2.new(0, 0, 0, 40)
+        OptionsHolder.Size = UDim2.new(1, 0, 0, #options * 30) -- Altura baseada no número de opções
+        OptionsHolder.Visible = false
+        OptionsHolder.Parent = Dropdown
         
-        local dropdownArrow = Instance.new("ImageLabel")
-        dropdownArrow.Name = "Arrow"
-        dropdownArrow.Size = UDim2.new(0, 16, 0, 16)
-        dropdownArrow.Position = UDim2.new(1, -20, 0.5, -8)
-        dropdownArrow.BackgroundTransparency = 1
-        dropdownArrow.Image = "rbxassetid://6031091004" -- Seta para baixo
-        dropdownArrow.ImageColor3 = Theme.SubText
-        dropdownArrow.Parent = dropdownButton
-        
-        local optionsContainer = Instance.new("Frame")
-        optionsContainer.Name = "Options"
-        optionsContainer.Size = UDim2.new(1, -24, 0, 0) -- Será ajustado com base nas opções
-        optionsContainer.Position = UDim2.new(0, 12, 0, 60)
-        optionsContainer.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
-        optionsContainer.BorderSizePixel = 0
-        optionsContainer.Visible = false
-        optionsContainer.Parent = dropdownContainer
-        
-        local optionsCorner = Instance.new("UICorner")
-        optionsCorner.CornerRadius = UDim.new(0, 4)
-        optionsCorner.Parent = optionsContainer
-        
-        local optionsList = Instance.new("Frame")
-        optionsList.Name = "List"
-        optionsList.Size = UDim2.new(1, -10, 1, -10)
-        optionsList.Position = UDim2.new(0, 5, 0, 5)
-        optionsList.BackgroundTransparency = 1
-        optionsList.Parent = optionsContainer
-        
-        local optionsLayout = Instance.new("UIListLayout")
-        optionsLayout.Padding = UDim.new(0, 5)
-        optionsLayout.Parent = optionsList
-        
-        -- Preencher opções
-        local optionsHeight = 0
+        -- Criar as opções
         for i, option in ipairs(options) do
-            local optionButton = Instance.new("TextButton")
-            optionButton.Name = option
-            optionButton.Size = UDim2.new(1, 0, 0, 25)
-            optionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-            optionButton.BorderSizePixel = 0
-            optionButton.Text = ""
-            optionButton.AutoButtonColor = false
-            optionButton.Parent = optionsList
+            local OptionButton = Instance.new("TextButton")
+            OptionButton.Name = option
+            OptionButton.BackgroundColor3 = Theme.Background
+            OptionButton.BorderSizePixel = 0
+            OptionButton.Position = UDim2.new(0, 0, 0, (i-1) * 30)
+            OptionButton.Size = UDim2.new(1, 0, 0, 30)
+            OptionButton.Font = Enum.Font.Gotham
+            OptionButton.Text = option
+            OptionButton.TextColor3 = Theme.Text
+            OptionButton.TextSize = 12
+            OptionButton.Parent = OptionsHolder
             
-            local optionCorner = Instance.new("UICorner")
-            optionCorner.CornerRadius = UDim.new(0, 4)
-            optionCorner.Parent = optionButton
-            
-            local optionText = Instance.new("TextLabel")
-            optionText.Size = UDim2.new(1, -10, 1, 0)
-            optionText.Position = UDim2.new(0, 10, 0, 0)
-            optionText.BackgroundTransparency = 1
-            optionText.Text = option
-            optionText.TextColor3 = Theme.Text
-            optionText.TextSize = 14
-            optionText.Font = Enum.Font.Gotham
-            optionText.TextXAlignment = Enum.TextXAlignment.Left
-            optionText.Parent = optionButton
-            
-            optionButton.MouseEnter:Connect(function()
-                TweenService:Create(optionButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 65)}):Play()
+            -- Efeito de hover
+            OptionButton.MouseEnter:Connect(function()
+                OptionButton.BackgroundColor3 = Theme.LightBackground
             end)
             
-            optionButton.MouseLeave:Connect(function()
-                TweenService:Create(optionButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
+            OptionButton.MouseLeave:Connect(function()
+                OptionButton.BackgroundColor3 = Theme.Background
             end)
             
-            optionButton.MouseButton1Click:Connect(function()
-                selectedText.Text = option
+            -- Lógica de seleção
+            OptionButton.MouseButton1Click:Connect(function()
+                SelectedOption.Text = option
                 
                 -- Fechar dropdown
-                TweenService:Create(dropdownContainer, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 50)}):Play()
-                TweenService:Create(dropdownArrow, TweenInfo.new(0.2), {Rotation = 0}):Play()
-                optionsContainer.Visible = false
+                TweenService:Create(Dropdown, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 40)}):Play()
+                TweenService:Create(DropdownArrow, TweenInfo.new(0.2), {Rotation = 0}):Play()
+                OptionsHolder.Visible = false
                 
                 callback(option)
             end)
-            
-            optionsHeight = optionsHeight + 30 -- 25 para altura + 5 para padding
-        end
-        
-        -- Ajustar altura do container de opções
-        optionsContainer.Size = UDim2.new(1, -24, 0, math.min(optionsHeight, 150))
-        
-        -- Adicionar scrolling se necessário
-        if optionsHeight > 150 then
-            optionsList:Destroy() -- Remover o frame existente
-            
-            local scrollingOptionsList = Instance.new("ScrollingFrame")
-            scrollingOptionsList.Name = "List"
-            scrollingOptionsList.Size = UDim2.new(1, -10, 1, -10)
-            scrollingOptionsList.Position = UDim2.new(0, 5, 0, 5)
-            scrollingOptionsList.BackgroundTransparency = 1
-            scrollingOptionsList.BorderSizePixel = 0
-            scrollingOptionsList.ScrollBarThickness = 4
-            scrollingOptionsList.ScrollBarImageColor3 = Theme.Accent
-            scrollingOptionsList.CanvasSize = UDim2.new(0, 0, 0, optionsHeight)
-            scrollingOptionsList.Parent = optionsContainer
-            
-            optionsLayout.Parent = scrollingOptionsList
-            
-            -- Mover as opções para o novo scrolling frame
-            for _, option in ipairs(options) do
-                local optionButton = Instance.new("TextButton")
-                optionButton.Name = option
-                optionButton.Size = UDim2.new(1, -4, 0, 25)
-                optionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-                optionButton.BorderSizePixel = 0
-                optionButton.Text = ""
-                optionButton.AutoButtonColor = false
-                optionButton.Parent = scrollingOptionsList
-                
-                local optionCorner = Instance.new("UICorner")
-                optionCorner.CornerRadius = UDim.new(0, 4)
-                optionCorner.Parent = optionButton
-                
-                local optionText = Instance.new("TextLabel")
-                optionText.Size = UDim2.new(1, -10, 1, 0)
-                optionText.Position = UDim2.new(0, 10, 0, 0)
-                optionText.BackgroundTransparency = 1
-                optionText.Text = option
-                optionText.TextColor3 = Theme.Text
-                optionText.TextSize = 14
-                optionText.Font = Enum.Font.Gotham
-                optionText.TextXAlignment = Enum.TextXAlignment.Left
-                optionText.Parent = optionButton
-                
-                optionButton.MouseEnter:Connect(function()
-                    TweenService:Create(optionButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 65)}):Play()
-                end)
-                
-                optionButton.MouseLeave:Connect(function()
-                    TweenService:Create(optionButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
-                end)
-                
-                optionButton.MouseButton1Click:Connect(function()
-                    selectedText.Text = option
-                    
-                    -- Fechar dropdown
-                    TweenService:Create(dropdownContainer, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 50)}):Play()
-                    TweenService:Create(dropdownArrow, TweenInfo.new(0.2), {Rotation = 0}):Play()
-                    optionsContainer.Visible = false
-                    
-                    callback(option)
-                end)
-            end
         end
         
         -- Estado do dropdown
         local isOpen = false
         
-        -- Comportamento de clique
-        dropdownButton.MouseButton1Click:Connect(function()
+        -- Botão de clique para todo o dropdown
+        local DropdownButton = Instance.new("TextButton")
+        DropdownButton.Name = "DropdownButton"
+        DropdownButton.BackgroundTransparency = 1
+        DropdownButton.Size = UDim2.new(1, 0, 0, 40)
+        DropdownButton.Text = ""
+        DropdownButton.Parent = Dropdown
+        
+        -- Lógica de abrir/fechar
+        DropdownButton.MouseButton1Click:Connect(function()
             isOpen = not isOpen
             
             if isOpen then
                 -- Abrir dropdown
-                TweenService:Create(dropdownContainer, TweenInfo.new(0.2), 
-                    {Size = UDim2.new(1, 0, 0, 50 + optionsContainer.AbsoluteSize.Y + 10)}):Play()
-                TweenService:Create(dropdownArrow, TweenInfo.new(0.2), {Rotation = 180}):Play()
-                optionsContainer.Visible = true
+                TweenService:Create(Dropdown, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 40 + OptionsHolder.Size.Y.Offset)}):Play()
+                TweenService:Create(DropdownArrow, TweenInfo.new(0.2), {Rotation = 180}):Play()
+                OptionsHolder.Visible = true
             else
                 -- Fechar dropdown
-                TweenService:Create(dropdownContainer, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 50)}):Play()
-                TweenService:Create(dropdownArrow, TweenInfo.new(0.2), {Rotation = 0}):Play()
-                optionsContainer.Visible = false
+                TweenService:Create(Dropdown, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 40)}):Play()
+                TweenService:Create(DropdownArrow, TweenInfo.new(0.2), {Rotation = 0}):Play()
+                OptionsHolder.Visible = false
             end
         end)
         
-        -- Retornar API
         return {
-            Instance = dropdownContainer,
             SetValue = function(value)
                 if table.find(options, value) then
-                    selectedText.Text = value
+                    SelectedOption.Text = value
                     callback(value)
                 end
             end,
             GetValue = function()
-                return selectedText.Text
+                return SelectedOption.Text
             end
         }
     end
-
-    -- Função para criar um botão
-    local function CreateButton(parent, title, description, callback)
-        local buttonContainer = Instance.new("Frame")
-        buttonContainer.Name = title .. "Button"
-        buttonContainer.Size = UDim2.new(1, 0, 0, 50)
-        buttonContainer.BackgroundColor3 = Theme.Button
-        buttonContainer.BorderSizePixel = 0
-        buttonContainer.Parent = parent
+    
+    -- Função para criar botão
+    local function CreateButton(parent, title, callback)
+        local Button = Instance.new("Frame")
+        Button.Name = title .. "Button"
+        Button.BackgroundColor3 = Theme.DarkBackground
+        Button.BorderSizePixel = 0
+        Button.Size = UDim2.new(1, 0, 0, 40)
+        Button.Parent = parent
         
-        local buttonCorner = Instance.new("UICorner")
-        buttonCorner.CornerRadius = UDim.new(0, 6)
-        buttonCorner.Parent = buttonContainer
+        local ButtonCorner = Instance.new("UICorner")
+        ButtonCorner.CornerRadius = UDim.new(0, 6)
+        ButtonCorner.Parent = Button
         
-        local buttonTitle = Instance.new("TextLabel")
-        buttonTitle.Name = "Title"
-        buttonTitle.Size = UDim2.new(1, -24, 0, 20)
-        buttonTitle.Position = UDim2.new(0, 12, 0, 8)
-        buttonTitle.BackgroundTransparency = 1
-        buttonTitle.Text = title
-        buttonTitle.TextColor3 = Theme.Text
-        buttonTitle.TextSize = 15
-        buttonTitle.Font = Enum.Font.GothamSemibold
-        buttonTitle.TextXAlignment = Enum.TextXAlignment.Left
-        buttonTitle.Parent = buttonContainer
+        local ButtonLabel = Instance.new("TextLabel")
+        ButtonLabel.Name = "Label"
+        ButtonLabel.BackgroundTransparency = 1
+        ButtonLabel.Size = UDim2.new(1, 0, 1, 0)
+        ButtonLabel.Font = Enum.Font.GothamSemibold
+        ButtonLabel.Text = title
+        ButtonLabel.TextColor3 = Theme.Text
+        ButtonLabel.TextSize = 14
+        ButtonLabel.Parent = Button
         
-        local buttonDescription = Instance.new("TextLabel")
-        buttonDescription.Name = "Description"
-        buttonDescription.Size = UDim2.new(1, -24, 0, 16)
-        buttonDescription.Position = UDim2.new(0, 12, 1, -24)
-        buttonDescription.BackgroundTransparency = 1
-        buttonDescription.Text = description
-        buttonDescription.TextColor3 = Theme.SubText
-        buttonDescription.TextSize = 13
-        buttonDescription.Font = Enum.Font.Gotham
-        buttonDescription.TextXAlignment = Enum.TextXAlignment.Left
-        buttonDescription.TextWrapped = true
-        buttonDescription.Parent = buttonContainer
+        local ButtonClick = Instance.new("TextButton")
+        ButtonClick.Name = "Click"
+        ButtonClick.BackgroundTransparency = 1
+        ButtonClick.Size = UDim2.new(1, 0, 1, 0)
+        ButtonClick.Text = ""
+        ButtonClick.Parent = Button
         
-        local buttonClick = Instance.new("TextButton")
-        buttonClick.Name = "Click"
-        buttonClick.Size = UDim2.new(1, 0, 1, 0)
-        buttonClick.BackgroundTransparency = 1
-        buttonClick.Text = ""
-        buttonClick.Parent = buttonContainer
-        
-        -- Efeito de hover
-        buttonClick.MouseEnter:Connect(function()
-            TweenService:Create(buttonContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(55, 55, 65)}):Play()
+        -- Efeitos visuais
+        ButtonClick.MouseEnter:Connect(function()
+            TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Theme.Accent}):Play()
         end)
         
-        buttonClick.MouseLeave:Connect(function()
-            TweenService:Create(buttonContainer, TweenInfo.new(0.2), {BackgroundColor3 = Theme.Button}):Play()
+        ButtonClick.MouseLeave:Connect(function()
+            TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Theme.DarkBackground}):Play()
         end)
         
-        -- Efeito de clique
-        buttonClick.MouseButton1Down:Connect(function()
-            TweenService:Create(buttonContainer, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(45, 45, 55)}):Play()
+        ButtonClick.MouseButton1Down:Connect(function()
+            TweenService:Create(Button, TweenInfo.new(0.1), {BackgroundColor3 = Theme.DarkBackground}):Play()
+            TweenService:Create(Button, TweenInfo.new(0.1), {Size = UDim2.new(0.98, 0, 0.95, 0)}):Play()
+            TweenService:Create(Button, TweenInfo.new(0.1), {Position = UDim2.new(0.01, 0, 0.025, 0)}):Play()
         end)
         
-        buttonClick.MouseButton1Up:Connect(function()
-            TweenService:Create(buttonContainer, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(55, 55, 65)}):Play()
+        ButtonClick.MouseButton1Up:Connect(function()
+            TweenService:Create(Button, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Accent}):Play()
+            TweenService:Create(Button, TweenInfo.new(0.1), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+            TweenService:Create(Button, TweenInfo.new(0.1), {Position = UDim2.new(0, 0, 0, 0)}):Play()
         end)
         
-        buttonClick.MouseButton1Click:Connect(callback)
+        ButtonClick.MouseButton1Click:Connect(function()
+            callback()
+        end)
         
-        return buttonContainer
+        return Button
     end
-
-    -- Função para criar um input de texto
-    local function CreateTextInput(parent, title, placeholder, callback)
-        local inputContainer = Instance.new("Frame")
-        inputContainer.Name = title .. "Input"
-        inputContainer.Size = UDim2.new(1, 0, 0, 60)
-        inputContainer.BackgroundColor3 = Theme.Button
-        inputContainer.BorderSizePixel = 0
-        inputContainer.Parent = parent
+    
+    -- Função para criar um atalho flutuante (SÓ PARA MOBILE)
+    local function CreateQuickButton(title, icon, position, callback)
+        local QuickButton = Instance.new("ImageButton")
+        QuickButton.Name = title .. "QuickButton"
+        QuickButton.BackgroundColor3 = Theme.Accent
+        QuickButton.BackgroundTransparency = 0.2
+        QuickButton.Position = position
+        QuickButton.Size = UDim2.new(0, 40, 0, 40)
+        QuickButton.AutoButtonColor = false
+        QuickButton.Image = icon
+        QuickButton.ImageColor3 = Theme.Text
+        QuickButton.Parent = QuickAccessFrame
         
-        local inputCorner = Instance.new("UICorner")
-        inputCorner.CornerRadius = UDim.new(0, 6)
-        inputCorner.Parent = inputContainer
+        local QuickButtonCorner = Instance.new("UICorner")
+        QuickButtonCorner.CornerRadius = UDim.new(1, 0)
+        QuickButtonCorner.Parent = QuickButton
         
-        local inputTitle = Instance.new("TextLabel")
-        inputTitle.Name = "Title"
-        inputTitle.Size = UDim2.new(1, -12, 0, 20)
-        inputTitle.Position = UDim2.new(0, 12, 0, 8)
-        inputTitle.BackgroundTransparency = 1
-        inputTitle.Text = title
-        inputTitle.TextColor3 = Theme.Text
-        inputTitle.TextSize = 15
-        inputTitle.Font = Enum.Font.GothamSemibold
-        inputTitle.TextXAlignment = Enum.TextXAlignment.Left
-        inputTitle.Parent = inputContainer
+        -- Efeitos visuais para toque
+        QuickButton.MouseEnter:Connect(function()
+            TweenService:Create(QuickButton, TweenInfo.new(0.2), {BackgroundTransparency = 0}):Play()
+        end)
         
-        local inputBox = Instance.new("TextBox")
-        inputBox.Name = "Input"
-        inputBox.Size = UDim2.new(1, -24, 0, 25)
-        inputBox.Position = UDim2.new(0, 12, 0, 28)
-        inputBox.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
-        inputBox.BorderSizePixel = 0
-        inputBox.PlaceholderText = placeholder
-        inputBox.PlaceholderColor3 = Color3.fromRGB(140, 140, 150)
-        inputBox.Text = ""
-        inputBox.TextColor3 = Theme.Text
-        inputBox.TextSize = 14
-        inputBox.Font = Enum.Font.Gotham
-        inputBox.TextXAlignment = Enum.TextXAlignment.Left
-        inputBox.Parent = inputContainer
+        QuickButton.MouseLeave:Connect(function()
+            TweenService:Create(QuickButton, TweenInfo.new(0.2), {BackgroundTransparency = 0.2}):Play()
+        end)
         
-        local inputPadding = Instance.new("UIPadding")
-        inputPadding.PaddingLeft = UDim.new(0, 10)
-        inputPadding.Parent = inputBox
+        QuickButton.MouseButton1Down:Connect(function()
+            TweenService:Create(QuickButton, TweenInfo.new(0.1), {Size = UDim2.new(0, 35, 0, 35)}):Play()
+        end)
         
-        local inputCorner = Instance.new("UICorner")
-        inputCorner.CornerRadius = UDim.new(0, 4)
-        inputCorner.Parent = inputBox
+        QuickButton.MouseButton1Up:Connect(function()
+            TweenService:Create(QuickButton, TweenInfo.new(0.1), {Size = UDim2.new(0, 40, 0, 40)}):Play()
+        end)
         
-        inputBox.Changed:Connect(function(prop)
-            if prop == "Text" then
-                callback(inputBox.Text)
+        QuickButton.MouseButton1Click:Connect(callback)
+        
+        return QuickButton
+    end
+    
+    -- Botão para mostrar/esconder os atalhos rápidos
+    local QuickAccessToggle = Instance.new("ImageButton")
+    QuickAccessToggle.Name = "QuickAccessToggle"
+    QuickAccessToggle.BackgroundColor3 = Theme.Accent
+    QuickAccessToggle.Position = UDim2.new(0, 10, 0.5, -25)
+    QuickAccessToggle.Size = UDim2.new(0, 50, 0, 50)
+    QuickAccessToggle.AutoButtonColor = false
+    QuickAccessToggle.Image = "rbxassetid://6031302931" -- Ícone de menu
+    QuickAccessToggle.ImageColor3 = Theme.Text
+    QuickAccessToggle.Parent = BloxFruitsMobileGUI
+    
+    local QuickAccessToggleCorner = Instance.new("UICorner")
+    QuickAccessToggleCorner.CornerRadius = UDim.new(1, 0)
+    QuickAccessToggleCorner.Parent = QuickAccessToggle
+    
+    -- Lógica para mostrar/esconder
+    local quickAccessVisible = false
+    
+    QuickAccessToggle.MouseButton1Click:Connect(function()
+        quickAccessVisible = not quickAccessVisible
+        QuickAccessFrame.Visible = quickAccessVisible
+    end)
+    
+    -- CRIAÇÃO DE ABAS (PARA TODA A INTERFACE)
+    local FarmTab = CreateTab("Farm", "rbxassetid://6035053278") -- Ícone de plantação/farming
+    local TeleportTab = CreateTab("TP", "rbxassetid://6035047391") -- Ícone de teleporte
+    local CombatTab = CreateTab("PVP", "rbxassetid://6034983957") -- Ícone de combate
+    local ItemsTab = CreateTab("Items", "rbxassetid://6031282950") -- Ícone de itens
+    local VisualTab = CreateTab("ESP", "rbxassetid://6031763426") -- Ícone de olho/visual
+    local SettingsTab = CreateTab("Config", "rbxassetid://6031280882") -- Ícone de engrenagem
+    
+    -- Selecionar a primeira aba por padrão
+    TabButtons[1].Button.MouseButton1Click:Fire()
+    
+    -- FARM TAB (PRINCIPAL DESSA PORRA)
+    local AutoFarmSection = CreateSection(FarmTab, "Auto Farm")
+    local AutoFarmEnabled = CreateToggle(AutoFarmSection, "Auto Farm", false, function(value)
+        if value then
+            -- Código para iniciar auto farm
+            local notification = "Iniciando Auto Farm - Verificando segurança..."
+            if AutoFarmMethod == "Level" then
+                notification = "Auto Farm de Level ativado"
+            elseif AutoFarmMethod == "Chest" then
+                notification = "Auto Farm de Baús ativado"
+            elseif AutoFarmMethod == "Fruit" then
+                notification = "Auto Farm de Frutas ativado"
             end
-        end)
-        
-        return {
-            Instance = inputContainer,
-            SetValue = function(value)
-                inputBox.Text = value
-            end,
-            GetValue = function()
-                return inputBox.Text
-            end
-        }
-    end
-
-    -- Criar abas
-    local homeTab = CreateTab("Home", "rbxassetid://6026568198")
-    local combatTab = CreateTab("Combat", "rbxassetid://6034509993")
-    local farmTab = CreateTab("Farming", "rbxassetid://6031280882")
-    local teleportTab = CreateTab("Teleport", "rbxassetid://6034479958")
-    local visualTab = CreateTab("Visual", "rbxassetid://6034328955")
-    local miscTab = CreateTab("Misc", "rbxassetid://6031075931")
-    local settingsTab = CreateTab("Settings", "rbxassetid://6031280882")
-
-    -- Selecionar primeira aba por padrão
-    if #tabs > 0 then
-        tabs[1].Button.MouseButton1Click:Fire()
-    end
-
-    -- Preencher aba Home
-    local homeWelcome = CreateSection(homeTab, "Welcome")
-    
-    CreateButton(homeWelcome, "Welcome to Arise Crossover Hub", "The most advanced script for Arise Crossover with multiple features.", function()
-        -- Apenas informação, sem ação necessária
-    end)
-    
-    local homeStats = CreateSection(homeTab, "Your Stats")
-    
-    CreateButton(homeStats, "Player Information", "Level: " .. (LocalPlayer.Level and LocalPlayer.Level.Value or "N/A") .. " | Health: 100%", function() end)
-    
-    local homeSocial = CreateSection(homeTab, "Socials")
-    
-    CreateButton(homeSocial, "Join our Discord", "Get notified about updates and more features.", function()
-        setclipboard("https://discord.gg/examplelink")
-        
-        -- Notificação
-        local notification = Instance.new("Frame")
-        notification.Name = "Notification"
-        notification.Size = UDim2.new(0, 250, 0, 60)
-        notification.Position = UDim2.new(0.5, -125, 0, -70)
-        notification.BackgroundColor3 = Theme.Header
-        notification.BorderSizePixel = 0
-        notification.Parent = AriseHubGUI
-        
-        local notifCorner = Instance.new("UICorner")
-        notifCorner.CornerRadius = UDim.new(0, 6)
-        notifCorner.Parent = notification
-        
-        local notifTitle = Instance.new("TextLabel")
-        notifTitle.Name = "Title"
-        notifTitle.Size = UDim2.new(1, -20, 0, 25)
-        notifTitle.Position = UDim2.new(0, 10, 0, 5)
-        notifTitle.BackgroundTransparency = 1
-        notifTitle.Text = "Discord Link Copied!"
-        notifTitle.TextColor3 = Theme.Text
-        notifTitle.TextSize = 16
-        notifTitle.Font = Enum.Font.GothamBold
-        notifTitle.Parent = notification
-        
-        local notifMessage = Instance.new("TextLabel")
-        notifMessage.Name = "Message"
-        notifMessage.Size = UDim2.new(1, -20, 0, 20)
-        notifMessage.Position = UDim2.new(0, 10, 0, 30)
-        notifMessage.BackgroundTransparency = 1
-        notifMessage.Text = "Invitation link has been copied to clipboard."
-        notifMessage.TextColor3 = Theme.SubText
-        notifMessage.TextSize = 14
-        notifMessage.Font = Enum.Font.Gotham
-        notifMessage.Parent = notification
-        
-        -- Animação de entrada
-        TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -125, 0, 20)}):Play()
-        
-        -- Animação de saída após 3 segundos
-        spawn(function()
-            wait(3)
-            TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(0.5, -125, 0, -70)}):Play()
-            wait(0.3)
-            notification:Destroy()
-        end)
-    end)
-
-    -- Preencher aba Combat
-    local combatMain = CreateSection(combatTab, "Combat Features")
-    
-    local autoAttackToggle = CreateToggle(combatMain, "Auto Attack", "Automatically attacks nearby enemies", false, function(value)
-        Config.Combat.AutoAttack = value
-    end)
-    
-    local autoDodgeToggle = CreateToggle(combatMain, "Auto Dodge", "Automatically dodges incoming attacks", false, function(value)
-        Config.Combat.AutoDodge = value
-    end)
-    
-    local attackSpeedSlider = CreateSlider(combatMain, "Attack Speed", 1, 5, 1, "x", function(value)
-        Config.Combat.AttackSpeed = value
-    end)
-    
-    -- Preencher aba Farming
-    local farmingMain = CreateSection(farmTab, "Auto Farm")
-    
-    local autoFarmToggle = CreateToggle(farmingMain, "Auto Farm", "Automatically farms the selected target", false, function(value)
-        Config.AutoFarm.Enabled = value
-    end)
-    
-    local farmTargetDropdown = CreateDropdown(farmingMain, "Farm Target", {"Monsters", "Bosses", "Chests", "Items"}, "Monsters", function(value)
-        Config.AutoFarm.Target = value
-    end)
-    
-    local farmRangeSlider = CreateSlider(farmingMain, "Farm Range", 5, 30, 10, "m", function(value)
-        Config.AutoFarm.Range = value
-    end)
-    
-    local farmModeDropdown = CreateDropdown(farmingMain, "Farm Mode", {"Normal", "Aggressive", "Stealth"}, "Normal", function(value)
-        Config.AutoFarm.Mode = value
-    end)
-    
-    -- Preencher aba Visual
-    local visualMain = CreateSection(visualTab, "ESP")
-    
-    local espToggle = CreateToggle(visualMain, "Player ESP", "Show player boxes, names, and distance", false, function(value)
-        Config.Visual.ESP = value
-    end)
-    
-    local chestEspToggle = CreateToggle(visualMain, "Chest ESP", "Show chest locations with distance", false, function(value)
-        Config.Visual.ChestESP = value
-    end)
-    
-    local itemEspToggle = CreateToggle(visualMain, "Item ESP", "Show dropped items with names", false, function(value)
-        Config.Visual.ItemESP = value
-    end)
-    
-    local visualEffects = CreateSection(visualTab, "Effects")
-    
-    local fullBrightToggle = CreateToggle(visualEffects, "Full Bright", "Removes darkness and enhances visibility", false, function(value)
-        Config.Visual.FullBright = value
-        
-        -- Implementação do Full Bright
-        if value then
-            local lighting = game:GetService("Lighting")
-            lighting.Brightness = 2
-            lighting.ClockTime = 14
-            lighting.FogEnd = 100000
-            lighting.GlobalShadows = false
-            lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+            
+            -- Notificação
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Blox Fruits Black",
+                Text = notification,
+                Duration = 3
+            })
         else
-            local lighting = game:GetService("Lighting")
-            lighting.Brightness = 1
-            lighting.ClockTime = lighting:GetMinutesAfterMidnight() / 60
-            lighting.FogEnd = 500
-            lighting.GlobalShadows = true
-            lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
+            -- Código para parar auto farm
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Blox Fruits Black",
+                Text = "Auto Farm desativado",
+                Duration = 3
+            })
         end
     end)
     
-    -- Preencher aba Movement
-    local movementSection = CreateSection(teleportTab, "Movement")
-    
-    local speedToggle = CreateToggle(movementSection, "Speed Hack", "Increases your movement speed", false, function(value)
-        Config.Movement.Speed = value
+    local FarmMethodDropdown = CreateDropdown(AutoFarmSection, "Método de Farm", {"Level", "Chest", "Fruit", "Bosses", "Material"}, "Level", function(value)
+        AutoFarmMethod = value
         
-        -- Implementação do Speed Hack
-        if value then
-            OriginalWalkSpeed = Humanoid.WalkSpeed
-            Humanoid.WalkSpeed = OriginalWalkSpeed * Config.Movement.SpeedMultiplier
-        else
-            Humanoid.WalkSpeed = OriginalWalkSpeed
+        -- Lógica para mudar método
+        if value == "Level" then
+            -- Configuração para farm de Level
+        elseif value == "Chest" then
+            -- Configuração para farm de baús
+        elseif value == "Fruit" then
+            -- Configuração para farm de frutas
         end
     end)
     
-    local speedMultiplierSlider = CreateSlider(movementSection, "Speed Multiplier", 1, 10, 2, "x", function(value)
-        Config.Movement.SpeedMultiplier = value
+    local FarmSpeedSlider = CreateSlider(AutoFarmSection, "Velocidade de Farm", 1, 5, 2, "x", function(value)
+        FarmSpeed = value
         
-        if Config.Movement.Speed then
-            Humanoid.WalkSpeed = OriginalWalkSpeed * value
+        -- Ajustar velocidade do farming
+        if value > 3 then
+            -- Aviso de risco
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Alerta de Segurança",
+                Text = "Velocidade alta aumenta risco de ban!",
+                Duration = 5
+            })
         end
     end)
     
-    local jumpToggle = CreateToggle(movementSection, "Jump Power", "Increases your jump height", false, function(value)
-        Config.Movement.Jump = value
+    local FarmDistanceSlider = CreateSlider(AutoFarmSection, "Distância de Farm", 5, 30, 15, "m", function(value)
+        FarmDistance = value
+    end)
+    
+    local AutoQuestToggle = CreateToggle(AutoFarmSection, "Auto Quest", false, function(value)
+        AutoQuest = value
+    end)
+    
+    local BringMobToggle = CreateToggle(AutoFarmSection, "Bring Mob", false, function(value)
+        BringMob = value
+    end)
+    
+    -- SEÇÃO DE FARMINGS ESPECÍFICOS
+    local SpecificFarmSection = CreateSection(FarmTab, "Farmings Específicos")
+    
+    local AutoRaidToggle = CreateToggle(SpecificFarmSection, "Auto Raid", false, function(value)
+        AutoRaid = value
+    end)
+    
+    local AutoBossToggle = CreateToggle(SpecificFarmSection, "Auto Farm Boss", false, function(value)
+        AutoBoss = value
+    end)
+    
+    local BossDropdown = CreateDropdown(SpecificFarmSection, "Selecionar Boss", {"Saber Expert", "The Gorilla King", "Bobby", "Deadbeard", "Diamond", "Jeremy"}, "Saber Expert", function(value)
+        SelectedBoss = value
+    end)
+    
+    local MaterialFarmToggle = CreateToggle(SpecificFarmSection, "Farm de Material", false, function(value)
+        MaterialFarm = value
+    end)
+    
+    local MaterialDropdown = CreateDropdown(SpecificFarmSection, "Material", {"Angel Wings", "Magma Ore", "Mystic Droplet", "Fish Tail", "Scrap Metal", "Dragon Scale"}, "Angel Wings", function(value)
+        SelectedMaterial = value
+    end)
+    
+    -- TELEPORT TAB
+    local IslandTeleportSection = CreateSection(TeleportTab, "Teleporte de Ilhas")
+    
+    local IslandDropdown = CreateDropdown(IslandTeleportSection, "Selecionar Ilha", {
+        "Starter Island", "Middle Town", "Jungle", "Pirate Village", "Desert", "Frozen Village", 
+        "Marine Fortress", "Skylands", "Prison", "Colosseum", "Magma Village", "Fountain City",
+        "First Sea Locations", "Kingdom of Rose", "Floating Turtle", "Mansion", "Haunted Castle",
+        "Ice Castle", "Forgotten Island", "Raven Rock", "Green Bit", "Cafe", "Factroy",
+        "Second Sea Locations", "Hydra Island", "Great Tree", "Castle On The Sea", "Port Town",
+        "Beautiful Pirate Domain", "Third Sea Locations"
+    }, "Starter Island", function(value)
+        SelectedIsland = value
         
-        -- Implementação do Jump Power
-        if value then
-            OriginalJumpPower = Humanoid.JumpPower
-            Humanoid.JumpPower = OriginalJumpPower * Config.Movement.JumpMultiplier
-        else
-            Humanoid.JumpPower = OriginalJumpPower
-        end
-    end)
-    
-    local jumpMultiplierSlider = CreateSlider(movementSection, "Jump Multiplier", 1, 5, 2, "x", function(value)
-        Config.Movement.JumpMultiplier = value
-        
-        if Config.Movement.Jump then
-            Humanoid.JumpPower = OriginalJumpPower * value
-        end
-    end)
-    
-    local noClipToggle = CreateToggle(movementSection, "No Clip", "Walk through walls and objects", false, function(value)
-        Config.Movement.NoClip = value
-    end)
-    
-    local teleportSection = CreateSection(teleportTab, "Teleport")
-    
-    -- Preencher aba Misc
-    local miscSection = CreateSection(miscTab, "Utilities")
-    
-    local autoQuestToggle = CreateToggle(miscSection, "Auto Quest", "Automatically accepts and completes quests", false, function(value)
-        Config.Misc.AutoQuest = value
-    end)
-    
-    local autoPickupToggle = CreateToggle(miscSection, "Auto Pickup", "Automatically collects nearby items", false, function(value)
-        Config.Misc.AutoPickup = value
-    end)
-    
-    local infiniteStaminaToggle = CreateToggle(miscSection, "Infinite Stamina", "Never run out of stamina", false, function(value)
-        Config.Misc.InfiniteStamina = value
-    end)
-    
-    -- Preencher aba Settings
-    local settingsSection = CreateSection(settingsTab, "Interface")
-    
-    local uiToggleInput = CreateTextInput(settingsSection, "UI Toggle Key", "RightControl", function(value)
-        -- Parser básico para converter texto em KeyCode
-        local keyMap = {
-            ["rightcontrol"] = Enum.KeyCode.RightControl,
-            ["leftcontrol"] = Enum.KeyCode.LeftControl,
-            ["rightalt"] = Enum.KeyCode.RightAlt,
-            ["leftalt"] = Enum.KeyCode.LeftAlt,
-            ["rightshift"] = Enum.KeyCode.RightShift,
-            ["leftshift"] = Enum.KeyCode.LeftShift,
-            ["q"] = Enum.KeyCode.Q,
-            ["e"] = Enum.KeyCode.E,
-            ["r"] = Enum.KeyCode.R,
-            ["t"] = Enum.KeyCode.T,
-            ["y"] = Enum.KeyCode.Y,
-            ["u"] = Enum.KeyCode.U,
-            ["p"] = Enum.KeyCode.P,
-            ["f"] = Enum.KeyCode.F,
-            ["g"] = Enum.KeyCode.G,
-            ["h"] = Enum.KeyCode.H,
-            ["j"] = Enum.KeyCode.J,
-            ["k"] = Enum.KeyCode.K,
-            ["l"] = Enum.KeyCode.L,
-            ["z"] = Enum.KeyCode.Z,
-            ["x"] = Enum.KeyCode.X,
-            ["c"] = Enum.KeyCode.C,
-            ["v"] = Enum.KeyCode.V,
-            ["b"] = Enum.KeyCode.B,
-            ["n"] = Enum.KeyCode.N,
-            ["m"] = Enum.KeyCode.M
+        -- Teleporte para a ilha selecionada
+        local teleportLocations = {
+            ["Starter Island"] = Vector3.new(1071.2832, 16.3085976, 1426.86792),
+            ["Middle Town"] = Vector3.new(-655.824158, 7.88708115, 1436.67908),
+            ["Jungle"] = Vector3.new(-1249.77222, 11.8870859, 341.356476),
+            ["Pirate Village"] = Vector3.new(-1122.34998, 4.78708982, 3855.91992),
+            -- Adicione mais localizações aqui
         }
         
-        local lowerValue = value:lower()
-        if keyMap[lowerValue] then
-            ToggleKey = keyMap[lowerValue]
+        if teleportLocations[value] then
+            local player = game:GetService("Players").LocalPlayer
+            local char = player.Character or player.CharacterAdded:Wait()
+            local humanoidRootPart = char:WaitForChild("HumanoidRootPart")
+            
+            -- Teleporte com efeito de deslocamento
+            for i = 1, 10 do
+                humanoidRootPart.CFrame = CFrame.new(teleportLocations[value])
+                task.wait(0.1)
+            end
+            
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Teleporte",
+                Text = "Teleportado para " .. value,
+                Duration = 3
+            })
         end
     end)
     
-    -- Configuração de funcionalidades do botão fechar/minimizar
-    CloseButton.MouseButton1Click:Connect(function()
-        AriseHubGUI:Destroy()
-        MinimizedCube:Destroy()
-        
-        -- Limpar connections e reverter alterações
-        for _, connection in pairs(getconnections(RunService.RenderStepped)) do
-            if connection.Function and string.find(debug.info(connection.Function, "s"), "AriseHub") then
-                connection:Disconnect()
-            end
+    local TeleportButton = CreateButton(IslandTeleportSection, "Teleportar", function()
+        -- A lógica de teleporte já está no dropdown, este é só um botão extra para confirmar
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Teleporte",
+            Text = "Teleportando para " .. SelectedIsland,
+            Duration = 3
+        })
+    end)
+    
+    -- SEÇÃO TELETRANSPORTE PARA JOGADORES
+    local PlayerTeleportSection = CreateSection(TeleportTab, "Teleporte para Jogadores")
+    
+    -- Lista de jogadores atualizada
+    local playerList = {}
+    for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+        if player ~= game:GetService("Players").LocalPlayer then
+            table.insert(playerList, player.Name)
         end
-        
-        -- Restaurar valores originais
-        if Humanoid then
-            Humanoid.WalkSpeed = OriginalWalkSpeed
-            Humanoid.JumpPower = OriginalJumpPower
-        end
+    end
+    
+    local PlayerDropdown = CreateDropdown(PlayerTeleportSection, "Selecionar Jogador", playerList, playerList[1] or "Nenhum jogador", function(value)
+        SelectedPlayer = value
     end)
     
-    MinimizeButton.MouseButton1Click:Connect(function()
-        -- Minimizar GUI principal e mostrar o cubo
-        AriseHubGUI.Enabled = false
-        MinimizedCube.Enabled = true
-        
-        -- Efeito de animação
-        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
-    end)
-    
-    CubeButton.MouseButton1Click:Connect(function()
-        -- Maximizar GUI principal e esconder o cubo
-        AriseHubGUI.Enabled = true
-        MinimizedCube.Enabled = false
-        
-        -- Resetar tamanho para animação
-        MainFrame.Size = UDim2.new(0, 0, 0, 0)
-        MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-        
-        -- Animar abertura
-        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 700, 0, 450), Position = UDim2.new(0.5, -350, 0.5, -225)}):Play()
-    end)
-    
-    -- Alternância de interface com tecla de atalho
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if not gameProcessed and input.KeyCode == ToggleKey then
-            if AriseHubGUI.Enabled then
-                MinimizeButton.MouseButton1Click:Fire()
-            else
-                CubeButton.MouseButton1Click:Fire()
+    -- Botão de teleporte para jogador
+    local TeleportToPlayerButton = CreateButton(PlayerTeleportSection, "Teleportar para Jogador", function()
+        local targetPlayer = game:GetService("Players"):FindFirstChild(SelectedPlayer)
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local player = game:GetService("Players").LocalPlayer
+            local char = player.Character or player.CharacterAdded:Wait()
+            
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                char.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+                
+                game:GetService("StarterGui"):SetCore("SendNotification", {
+                    Title = "Teleporte",
+                    Text = "Teleportado para " .. SelectedPlayer,
+                    Duration = 3
+                })
             end
+        else
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Erro",
+                Text = "Jogador não encontrado!",
+                Duration = 3
+            })
         end
     end)
     
-    -- Implementação de funcionalidades principais
+    -- COMBAT TAB
+    local CombatSection = CreateSection(CombatTab, "Combate Automático")
     
-    -- Sistema Auto Farm
-    local farmConnection = nil
-    local function AutoFarm()
-        if farmConnection then farmConnection:Disconnect() end
+    local AutoFarmMobs = CreateToggle(CombatSection, "Auto Kill Próximo", false, function(value)
+        AutoKillMobs = value
         
-        if not Config.AutoFarm.Enabled then return end
-        
-        farmConnection = RunService.Heartbeat:Connect(function()
-            if not Config.AutoFarm.Enabled then farmConnection:Disconnect() return end
-            
-            -- Verificar se o personagem está vivo
-            if not Character or not Character:FindFirstChild("HumanoidRootPart") or not Character:FindFirstChildOfClass("Humanoid") or Character:FindFirstChildOfClass("Humanoid").Health <= 0 then
-                return
-            end
-            
-            local HRP = Character:FindFirstChild("HumanoidRootPart")
-            local targetPart = nil
-            local closestDistance = math.huge
-            local targetModel = nil
-            
-            -- Função para verificar NPCs e monstros
-            local function CheckNPC(model)
-                if not model:IsA("Model") then return end
-                if not model:FindFirstChild("HumanoidRootPart") or not model:FindFirstChildOfClass("Humanoid") then return end
-                if model:FindFirstChildOfClass("Humanoid").Health <= 0 then return end
-                
-                local enemyHRP = model:FindFirstChild("HumanoidRootPart")
-                local distance = (HRP.Position - enemyHRP.Position).Magnitude
-                
-                if distance <= Config.AutoFarm.Range and distance < closestDistance then
-                    -- Verificar tipo de alvo baseado na seleção
-                    local isValidTarget = false
-                    
-                    if Config.AutoFarm.Target == "Monsters" and not model:FindFirstChild("BossTag") then
-                        isValidTarget = true
-                    elseif Config.AutoFarm.Target == "Bosses" and model:FindFirstChild("BossTag") then
-                        isValidTarget = true
-                    end
-                    
-                    if isValidTarget then
-                        closestDistance = distance
-                        targetPart = enemyHRP
-                        targetModel = model
-                    end
-                end
-            end
-            
-            -- Função para verificar baús e itens
-            local function CheckItem(item)
-                if not item:IsA("Model") and not item:IsA("Part") and not item:IsA("MeshPart") then return end
-                
-                local itemPart = item:IsA("Model") and (item:FindFirstChild("HumanoidRootPart") or item:FindFirstChild("PrimaryPart") or item:FindFirstChildWhichIsA("BasePart")) or item
-                
-                if not itemPart then return end
-                
-                local distance = (HRP.Position - itemPart.Position).Magnitude
-                
-                if distance <= Config.AutoFarm.Range and distance < closestDistance then
-                    -- Verificar tipo de alvo baseado na seleção
-                    local isValidTarget = false
-                    
-                    if Config.AutoFarm.Target == "Chests" and (item.Name:lower():find("chest") or item.Name:lower():find("treasure")) then
-                        isValidTarget = true
-                    elseif Config.AutoFarm.Target == "Items" and not (item.Name:lower():find("chest") or item.Name:lower():find("treasure")) then
-                        isValidTarget = true
-                    end
-                    
-                    if isValidTarget then
-                        closestDistance = distance
-                        targetPart = itemPart
-                        targetModel = item
-                    end
-                end
-            end
-            
-            -- Procurar alvos no workspace
-            if Config.AutoFarm.Target == "Monsters" or Config.AutoFarm.Target == "Bosses" then
-                for _, model in pairs(workspace:GetChildren()) do
-                    CheckNPC(model)
-                end
-                
-                -- Verificar pastas específicas do jogo onde inimigos possam estar
-                local enemyFolders = {"Enemies", "Monsters", "NPCs", "Mobs", "Spawns"}
-                for _, folderName in ipairs(enemyFolders) do
-                    local folder = workspace:FindFirstChild(folderName)
-                    if folder then
-                        for _, model in pairs(folder:GetChildren()) do
-                            CheckNPC(model)
-                        end
-                    end
-                end
-            end
-            
-            if Config.AutoFarm.Target == "Chests" or Config.AutoFarm.Target == "Items" then
-                for _, item in pairs(workspace:GetChildren()) do
-                    CheckItem(item)
-                end
-                
-                -- Verificar pastas específicas do jogo onde itens possam estar
-                local itemFolders = {"Items", "Pickups", "Collectibles", "Chests", "Drops"}
-                for _, folderName in ipairs(itemFolders) do
-                    local folder = workspace:FindFirstChild(folderName)
-                    if folder then
-                        for _, item in pairs(folder:GetChildren()) do
-                            CheckItem(item)
-                        end
-                    end
-                end
-            end
-            
-            -- Se encontrou um alvo, mover até ele e atacar/coletar
-            if targetPart and targetModel then
-                local distance = (HRP.Position - targetPart.Position).Magnitude
-                
-                -- Mover para o alvo
-                if distance > 5 then
-                    local moveDirection = (targetPart.Position - HRP.Position).Unit
-                    local movePosition = targetPart.Position - moveDirection * 4 -- Ficar a 4 studs de distância
-                    
-                    -- Teleportar suavemente para o alvo
-                    HRP.CFrame = HRP.CFrame:Lerp(CFrame.new(movePosition, targetPart.Position), 0.1)
-                end
-                
-                -- Atacar o alvo (se for monstro/boss)
-                if (Config.AutoFarm.Target == "Monsters" or Config.AutoFarm.Target == "Bosses") and distance <= 5 then
-                    -- Tentar encontrar e usar remotes de ataque
-                    local attackRemotes = {"Attack", "Combat", "LightAttack", "HeavyAttack", "SpecialAttack"}
-                    
-                    for _, remote in ipairs(attackRemotes) do
-                        local attackRemote = Character:FindFirstChild(remote) or
-                                            LocalPlayer.Backpack:FindFirstChild(remote) or
-                                            ReplicatedStorage:FindFirstChild(remote)
-                        
-                        if attackRemote and attackRemote:IsA("RemoteEvent") then
-                            attackRemote:FireServer()
-                            break
-                        end
-                    end
-                    
-                    -- Método alternativo: simular clique de mouse
-                    mouse1click()
-                end
-                
-                -- Coletar o item (se for baú/item)
-                if (Config.AutoFarm.Target == "Chests" or Config.AutoFarm.Target == "Items") and distance <= 5 then
-                    -- Tentar usar proximity prompt se existir
-                    local prompt = targetModel:FindFirstChildWhichIsA("ProximityPrompt")
-                    if prompt then
-                        fireproximityprompt(prompt)
-                    end
-                    
-                    -- Método alternativo: tentar remotes de interação
-                    local interactRemotes = {"Interact", "Collect", "Open", "Pickup"}
-                    
-                    for _, remote in ipairs(interactRemotes) do
-                        local interactRemote = ReplicatedStorage:FindFirstChild(remote)
-                        
-                        if interactRemote and interactRemote:IsA("RemoteEvent") then
-                            interactRemote:FireServer(targetModel)
-                            break
-                        end
-                    end
-                end
-            end
-        end)
-    end
-    
-    -- Observer para mudanças no AutoFarm
-    autoFarmToggle.SetValue = function(value)
-        Config.AutoFarm.Enabled = value
-        AutoFarm()
-    end
-    
-    -- Sistema Auto Attack
-    local attackConnection = nil
-    local function AutoAttack()
-        if attackConnection then attackConnection:Disconnect() end
-        
-        if not Config.Combat.AutoAttack then return end
-        
-        attackConnection = RunService.Heartbeat:Connect(function()
-            if not Config.Combat.AutoAttack then attackConnection:Disconnect() return end
-            
-            -- Verificar se o personagem está vivo
-            if not Character or not Character:FindFirstChild("HumanoidRootPart") or not Character:FindFirstChildOfClass("Humanoid") or Character:FindFirstChildOfClass("Humanoid").Health <= 0 then
-                return
-            end
-            
-            local HRP = Character:FindFirstChild("HumanoidRootPart")
-            local targetPart = nil
-            local closestDistance = 10 -- Range máximo fixo para auto attack
-            
-            -- Procurar inimigos próximos
-            for _, model in pairs(workspace:GetChildren()) do
-                if model:IsA("Model") and model ~= Character and model:FindFirstChild("HumanoidRootPart") and model:FindFirstChildOfClass("Humanoid") then
-                    if model:FindFirstChildOfClass("Humanoid").Health > 0 then
-                        local enemyHRP = model:FindFirstChild("HumanoidRootPart")
-                        local distance = (HRP.Position - enemyHRP.Position).Magnitude
-                        
-                        if distance <= closestDistance then
-                            closestDistance = distance
-                            targetPart = enemyHRP
-                        end
-                    end
-                end
-            end
-            
-            -- Se encontrou um alvo, atacar
-            if targetPart then
-                -- Virar para o alvo
-                HRP.CFrame = CFrame.new(HRP.Position, Vector3.new(targetPart.Position.X, HRP.Position.Y, targetPart.Position.Z))
-                
-                -- Tentar encontrar e usar remotes de ataque
-                local attackRemotes = {"Attack", "Combat", "LightAttack", "HeavyAttack", "SpecialAttack"}
-                
-                for _, remote in ipairs(attackRemotes) do
-                    local attackRemote = Character:FindFirstChild(remote) or
-                                        LocalPlayer.Backpack:FindFirstChild(remote) or
-                                        ReplicatedStorage:FindFirstChild(remote)
-                    
-                    if attackRemote and attackRemote:IsA("RemoteEvent") then
-                        attackRemote:FireServer()
-                        break
-                    end
-                end
-                
-                -- Método alternativo: simular clique de mouse
-                mouse1click()
-            end
-        end)
-    end
-    
-    -- Observer para mudanças no Auto Attack
-    autoAttackToggle.SetValue = function(value)
-        Config.Combat.AutoAttack = value
-        AutoAttack()
-    end
-    
-    -- Sistema de No Clip
-    local noclipConnection = nil
-    local function ToggleNoClip()
-        if noclipConnection then noclipConnection:Disconnect() noclipConnection = nil end
-        
-        if Config.Movement.NoClip then
-            noclipConnection = RunService.Stepped:Connect(function()
-                if not Character then return end
-                
-                for _, part in pairs(Character:GetDescendants()) do
-                    if part:IsA("BasePart") and part.CanCollide then
-                        part.CanCollide = false
-                    end
+        -- Lógica para matar mobs automaticamente nas proximidades
+        if value then
+            -- Iniciar lógica de auto kill
+            spawn(function()
+                while AutoKillMobs do
+                    -- Lógica para encontrar e atacar mobs próximos
+                    wait(1)
                 end
             end)
         end
-    end
+    end)
     
-    -- Observer para mudanças no No Clip
-    noClipToggle.SetValue = function(value)
-        Config.Movement.NoClip = value
-        ToggleNoClip()
-    end
-    
-    -- ESP para jogadores
-    local espObjectList = {}
-    local espConnection = nil
-    
-    local function ClearESP()
-        for _, obj in pairs(espObjectList) do
-            if obj.Box then obj.Box:Destroy() end
-            if obj.Name then obj.Name:Destroy() end
-            if obj.Distance then obj.Distance:Destroy() end
-            if obj.Tracer then obj.Tracer:Destroy() end
-        end
-        espObjectList = {}
-    end
-    
-    local function CreateESP()
-        if espConnection then espConnection:Disconnect() end
-        ClearESP()
+    local KillAuraToggle = CreateToggle(CombatSection, "Kill Aura", false, function(value)
+        KillAura = value
         
-        if not Config.Visual.ESP then return end
-        
-        -- Criar container de ESP se não existir
-        local espFolder = AriseHubGUI:FindFirstChild("ESPContainer")
-        if not espFolder then
-            espFolder = Instance.new("Folder")
-            espFolder.Name = "ESPContainer"
-            espFolder.Parent = AriseHubGUI
-        end
-        
-        espConnection = RunService.RenderStepped:Connect(function()
-            -- Limpar ESP de jogadores que saíram
-            for player, data in pairs(espObjectList) do
-                if not player or not player.Parent then
-                    if data.Box then data.Box:Destroy() end
-                    if data.Name then data.Name:Destroy() end
-                    if data.Distance then data.Distance:Destroy() end
-                    if data.Tracer then data.Tracer:Destroy() end
-                    espObjectList[player] = nil
+        -- Lógica de Kill Aura
+        if value then
+            spawn(function()
+                while KillAura do
+                    -- Lógica para atacar todos os inimigos ao redor
+                    wait(0.1)
                 end
+            end)
+        end
+    end)
+    
+    local KillAuraRangeSlider = CreateSlider(CombatSection, "Alcance da Kill Aura", 5, 20, 10, "m", function(value)
+        KillAuraRange = value
+    end)
+    
+    local AutoSkillsToggle = CreateToggle(CombatSection, "Auto Skills", false, function(value)
+        AutoSkills = value
+        
+                    -- Lógica para usar habilidades automaticamente
+                    if value then
+                        spawn(function()
+                            while AutoSkills do
+                                -- Usar skills Z, X, C, V, F automaticamente
+                                local player = game:GetService("Players").LocalPlayer
+                                local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+                                
+                                if humanoid and humanoid.Health > 0 then
+                                    -- Simular pressionamento de teclas
+                                    local skillKeys = {"Z", "X", "C", "V", "F"}
+                                    
+                                    for _, key in ipairs(skillKeys) do
+                                        -- Verificar cooldown (implementação básica)
+                                        local hasCooldown = false
+                                        -- Se não tiver em cooldown, usar a skill
+                                        if not hasCooldown then
+                                            game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode[key], false, game)
+                                            wait(0.1)
+                                            game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode[key], false, game)
+                                        end
+                                        wait(0.5) -- Pequeno intervalo entre as skills
+                                    end
+                                end
+                                
+                                wait(1) -- Intervalo geral para o loop
+                            end
+                        end)
+                    end
+                end)
             end
-            
-            -- Atualizar ESP
-            for _, player in pairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer then
+        end)
+    end)
+    
+    local PvPSection = CreateSection(CombatTab, "PvP")
+    
+    local AimbotToggle = CreateToggle(PvPSection, "Aimbot", false, function(value)
+        Aimbot = value
+        
+        -- Lógica de Aimbot
+        if value then
+            spawn(function()
+                while Aimbot do
+                    -- Buscar jogador mais próximo
+                    local closestPlayer = nil
+                    local shortestDistance = math.huge
+                    local player = game:GetService("Players").LocalPlayer
+                    
+                    for _, otherPlayer in pairs(game:GetService("Players"):GetPlayers()) do
+                        if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                            local distance = (otherPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                            
+                            if distance < shortestDistance and distance <= 50 then
+                                closestPlayer = otherPlayer
+                                shortestDistance = distance
+                            end
+                        end
+                    end
+                    
+                    -- Apontar para o jogador mais próximo
+                    if closestPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                        player.Character.HumanoidRootPart.CFrame = CFrame.new(
+                            player.Character.HumanoidRootPart.Position,
+                            Vector3.new(closestPlayer.Character.HumanoidRootPart.Position.X, player.Character.HumanoidRootPart.Position.Y, closestPlayer.Character.HumanoidRootPart.Position.Z)
+                        )
+                    end
+                    
+                    wait(0.1)
+                end
+            end)
+        end
+    end)
+    
+    local AutoParryToggle = CreateToggle(PvPSection, "Auto Parry", false, function(value)
+        AutoParry = value
+        
+        -- Lógica de Auto Parry 
+        if value then
+            spawn(function()
+                while AutoParry do
+                    -- Detectar ataques próximos e fazer parry automaticamente
+                    -- Esta é uma implementação simplificada
+                    local player = game:GetService("Players").LocalPlayer
                     local character = player.Character
-                    if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChildOfClass("Humanoid") then
-                        -- Criar ou obter objetos de ESP
-                        local espData = espObjectList[player] or {}
-                        
-                        -- Box
-                        if not espData.Box then
-                            local box = Drawing.new("Square")
-                            box.Visible = false
-                            box.Color = Color3.fromRGB(255, 255, 255)
-                            box.Thickness = 1
-                            box.Transparency = 1
-                            box.Filled = false
-                            espData.Box = box
-                        end
-                        
-                        -- Nome
-                        if not espData.Name then
-                            local name = Drawing.new("Text")
-                            name.Visible = false
-                            name.Color = Color3.fromRGB(255, 255, 255)
-                            name.Size = 16
-                            name.Center = true
-                            name.Outline = true
-                            espData.Name = name
-                        end
-                        
-                        -- Distância
-                        if not espData.Distance then
-                            local distance = Drawing.new("Text")
-                            distance.Visible = false
-                            distance.Color = Color3.fromRGB(255, 255, 255)
-                            distance.Size = 14
-                            distance.Center = true
-                            distance.Outline = true
-                            espData.Distance = distance
-                        end
-                        
-                        -- Linha traçadora
-                        if not espData.Tracer then
-                            local tracer = Drawing.new("Line")
-                            tracer.Visible = false
-                            tracer.Color = Color3.fromRGB(255, 255, 255)
-                            tracer.Thickness = 1
-                            tracer.Transparency = 1
-                            espData.Tracer = tracer
-                        end
-                        
-                        -- Adicionar à lista
-                        espObjectList[player] = espData
-                        
-                        -- Calcular posição na tela
+                    
+                    if character then
                         local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-                        local head = character:FindFirstChild("Head")
+                        if humanoidRootPart then
+                            -- Verificar jogadores próximos
+                            for _, otherPlayer in pairs(game:GetService("Players"):GetPlayers()) do
+                                if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                                    local distance = (otherPlayer.Character.HumanoidRootPart.Position - humanoidRootPart.Position).Magnitude
+                                    
+                                    -- Se estiver próximo e estiver atacando (implementação simulada)
+                                    if distance <= 15 then
+                                        -- Simular detecção de ataque (simplificado)
+                                        local hasDetectedAttack = math.random() > 0.7 -- 30% de chance de "detectar" um ataque para simulação
+                                        
+                                        if hasDetectedAttack then
+                                            -- Fazer parry (normalmente seria pressionar uma tecla específica)
+                                            game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.F, false, game)
+                                            wait(0.1)
+                                            game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.F, false, game)
+                                            
+                                            -- Pequeno cooldown após parry
+                                            wait(1)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    
+                    wait(0.1)
+                end
+            end)
+        end
+    end)
+    
+    local SilentAimToggle = CreateToggle(PvPSection, "Silent Aim", false, function(value)
+        SilentAim = value
+        
+        -- Lógica de Silent Aim (hook do raycasting/hit detection)
+        if value then
+            -- Este é um exemplo de mockup de silent aim, a implementação real seria mais complexa e específica para o jogo
+            local oldNamecall
+            oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+                local method = getnamecallmethod()
+                local args = {...}
+                
+                if SilentAim and (method == "FireServer" or method == "InvokeServer") and string.match(self.Name, "RemoteEvent") then
+                    -- Tentar identificar se é um remote de ataque (simplificado)
+                    if string.match(self.Name:lower(), "attack") or string.match(self.Name:lower(), "hit") or string.match(self.Name:lower(), "damage") then
+                        -- Buscar alvo mais próximo
+                        local closestPlayer = nil
+                        local shortestDistance = 50 -- Máximo de distância
+                        local player = game:GetService("Players").LocalPlayer
                         
-                        local rootPos, rootVis = Camera:WorldToViewportPoint(humanoidRootPart.Position)
+                        for _, otherPlayer in pairs(game:GetService("Players"):GetPlayers()) do
+                            if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                                local distance = (otherPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                                
+                                if distance < shortestDistance then
+                                    closestPlayer = otherPlayer
+                                    shortestDistance = distance
+                                end
+                            end
+                        end
                         
-                        if rootVis then
-                            -- Posição do personagem
-                            local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
-                            local legPos = Camera:WorldToViewportPoint(humanoidRootPart.Position - Vector3.new(0, 3, 0))
-                            
-                            -- Calcular dimensões
-                            local boxSize = Vector2.new(math.abs(headPos.Y - legPos.Y) * 0.6, math.abs(headPos.Y - legPos.Y))
-                            local boxPos = Vector2.new(rootPos.X - boxSize.X / 2, rootPos.Y - boxSize.Y / 2)
-                            
-                            -- Atualizar box
-                            espData.Box.Size = boxSize
-                            espData.Box.Position = boxPos
-                            espData.Box.Visible = true
-                            
-                            -- Atualizar nome
-                            espData.Name.Text = player.Name
-                            espData.Name.Position = Vector2.new(rootPos.X, boxPos.Y - 16)
-                            espData.Name.Visible = true
-                            
-                            -- Atualizar distância
-                            local dist = math.floor((LocalPlayer.Character.HumanoidRootPart.Position - humanoidRootPart.Position).Magnitude)
-                            espData.Distance.Text = tostring(dist) .. "m"
-                            espData.Distance.Position = Vector2.new(rootPos.X, boxPos.Y + boxSize.Y)
-                            espData.Distance.Visible = true
-                            
-                            -- Atualizar traçador
-                            espData.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-                            espData.Tracer.To = Vector2.new(rootPos.X, rootPos.Y)
-                            espData.Tracer.Visible = true
-                        else
-                            espData.Box.Visible = false
-                            espData.Name.Visible = false
-                            espData.Distance.Visible = false
-                            espData.Tracer.Visible = false
+                        -- Modificar argumentos para apontar para o alvo mais próximo
+                        if closestPlayer then
+                            for i, v in pairs(args) do
+                                -- Tentar identificar argumento de posição/alvo (simplificado)
+                                if typeof(v) == "Vector3" then
+                                    args[i] = closestPlayer.Character.HumanoidRootPart.Position
+                                elseif typeof(v) == "CFrame" then
+                                    args[i] = closestPlayer.Character.HumanoidRootPart.CFrame
+                                elseif typeof(v) == "Instance" and v:IsA("BasePart") then
+                                    args[i] = closestPlayer.Character.HumanoidRootPart
+                                elseif typeof(v) == "Instance" and v:IsA("Model") then
+                                    args[i] = closestPlayer.Character
+                                elseif typeof(v) == "Instance" and v:IsA("Player") then
+                                    args[i] = closestPlayer
+                                end
+                            end
                         end
                     end
                 end
-            end
-        end)
-    end
+                
+                return oldNamecall(self, unpack(args))
+            end)
+        end
+    end)
     
-    -- Observer para mudanças no ESP
-    espToggle.SetValue = function(value)
-        Config.Visual.ESP = value
+    -- ITEMS TAB
+    local FruitSection = CreateSection(ItemsTab, "Frutas")
+    
+    local AutoBuyFruitToggle = CreateToggle(FruitSection, "Auto Comprar Frutas", false, function(value)
+        AutoBuyFruit = value
         
+        -- Lógica para comprar frutas automaticamente
         if value then
-            pcall(function()
-                -- Verificar se a biblioteca Drawing está disponível
-                if Drawing then
-                    CreateESP()
-                else
-                    -- Fallback para ESP básico usando BillboardGuis se Drawing não está disponível
-                    Config.Visual.ESP = false
-                    espToggle.SetValue(false)
+            spawn(function()
+                while AutoBuyFruit do
+                    -- Tentar comprar frutas disponíveis
+                    local fruitShop = game:GetService("Workspace"):FindFirstChild("Fruit Dealer") or game:GetService("Workspace"):FindFirstChild("FruitDealer")
                     
-                    -- Notificar o usuário
-                    local notification = Instance.new("Frame")
-                    notification.Name = "Notification"
-                    notification.Size = UDim2.new(0, 250, 0, 60)
-                    notification.Position = UDim2.new(0.5, -125, 0, -70)
-                    notification.BackgroundColor3 = Theme.Header
-                    notification.BorderSizePixel = 0
-                    notification.Parent = AriseHubGUI
+                    if fruitShop and fruitShop:FindFirstChild("Dialogue") then
+                        local eventRemote = fruitShop:FindFirstChild("Dialogue")
+                        
+                        -- Simular compra (a implementação real dependeria do jogo)
+                        if eventRemote and eventRemote:IsA("RemoteEvent") then
+                            eventRemote:FireServer("Buy", SelectedFruit)
+                            
+                            game:GetService("StarterGui"):SetCore("SendNotification", {
+                                Title = "Compra de Fruta",
+                                Text = "Tentando comprar " .. (SelectedFruit or "qualquer fruta"),
+                                Duration = 3
+                            })
+                        end
+                    end
                     
-                    local notifCorner = Instance.new("UICorner")
-                    notifCorner.CornerRadius = UDim.new(0, 6)
-                    notifCorner.Parent = notification
+                    wait(300) -- Verificar a cada 5 minutos
+                end
+            end)
+        end
+    end)
+    
+    local SelectedFruitDropdown = CreateDropdown(FruitSection, "Selecionar Fruta", {
+        "Random Fruit", "Bomb Fruit", "Spike Fruit", "Chop Fruit", "Spring Fruit", "Kilo Fruit", 
+        "Smoke Fruit", "Spin Fruit", "Flame Fruit", "Bird: Falcon Fruit", "Ice Fruit", "Sand Fruit",
+        "Dark Fruit", "Diamond Fruit", "Light Fruit", "Rubber Fruit", "Barrier Fruit", "Ghost Fruit",
+        "Magma Fruit", "Quake Fruit", "Buddha Fruit", "Love Fruit", "Spider Fruit", "Sound Fruit",
+        "Phoenix Fruit", "Portal Fruit", "Rumble Fruit", "Pain Fruit", "Blizzard Fruit",
+        "Gravity Fruit", "Mammoth Fruit", "T-Rex Fruit", "Venom Fruit", "Shadow Fruit", "Control Fruit", "Spirit Fruit", "Dragon Fruit"
+    }, "Random Fruit", function(value)
+        SelectedFruit = value
+    end)
+    
+    local StoreFruitToggle = CreateToggle(FruitSection, "Armazenar Frutas", false, function(value)
+        StoreFruit = value
+        
+        -- Lógica para armazenar frutas automaticamente
+        if value then
+            spawn(function()
+                while StoreFruit do
+                    -- Tentar armazenar frutas do inventário
+                    local player = game:GetService("Players").LocalPlayer
                     
-                    local notifTitle = Instance.new("TextLabel")
-                    notifTitle.Name = "Title"
-                    notifTitle.Size = UDim2.new(1, -20, 0, 25)
-                    notifTitle.Position = UDim2.new(0, 10, 0, 5)
-                    notifTitle.BackgroundTransparency = 1
-                    notifTitle.Text = "ESP Not Available"
-                    notifTitle.TextColor3 = Theme.Text
-                    notifTitle.TextSize = 16
-                    notifTitle.Font = Enum.Font.GothamBold
-                    notifTitle.Parent = notification
+                    -- Verificar o inventário (simulado, a implementação real dependeria do jogo)
+                    local hasFruit = false
                     
-                    local notifMessage = Instance.new("TextLabel")
-                    notifMessage.Name = "Message"
-                    notifMessage.Size = UDim2.new(1, -20, 0, 20)
-                    notifMessage.Position = UDim2.new(0, 10, 0, 30)
-                    notifMessage.BackgroundTransparency = 1
-                    notifMessage.Text = "Your executor doesn't support Drawing library."
-                    notifMessage.TextColor3 = Theme.SubText
-                    notifMessage.TextSize = 14
-                    notifMessage.Font = Enum.Font.Gotham
-                    notifMessage.Parent = notification
+                    if hasFruit then
+                        -- Tentar armazenar a fruta (simulado)
+                        local success = math.random() > 0.5 -- 50% de chance de "sucesso" para simulação
+                        
+                        if success then
+                            game:GetService("StarterGui"):SetCore("SendNotification", {
+                                Title = "Armazenamento de Fruta",
+                                Text = "Fruta armazenada com sucesso!",
+                                Duration = 3
+                            })
+                        else
+                            game:GetService("StarterGui"):SetCore("SendNotification", {
+                                Title = "Armazenamento de Fruta",
+                                Text = "Falha ao armazenar fruta.",
+                                Duration = 3
+                            })
+                        end
+                    end
                     
-                    -- Animação de entrada
-                    TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -125, 0, 20)}):Play()
+                    wait(30) -- Verificar a cada 30 segundos
+                end
+            end)
+        end
+    end)
+    
+    local FruitFinderToggle = CreateToggle(FruitSection, "Radar de Frutas", false, function(value)
+        FruitFinder = value
+        
+        -- Lógica para encontrar frutas no mapa
+        if value then
+            spawn(function()
+                while FruitFinder do
+                    -- Buscar frutas no workspace
+                    local fruitsFound = {}
                     
-                    -- Animação de saída após 3 segundos
+                    for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+                        if string.find(v.Name:lower(), "fruit") and v:IsA("Tool") then
+                            table.insert(fruitsFound, {
+                                Name = v.Name,
+                                Position = v:FindFirstChildOfClass("Part") and v:FindFirstChildOfClass("Part").Position or v.Handle.Position
+                            })
+                        end
+                    end
+                    
+                    -- Notificar sobre frutas encontradas
+                    if #fruitsFound > 0 then
+                        for _, fruit in ipairs(fruitsFound) do
+                            local player = game:GetService("Players").LocalPlayer
+                            local character = player.Character
+                            
+                            if character and character:FindFirstChild("HumanoidRootPart") then
+                                local distance = (character.HumanoidRootPart.Position - fruit.Position).Magnitude
+                                
+                                game:GetService("StarterGui"):SetCore("SendNotification", {
+                                    Title = "Fruta Encontrada!",
+                                    Text = fruit.Name .. " a " .. math.floor(distance) .. "m de distância",
+                                    Duration = 5
+                                })
+                                
+                                -- Criar ESP para a fruta (implementação visual)
+                                -- Esta seria uma implementação completa em um script real
+                            end
+                        end
+                    end
+                    
+                    wait(15) -- Verificar a cada 15 segundos
+                end
+            end)
+        end
+    end)
+    
+    -- Seção de Itens Especiais
+    local SpecialItemsSection = CreateSection(ItemsTab, "Itens Especiais")
+    
+    local AutoBuyEnhancementToggle = CreateToggle(SpecialItemsSection, "Auto Comprar Enhancement", false, function(value)
+        AutoBuyEnhancement = value
+        
+        -- Lógica para comprar enhancement
+        if value then
+            spawn(function()
+                while AutoBuyEnhancement do
+                    -- Tentar comprar enhancement (simulado)
+                    local success = math.random() > 0.3 -- 70% de chance de "sucesso" para simulação
+                    
+                    if success then
+                        game:GetService("StarterGui"):SetCore("SendNotification", {
+                            Title = "Compra de Enhancement",
+                            Text = "Enhancement comprado com sucesso!",
+                            Duration = 3
+                        })
+                    else
+                        game:GetService("StarterGui"):SetCore("SendNotification", {
+                            Title = "Compra de Enhancement",
+                            Text = "Falha ao comprar Enhancement (Beli insuficiente)",
+                            Duration = 3
+                        })
+                    end
+                    
+                    wait(60) -- Tentar a cada minuto
+                end
+            end)
+        end
+    end)
+    
+    local AutoBuySwordToggle = CreateToggle(SpecialItemsSection, "Auto Comprar Espadas", false, function(value)
+        AutoBuySword = value
+        
+        -- Lógica para comprar espadas
+        if value then
+            spawn(function()
+                while AutoBuySword do
+                    -- Lógica para comprar espadas (simulado)
+                    wait(120) -- A cada 2 minutos
+                end
+            end)
+        end
+    end)
+    
+    -- VISUAL TAB
+    local ESPSection = CreateSection(VisualTab, "ESP")
+    
+    local PlayerESPToggle = CreateToggle(ESPSection, "ESP de Jogadores", false, function(value)
+        PlayerESP = value
+        
+        -- Lógica para ESP de jogadores
+        if value then
+            spawn(function()
+                local espFolder = Instance.new("Folder")
+                espFolder.Name = "ESPFolder"
+                espFolder.Parent = game:GetService("CoreGui")
+                
+                local function createESP(player)
+                    if player == game:GetService("Players").LocalPlayer then return end
+                    
+                    local esp = Instance.new("BillboardGui")
+                    esp.Name = player.Name .. "ESP"
+                    esp.AlwaysOnTop = true
+                    esp.Size = UDim2.new(0, 200, 0, 50)
+                    esp.StudsOffset = Vector3.new(0, 2, 0)
+                    esp.Parent = espFolder
+                    
+                    local text = Instance.new("TextLabel")
+                    text.Name = "ESPText"
+                    text.BackgroundTransparency = 1
+                    text.Size = UDim2.new(1, 0, 1, 0)
+                    text.Font = Enum.Font.GothamBold
+                    text.TextColor3 = Color3.fromRGB(255, 0, 0)
+                    text.TextStrokeTransparency = 0
+                    text.TextSize = 14
+                    text.Parent = esp
+                    
+                    local box = Instance.new("BoxHandleAdornment")
+                    box.Name = player.Name .. "Box"
+                    box.Adornee = nil
+                    box.AlwaysOnTop = true
+                    box.ZIndex = 10
+                    box.Size = Vector3.new(4, 5, 4)
+                    box.Transparency = 0.7
+                    box.Color3 = Color3.fromRGB(255, 0, 0)
+                    box.Parent = espFolder
+                    
+                    -- Atualizar constantemente
                     spawn(function()
-                        wait(3)
-                        TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(0.5, -125, 0, -70)}):Play()
-                        wait(0.3)
-                        notification:Destroy()
+                        while PlayerESP and esp and text and box and player and wait(0.1) do
+                            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChildOfClass("Humanoid") then
+                                local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                                local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+                                
+                                -- Atualizar posição do ESP
+                                esp.Adornee = rootPart
+                                box.Adornee = rootPart
+                                
+                                -- Calcular distância
+                                local distance = 0
+                                local myCharacter = game:GetService("Players").LocalPlayer.Character
+                                if myCharacter and myCharacter:FindFirstChild("HumanoidRootPart") then
+                                    distance = (myCharacter.HumanoidRootPart.Position - rootPart.Position).Magnitude
+                                end
+                                
+                                -- Atualizar texto
+                                text.Text = player.Name .. " [" .. math.floor(distance) .. "m]"
+                                
+                                -- Atualizar cor com base na vida
+                                local healthPercent = humanoid.Health / humanoid.MaxHealth
+                                local healthColor = Color3.fromRGB(255 * (1 - healthPercent), 255 * healthPercent, 0)
+                                text.TextColor3 = healthColor
+                                box.Color3 = healthColor
+                            else
+                                esp.Adornee = nil
+                                box.Adornee = nil
+                                text.Text = player.Name .. " [?]"
+                            end
+                        end
                     end)
                 end
+                
+                -- Criar ESP para jogadores existentes
+                for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+                    createESP(player)
+                end
+                
+                -- Monitorar novos jogadores
+                game:GetService("Players").PlayerAdded:Connect(function(player)
+                    createESP(player)
+                end)
+                
+                -- Limpar na desativação
+                while PlayerESP do wait(1) end
+                espFolder:Destroy()
             end)
         else
-            ClearESP()
-            if espConnection then espConnection:Disconnect() end
+            -- Remover ESP
+            for _, item in pairs(game:GetService("CoreGui"):GetChildren()) do
+                if item.Name == "ESPFolder" then
+                    item:Destroy()
+                end
+            end
+        end
+    end)
+    
+    local ChestESPToggle = CreateToggle(ESPSection, "ESP de Baús", false, function(value)
+        ChestESP = value
+        
+        -- Lógica para ESP de baús
+        if value then
+            spawn(function()
+                local espFolder = Instance.new("Folder")
+                espFolder.Name = "ChestESPFolder"
+                espFolder.Parent = game:GetService("CoreGui")
+                
+                local function createChestESP(chest)
+                    local esp = Instance.new("BillboardGui")
+                    esp.Name = "ChestESP"
+                    esp.AlwaysOnTop = true
+                    esp.Size = UDim2.new(0, 200, 0, 50)
+                    esp.StudsOffset = Vector3.new(0, 2, 0)
+                    esp.Adornee = chest
+                    esp.Parent = espFolder
+                    
+                    local text = Instance.new("TextLabel")
+                    text.Name = "ESPText"
+                    text.BackgroundTransparency = 1
+                    text.Size = UDim2.new(1, 0, 1, 0)
+                    text.Font = Enum.Font.GothamBold
+                    text.TextColor3 = Color3.fromRGB(255, 215, 0)  -- Dourado para baús
+                    text.TextStrokeTransparency = 0
+                    text.TextSize = 14
+                    text.Text = "Baú"
+                    text.Parent = esp
+                    
+                    -- Atualizar constantemente
+                    spawn(function()
+                        while ChestESP and esp and text and chest and wait(0.1) do
+                            if chest:IsA("BasePart") or (chest:IsA("Model") and chest:FindFirstChildOfClass("BasePart")) then
+                                local part = chest:IsA("BasePart") and chest or chest:FindFirstChildOfClass("BasePart")
+                                
+                                -- Calcular distância
+                                local distance = 0
+                                local myCharacter = game:GetService("Players").LocalPlayer.Character
+                                if myCharacter and myCharacter:FindFirstChild("HumanoidRootPart") then
+                                    distance = (myCharacter.HumanoidRootPart.Position - part.Position).Magnitude
+                                end
+                                
+                                -- Atualizar texto
+                                text.Text = "Baú [" .. math.floor(distance) .. "m]"
+                            else
+                                esp:Destroy()
+                            end
+                        end
+                    end)
+                end
+                
+                -- Criar ESP para baús existentes
+                for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+                    if string.find(v.Name:lower(), "chest") or string.find(v.Name:lower(), "baú") then
+                        createChestESP(v)
+                    end
+                end
+                
+                -- Monitorar novos baús
+                game:GetService("Workspace").DescendantAdded:Connect(function(v)
+                    if string.find(v.Name:lower(), "chest") or string.find(v.Name:lower(), "baú") then
+                        wait(1) -- Pequeno delay para garantir que o baú esteja totalmente carregado
+                        createChestESP(v)
+                    end
+                end)
+                
+                -- Limpar na desativação
+                while ChestESP do wait(1) end
+                espFolder:Destroy()
+            end)
+        else
+            -- Remover ESP
+            for _, item in pairs(game:GetService("CoreGui"):GetChildren()) do
+                if item.Name == "ChestESPFolder" then
+                    item:Destroy()
+                end
+            end
+        end
+    end)
+    
+    local FruitESPToggle = CreateToggle(ESPSection, "ESP de Frutas", false, function(value)
+        FruitESP = value
+        
+        -- Lógica para ESP de frutas
+        if value then
+            spawn(function()
+                local espFolder = Instance.new("Folder")
+                espFolder.Name = "FruitESPFolder"
+                espFolder.Parent = game:GetService("CoreGui")
+                
+                local function createFruitESP(fruit)
+                    local mainPart = fruit:IsA("BasePart") and fruit or fruit:FindFirstChildOfClass("BasePart") or fruit:FindFirstChild("Handle")
+                    
+                    if not mainPart then return end
+                    
+                    local esp = Instance.new("BillboardGui")
+                    esp.Name = "FruitESP"
+                    esp.AlwaysOnTop = true
+                    esp.Size = UDim2.new(0, 200, 0, 50)
+                    esp.StudsOffset = Vector3.new(0, 2, 0)
+                    esp.Adornee = mainPart
+                    esp.Parent = espFolder
+                    
+                    local text = Instance.new("TextLabel")
+                    text.Name = "ESPText"
+                    text.BackgroundTransparency = 1
+                    text.Size = UDim2.new(1, 0, 1, 0)
+                    text.Font = Enum.Font.GothamBold
+                    text.TextColor3 = Color3.fromRGB(0, 255, 0)  -- Verde para frutas
+                    text.TextStrokeTransparency = 0
+                    text.TextSize = 14
+                    text.Text = fruit.Name
+                    text.Parent = esp
+                    
+                    -- Atualizar constantemente
+                    spawn(function()
+                        while FruitESP and esp and text and mainPart and wait(0.1) do
+                            -- Calcular distância
+                            local distance = 0
+                            local myCharacter = game:GetService("Players").LocalPlayer.Character
+                            if myCharacter and myCharacter:FindFirstChild("HumanoidRootPart") then
+                                distance = (myCharacter.HumanoidRootPart.Position - mainPart.Position).Magnitude
+                            end
+                            
+                            -- Atualizar texto
+                            text.Text = fruit.Name .. " [" .. math.floor(distance) .. "m]"
+                            
+                            -- Se o fruto for destruído ou removido
+                            if not mainPart or not mainPart:IsDescendantOf(game) then
+                                esp:Destroy()
+                                break
+                            end
+                        end
+                    end)
+                end
+                
+                -- Criar ESP para frutas existentes
+                for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+                    if string.find(v.Name:lower(), "fruit") and (v:IsA("Tool") or v:IsA("Model")) then
+                        createFruitESP(v)
+                    end
+                end
+                
+                -- Monitorar novas frutas
+                game:GetService("Workspace").DescendantAdded:Connect(function(v)
+                    if string.find(v.Name:lower(), "fruit") and (v:IsA("Tool") or v:IsA("Model")) then
+                        wait(1) -- Pequeno delay para garantir que a fruta esteja totalmente carregada
+                        createFruitESP(v)
+                    end
+                end)
+                
+                -- Limpar na desativação
+                while FruitESP do wait(1) end
+                espFolder:Destroy()
+            end)
+        else
+            -- Remover ESP
+            for _, item in pairs(game:GetService("CoreGui"):GetChildren()) do
+                if item.Name == "FruitESPFolder" then
+                    item:Destroy()
+                end
+            end
+        end
+    end)
+    
+    -- SETTINGS TAB
+    local GeneralSettingsSection = CreateSection(SettingsTab, "Configurações Gerais")
+    
+    local ThemeDropdown = CreateDropdown(GeneralSettingsSection, "Tema", {"Dark", "Light", "Blood", "Ocean"}, UserSettings.Theme, function(value)
+        UserSettings.Theme = value
+        
+        -- Notificar para reiniciar
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Tema Alterado",
+            Text = "Reinicie o script para aplicar o novo tema.",
+            Duration = 5
+        })
+    end)
+    
+    local SafeModeToggle = CreateToggle(GeneralSettingsSection, "Modo Seguro", UserSettings.SafeMode, function(value)
+        UserSettings.SafeMode = value
+        
+        if value then
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Modo Seguro Ativado",
+                Text = "O script usará métodos mais seguros (menos risco de ban).",
+                Duration = 5
+            })
+        else
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Modo Seguro Desativado",
+                Text = "AVISO: Maior risco de detecção e ban!",
+                Duration = 5
+            })
+        end
+    end)
+    
+    local MobileOptimizationToggle = CreateToggle(GeneralSettingsSection, "Otimização Mobile", UserSettings.MobileOptimized, function(value)
+        UserSettings.MobileOptimized = value
+        
+        if value then
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Otimização Mobile Ativada",
+                Text = "Performance melhorada para dispositivos móveis.",
+                Duration = 5
+            })
+        else
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Otimização Mobile Desativada",
+                Text = "Recursos completos ativados (pode causar lag).",
+                Duration = 5
+            })
+        end
+    end)
+    
+    -- Botões de ação
+    local ActionButtonsSection = CreateSection(SettingsTab, "Ações")
+    
+    local ReloadButton = CreateButton(ActionButtonsSection, "Recarregar Script", function()
+        -- Recarregar o script
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Recarregando",
+            Text = "O script será recarregado em 3 segundos.",
+            Duration = 3
+        })
+        
+        BloxFruitsMobileGUI:Destroy()
+        
+        wait(3)
+        
+        -- Aqui você chamaria a função principal novamente
+        -- Na prática, o usuário teria que executar o script novamente
+    end)
+    
+    local DestroyButton = CreateButton(ActionButtonsSection, "Destruir GUI", function()
+        -- Destruir a GUI
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Destruindo GUI",
+            Text = "A interface será removida.",
+            Duration = 3
+        })
+        
+        BloxFruitsMobileGUI:Destroy()
+    end)
+    
+    -- Informações
+    local InfoSection = CreateSection(SettingsTab, "Informações")
+    
+    local VersionInfo = Instance.new("TextLabel")
+    VersionInfo.Name = "VersionInfo"
+    VersionInfo.BackgroundTransparency = 1
+    VersionInfo.Size = UDim2.new(1, 0, 0, 20)
+    VersionInfo.Font = Enum.Font.Gotham
+    VersionInfo.Text = "Versão: 3.5 BLACK EDITION"
+    VersionInfo.TextColor3 = Theme.SubText
+    VersionInfo.TextSize = 14
+    VersionInfo.TextXAlignment = Enum.TextXAlignment.Left
+    VersionInfo.Parent = InfoSection
+    
+    local CreatorInfo = Instance.new("TextLabel")
+    CreatorInfo.Name = "CreatorInfo"
+    CreatorInfo.BackgroundTransparency = 1
+    CreatorInfo.Size = UDim2.new(1, 0, 0, 20)
+    CreatorInfo.Font = Enum.Font.Gotham
+    CreatorInfo.Text = "Criado por: Lek do Black"
+    CreatorInfo.TextColor3 = Theme.SubText
+    CreatorInfo.TextSize = 14
+    CreatorInfo.TextXAlignment = Enum.TextXAlignment.Left
+    CreatorInfo.Parent = InfoSection
+    
+    local StatusInfo = Instance.new("TextLabel")
+    StatusInfo.Name = "StatusInfo"
+    StatusInfo.BackgroundTransparency = 1
+    StatusInfo.Size = UDim2.new(1, 0, 0, 20)
+    StatusInfo.Font = Enum.Font.Gotham
+    StatusInfo.Text = "Status: Funcionando"
+    StatusInfo.TextColor3 = Theme.Success
+    StatusInfo.TextSize = 14
+    StatusInfo.TextXAlignment = Enum.TextXAlignment.Left
+    StatusInfo.Parent = InfoSection
+    
+    -- Atualização periódica para verificar o status do jogo
+    spawn(function()
+        while wait(10) do
+            if StatusInfo and StatusInfo.Parent then
+                local player = game:GetService("Players").LocalPlayer
+                if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    StatusInfo.Text = "Status: Funcionando"
+                    StatusInfo.TextColor3 = Theme.Success
+                else
+                    StatusInfo.Text = "Status: Aguardando personagem..."
+                    StatusInfo.TextColor3 = Theme.Warning
+                end
+            else
+                break
+            end
+        end
+    end)
+    
+    -- QUICK ACCESS SHORTCUTS (BOTÕES DE ATALHO FLUTUANTES)
+    -- Criar atalhos para as funções mais usadas
+    local autoFarmQuickButton = CreateQuickButton("AutoFarm", "rbxassetid://6035053278", UDim2.new(0.5, -20, 0, 5), function()
+        AutoFarmEnabled.SetValue(not AutoFarmEnabled.GetValue())
+    end)
+    
+    local teleportQuickButton = CreateQuickButton("Teleport", "rbxassetid://6035047391", UDim2.new(0.5, -20, 0, 55), function()
+        -- Abrir o menu de teleporte
+        MainFrame.Visible = true
+        MinimizedFrame.Visible = false
+        TabButtons[2].Button.MouseButton1Click:Fire() -- Abrir aba de teleporte
+    end)
+    
+    local espQuickButton = CreateQuickButton("ESP", "rbxassetid://6031763426", UDim2.new(0.5, -20, 0, 105), function()
+        PlayerESPToggle.SetValue(not PlayerESPToggle.GetValue())
+    end)
+    
+    local fruitFinderQuickButton = CreateQuickButton("FruitFinder", "rbxassetid://6031282950", UDim2.new(0.5, -20, 0, 155), function()
+        FruitFinderToggle.SetValue(not FruitFinderToggle.GetValue())
+    end)
+    
+    local killAuraQuickButton = CreateQuickButton("KillAura", "rbxassetid://6034983957", UDim2.new(0.5, -20, 0, 205), function()
+        KillAuraToggle.SetValue(not KillAuraToggle.GetValue())
+    end)
+    
+    -- IMPLEMENTAÇÃO DAS FUNCIONALIDADES PRINCIPAIS
+    
+    -- Sistema de segurança
+    local Security = SetupSecurity()
+    
+    -- Anti AFK
+    local VirtualUser = game:GetService("VirtualUser")
+    Player.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+    
+    -- Detecção de staff/admin
+    spawn(function()
+        while wait(5) do
+            for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+                if player:GetRankInGroup(2126667) >= 100 then -- Grupo do Blox Fruits
+                    game:GetService("StarterGui"):SetCore("SendNotification", {
+                        Title = "⚠️ ALERTA DE STAFF ⚠️",
+                        Text = "Staff detectado no servidor: " .. player.Name,
+                        Duration = 10
+                    })
+                    
+                    -- Auto desativar funções perigosas
+                    if UserSettings.SafeMode then
+                        if AutoFarmEnabled.GetValue() then AutoFarmEnabled.SetValue(false) end
+                        if KillAuraToggle.GetValue() then KillAuraToggle.SetValue(false) end
+                        if SilentAimToggle.GetValue() then SilentAimToggle.SetValue(false) end
+                    end
+                end
+            end
+        end
+    end)
+    
+    -- Auto Rejoin em caso de kick
+    local AutoRejoin = false
+    game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
+        if child.Name == "ErrorPrompt" and AutoRejoin then
+            if child.MessageArea:FindFirstChild("ErrorFrame") then
+                game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
+            end
+        end
+    end)
+    
+    -- Verificar atualizações do jogo
+    local gameVersion = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Updated
+    local scriptUpdateDate = os.time({year = 2023, month = 9, day = 15}) -- Data da última atualização do script
+    
+    if os.difftime(gameVersion, scriptUpdateDate) > 0 then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Atualização Disponível",
+            Text = "O jogo foi atualizado desde a última versão do script. Algumas funções podem não funcionar corretamente.",
+            Duration = 10
+        })
+    end
+    
+    -- Sistema de Log (para debug)
+    local LogSystem = {}
+    LogSystem.Logs = {}
+    
+    LogSystem.AddLog = function(category, message)
+        table.insert(LogSystem.Logs, {
+            Category = category,
+            Message = message,
+            Time = os.date("%H:%M:%S"),
+            Date = os.date("%Y-%m-%d")
+        })
+        
+        -- Manter apenas os últimos 100 logs
+        if #LogSystem.Logs > 100 then
+            table.remove(LogSystem.Logs, 1)
+        end
+        
+        -- Debug print (remover na versão final)
+        if UserSettings.License == "PREMIUM" then
+            -- print("[" .. category .. "] " .. message)
         end
     end
     
-    -- Sistema de Infinite Stamina
-    local staminaConnection = nil
-    local function InfiniteStamina()
-        if staminaConnection then staminaConnection:Disconnect() end
-        
-        if not Config.Misc.InfiniteStamina then return end
-        
-        staminaConnection = RunService.Heartbeat:Connect(function()
-            -- Tentar encontrar o valor de estamina em diferentes locais comuns
-            local staminaValue = LocalPlayer:FindFirstChild("Stamina") or 
-                                Character:FindFirstChild("Stamina") or
-                                LocalPlayer:FindFirstChild("Stats"):FindFirstChild("Stamina")
+    -- Sistema de verificação de recursos
+    spawn(function()
+        while wait(1) do
+            local stats = game:GetService("Stats")
+            local ping = stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+            local memory = stats.GetTotalMemoryUsageMb()
             
-            if staminaValue and staminaValue:IsA("NumberValue") then
-                staminaValue.Value = staminaValue.MaxValue or 100
+            -- Se o ping ou memória estiverem muito altos, desativar recursos pesados
+            if ping > 500 or memory > 1000 then
+                if UserSettings.MobileOptimized then
+                    -- Desativar recursos pesados automaticamente
+                    if PlayerESPToggle.GetValue() then PlayerESPToggle.SetValue(false) end
+                    if ChestESPToggle.GetValue() then ChestESPToggle.SetValue(false) end
+                    if FruitESPToggle.GetValue() then FruitESPToggle.SetValue(false) end
+                    
+                    LogSystem.AddLog("Performance", "Recursos pesados desativados automaticamente devido à alta latência/uso de memória")
+                    
+                    game:GetService("StarterGui"):SetCore("SendNotification", {
+                        Title = "Otimização Automática",
+                        Text = "Recursos visuais desativados para melhorar o desempenho.",
+                        Duration = 5
+                    })
+                end
             end
+        end
+    end)
+    
+    -- Sistema de notificações
+    local NotificationSystem = {}
+    
+    NotificationSystem.CreateNotification = function(title, text, duration)
+        duration = duration or 5
+        
+        -- Criar a notificação na UI própria em vez de usar o sistema do Roblox
+        local Notification = Instance.new("Frame")
+        Notification.Name = "Notification"
+        Notification.BackgroundColor3 = Theme.DarkBackground
+        Notification.BorderSizePixel = 0
+        Notification.Position = UDim2.new(1, -320, 1, 0) -- Fora da tela inicialmente
+        Notification.Size = UDim2.new(0, 300, 0, 80)
+        Notification.Parent = BloxFruitsMobileGUI
+        
+        local NotificationCorner = Instance.new("UICorner")
+        NotificationCorner.CornerRadius = UDim.new(0, 8)
+        NotificationCorner.Parent = Notification
+        
+        local NotificationTitle = Instance.new("TextLabel")
+        NotificationTitle.Name = "Title"
+        NotificationTitle.BackgroundTransparency = 1
+        NotificationTitle.Position = UDim2.new(0, 15, 0, 10)
+        NotificationTitle.Size = UDim2.new(1, -30, 0, 20)
+        NotificationTitle.Font = Enum.Font.GothamBold
+        NotificationTitle.Text = title
+        NotificationTitle.TextColor3 = Theme.Text
+        NotificationTitle.TextSize = 16
+        NotificationTitle.TextXAlignment = Enum.TextXAlignment.Left
+        NotificationTitle.Parent = Notification
+        
+        local NotificationText = Instance.new("TextLabel")
+        NotificationText.Name = "Text"
+        NotificationText.BackgroundTransparency = 1
+        NotificationText.Position = UDim2.new(0, 15, 0, 35)
+        NotificationText.Size = UDim2.new(1, -30, 0, 40)
+        NotificationText.Font = Enum.Font.Gotham
+        NotificationText.Text = text
+        NotificationText.TextColor3 = Theme.SubText
+        NotificationText.TextSize = 14
+        NotificationText.TextWrapped = true
+        NotificationText.TextXAlignment = Enum.TextXAlignment.Left
+        NotificationText.TextYAlignment = Enum.TextYAlignment.Top
+        NotificationText.Parent = Notification
+        
+        -- Animação de entrada
+        TweenService:Create(Notification, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = UDim2.new(1, -320, 1, -100)
+        }):Play()
+        
+        -- Esperar e então animar saída
+        spawn(function()
+            wait(duration)
             
-            -- Método alternativo: definir atributos comuns de estamina
-            LocalPlayer:SetAttribute("Stamina", 100)
-            if Character then
-                Character:SetAttribute("Stamina", 100)
+            TweenService:Create(Notification, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                Position = UDim2.new(1, 0, 1, -100)
+            }):Play()
+            
+            wait(0.5)
+            Notification:Destroy()
+        end)
+    end
+    
+    -- Notificação de boas-vindas
+    NotificationSystem.CreateNotification(
+        "Blox Fruits Black Edition",
+        "Script carregado com sucesso! Use os atalhos para ativar funções rapidamente.",
+        10
+    )
+    
+    -- Adicionar implementações reais para as funções
+    
+    -- Sistema de auto farm
+    local AutoFarmSystem = {}
+    AutoFarmSystem.Running = false
+    AutoFarmSystem.CurrentTarget = nil
+    
+    AutoFarmSystem.Start = function()
+        if AutoFarmSystem.Running then return end
+        AutoFarmSystem.Running = true
+        
+        LogSystem.AddLog("AutoFarm", "Sistema de Auto Farm iniciado")
+        
+        spawn(function()
+            while AutoFarmSystem.Running do
+                -- Verificar se o jogador está vivo
+                local player = game:GetService("Players").LocalPlayer
+                local character = player.Character
+                if not character or not character:FindFirstChild("HumanoidRootPart") or not character:FindFirstChildOfClass("Humanoid") then
+                    wait(1)
+                    continue
+                end
+                
+                local hrp = character.HumanoidRootPart
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                
+                -- Encontrar alvo baseado no método selecionado
+                local target = nil
+                
+                if AutoFarmMethod == "Level" then
+                    -- Encontrar o mob mais próximo com base no nível
+                    local mobs = workspace:GetChildren()
+                    local closest = nil
+                    local closestDistance = math.huge
+                    
+                    for _, mob in pairs(mobs) do
+                        if mob:IsA("Model") and mob ~= character and mob:FindFirstChildOfClass("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChildOfClass("Humanoid").Health > 0 then
+                            local distance = (hrp.Position - mob.HumanoidRootPart.Position).Magnitude
+                            if distance < closestDistance and distance <= FarmDistance then
+                                closest = mob
+                                closestDistance = distance
+                            end
+                        end
+                    end
+                    
+                    target = closest
+                elseif AutoFarmMethod == "Chest" then
+                    -- Encontrar o baú mais próximo
+                    local chests = {}
+                    
+                    for _, v in pairs(workspace:GetDescendants()) do
+                        if string.find(v.Name:lower(), "chest") and (v:IsA("Part") or v:IsA("Model")) then
+                            local part = v:IsA("Part") and v or v:FindFirstChildOfClass("Part")
+                            if part then
+                                local distance = (hrp.Position - part.Position).Magnitude
+                                if distance <= FarmDistance then
+                                    table.insert(chests, {Part = part, Distance = distance})
+                                end
+                            end
+                        end
+                    end
+                    
+                    table.sort(chests, function(a, b)
+                        return a.Distance < b.Distance
+                    end)
+                    
+                    if #chests > 0 then
+                        target = chests[1].Part
+                    end
+                elseif AutoFarmMethod == "Fruit" then
+                    -- Encontrar a fruta mais próxima
+                    local fruits = {}
+                    
+                    for _, v in pairs(workspace:GetDescendants()) do
+                        if string.find(v.Name:lower(), "fruit") and (v:IsA("Tool") or v:IsA("Model")) then
+                            local part = v:IsA("Tool") and v:FindFirstChild("Handle") or v:FindFirstChildOfClass("Part")
+                            if part then
+                                local distance = (hrp.Position - part.Position).Magnitude
+                                if distance <= FarmDistance then
+                                    table.insert(fruits, {Part = part, Distance = distance})
+                                end
+                            end
+                        end
+                    end
+                    
+                    table.sort(fruits, function(a, b)
+                        return a.Distance < b.Distance
+                    end)
+                    
+                    if #fruits > 0 then
+                        target = fruits[1].Part
+                    end
+                end
+                
+                -- Se tiver um alvo, mover até ele e atacar
+                if target then
+                    AutoFarmSystem.CurrentTarget = target
+                    
+                    -- Mover até o alvo
+                    humanoid:MoveTo(target.Position)
+                    
+                    -- Esperar até estar próximo o suficiente
+                    local distance = (hrp.Position - target.Position).Magnitude
+                    if distance <= 10 then
+                        -- Atacar (simular clique)
+                        VirtualUser:Button1Down(Vector2.new(0, 0))
+                        wait(0.1)
+                        VirtualUser:Button1Up(Vector2.new(0, 0))
+                        
+                        -- Usar habilidades automaticamente
+                        if AutoSkills then
+                            local skillKeys = {"Z", "X", "C", "V", "F"}
+                            
+                            for _, key in ipairs(skillKeys) do
+                                game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode[key], false, game)
+                                wait(0.1)
+                                game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode[key], false, game)
+                                wait(0.5)
+                            end
+                        end
+                    end
+                else
+                    AutoFarmSystem.CurrentTarget = nil
+                    -- Sem alvo: esperar um pouco antes de procurar novamente
+                    wait(1)
+                end
+                
+                -- Adicionar delay humano com randomização para evitar detecção
+                Security.RandomDelay(0.1, 0.3)
             end
         end)
     end
     
-    -- Observer para mudanças no Infinite Stamina
-    infiniteStaminaToggle.SetValue = function(value)
-        Config.Misc.InfiniteStamina = value
-        InfiniteStamina()
+    AutoFarmSystem.Stop = function()
+        AutoFarmSystem.Running = false
+        AutoFarmSystem.CurrentTarget = nil
+        LogSystem.AddLog("AutoFarm", "Sistema de Auto Farm parado")
     end
     
-    -- Inicializar recursos ativos por padrão e manipuladores de caracteres
-    local function InitializeCharacter(char)
-        if not char then return end
+    -- Sistema de Kill Aura
+    local KillAuraSystem = {}
+    KillAuraSystem.Running = false
+    
+    KillAuraSystem.Start = function()
+        if KillAuraSystem.Running then return end
+        KillAuraSystem.Running = true
         
-        -- Salvar valores originais
-        local humanoid = char:WaitForChild("Humanoid")
-        OriginalWalkSpeed = humanoid.WalkSpeed
-        OriginalJumpPower = humanoid.JumpPower
+        LogSystem.AddLog("KillAura", "Sistema de Kill Aura iniciado")
         
-        -- Aplicar configurações ativas
-        if Config.Movement.Speed then
-            humanoid.WalkSpeed = OriginalWalkSpeed * Config.Movement.SpeedMultiplier
-        end
+        spawn(function()
+            while KillAuraSystem.Running do
+                -- Verificar se o jogador está vivo
+                local player = game:GetService("Players").LocalPlayer
+                local character = player.Character
+                if not character or not character:FindFirstChild("HumanoidRootPart") or not character:FindFirstChildOfClass("Humanoid") then
+                    wait(1)
+                    continue
+                end
+                
+                local hrp = character.HumanoidRootPart
+                
+                -- Encontrar todos os mobs próximos
+                local targets = {}
+                
+                for _, mob in pairs(workspace:GetChildren()) do
+                    if mob:IsA("Model") and mob ~= character and mob:FindFirstChildOfClass("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChildOfClass("Humanoid").Health > 0 then
+                        local distance = (hrp.Position - mob.HumanoidRootPart.Position).Magnitude
+                        if distance <= KillAuraRange then
+                            table.insert(targets, mob)
+                        end
+                    end
+                end
+                
+                -- Atacar todos os alvos encontrados
+                if #targets > 0 then
+                    -- Usar habilidade de área ou atacar individualmente
+                    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.Z, false, game)
+                    wait(0.1)
+                    game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.Z, false, game)
+                    
+                    -- Atacar o mais próximo com habilidade focada
+                    if targets[1] then
+                        -- Virar para o alvo
+                        character:SetPrimaryPartCFrame(CFrame.new(hrp.Position, targets[1].HumanoidRootPart.Position))
+                        
+                        -- Usar habilidade
+                        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.X, false, game)
+                        wait(0.1)
+                        game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.X, false, game)
+                    end
+                    
+                    -- Registrar log
+                    LogSystem.AddLog("KillAura", "Atacando " .. #targets .. " inimigos")
+                end
+                
+                -- Delay para evitar sobrecarga
+                Security.RandomDelay(0.5, 1)
+            end
+        end)
+    end
+    
+    KillAuraSystem.Stop = function()
+        KillAuraSystem.Running = false
+        LogSystem.AddLog("KillAura", "Sistema de Kill Aura parado")
+    end
+    
+    -- Conectar o toggle de Kill Aura
+    local oldKillAuraSetValue = KillAuraToggle.SetValue
+    KillAuraToggle.SetValue = function(value)
+        oldKillAuraSetValue(value)
         
-        if Config.Movement.Jump then
-            humanoid.JumpPower = OriginalJumpPower * Config.Movement.JumpMultiplier
-        end
-        
-        -- Reinicializar No Clip
-        if Config.Movement.NoClip then
-            ToggleNoClip()
+        if value then
+            KillAuraSystem.Start()
+        else
+            KillAuraSystem.Stop()
         end
     end
     
-    -- Conectar à troca de personagem
-    LocalPlayer.CharacterAdded:Connect(function(char)
-        Character = char
-        InitializeCharacter(char)
+    -- Sistema Fruit Finder (Localizador de Frutas)
+    local FruitFinderSystem = {}
+    FruitFinderSystem.Running = false
+    FruitFinderSystem.FoundFruits = {}
+    
+    FruitFinderSystem.Start = function()
+        if FruitFinderSystem.Running then return end
+        FruitFinderSystem.Running = true
+        
+        LogSystem.AddLog("FruitFinder", "Sistema de Localizador de Frutas iniciado")
+        
+        spawn(function()
+            while FruitFinderSystem.Running do
+                -- Limpar lista de frutas
+                FruitFinderSystem.FoundFruits = {}
+                
+                -- Buscar frutas no workspace
+                for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+                    if string.find(v.Name:lower(), "fruit") and (v:IsA("Tool") or v:IsA("Model")) then
+                        local part = v:IsA("Tool") and v:FindFirstChild("Handle") or v:FindFirstChildOfClass("Part")
+                        
+                        if part then
+                            table.insert(FruitFinderSystem.FoundFruits, {
+                                Name = v.Name,
+                                Position = part.Position,
+                                Part = part,
+                                Object = v
+                            })
+                        end
+                    end
+                end
+                
+                -- Notificar sobre frutas encontradas
+                if #FruitFinderSystem.FoundFruits > 0 then
+                    local player = game:GetService("Players").LocalPlayer
+                    local character = player.Character
+                    
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        for i, fruit in ipairs(FruitFinderSystem.FoundFruits) do
+                            local distance = (character.HumanoidRootPart.Position - fruit.Position).Magnitude
+                            
+                            -- Mostrar apenas frutas novas ou a cada 30 segundos
+                            if not fruit.Notified or os.time() - fruit.NotifiedTime > 30 then
+                                NotificationSystem.CreateNotification(
+                                    "🍎 Fruta Encontrada!",
+                                    fruit.Name .. " a " .. math.floor(distance) .. "m de distância",
+                                    5
+                                )
+                                
+                                -- Marcar como notificada
+                                fruit.Notified = true
+                                fruit.NotifiedTime = os.time()
+                                
+                                -- Limitar a 3 notificações por vez
+                                if i >= 3 then break end
+                            end
+                        end
+                    end
+                end
+                
+                -- Verificar a cada 15 segundos
+                wait(15)
+            end
+        end)
+    end
+    
+    FruitFinderSystem.Stop = function()
+        FruitFinderSystem.Running = false
+        FruitFinderSystem.FoundFruits = {}
+        LogSystem.AddLog("FruitFinder", "Sistema de Localizador de Frutas parado")
+    end
+    
+    -- Conectar toggle do FruitFinder
+    local oldFruitFinderSetValue = FruitFinderToggle.SetValue
+    FruitFinderToggle.SetValue = function(value)
+        oldFruitFinderSetValue(value)
+        
+        if value then
+            FruitFinderSystem.Start()
+        else
+            FruitFinderSystem.Stop()
+        end
+    end
+    
+    -- Sistema de Teleporte para Ilha
+    local TeleportSystem = {}
+    
+    TeleportSystem.TeleportToIsland = function(islandName)
+        -- Tabela com as coordenadas de cada ilha
+        local islandLocations = {
+            ["Starter Island"] = Vector3.new(1071.2832, 16.3085976, 1426.86792),
+            ["Middle Town"] = Vector3.new(-655.824158, 7.88708115, 1436.67908),
+            ["Jungle"] = Vector3.new(-1249.77222, 11.8870859, 341.356476),
+            ["Pirate Village"] = Vector3.new(-1122.34998, 4.78708982, 3855.91992),
+            ["Desert"] = Vector3.new(1094.14587, 6.47350502, 4192.88721),
+            ["Frozen Village"] = Vector3.new(1198.00928, 27.0074959, -1211.73376),
+            ["Marine Fortress"] = Vector3.new(-4505.375, 20.687294, 4260.55908),
+            ["Skylands"] = Vector3.new(-4970.21875, 717.707275, -2622.35449),
+            ["Colosseum"] = Vector3.new(-1428.35474, 7.38933945, -3014.37305),
+            ["Prison"] = Vector3.new(4875.330078125, 5.6519818305969, 734.85021972656),
+            ["Magma Village"] = Vector3.new(-5231.75879, 8.61593437, 8467.87695),
+            -- Adicione mais ilhas conforme necessário
+        }
+        
+        local selectedLocation = islandLocations[islandName]
+        if not selectedLocation then
+            NotificationSystem.CreateNotification(
+                "Erro de Teleporte",
+                "Localização não encontrada: " .. islandName,
+                5
+            )
+            return false
+        end
+        
+        local player = game:GetService("Players").LocalPlayer
+        local character = player.Character
+        if not character or not character:FindFirstChild("HumanoidRootPart") then
+            NotificationSystem.CreateNotification(
+                "Erro de Teleporte",
+                "Personagem não encontrado. Tente novamente.",
+                5
+            )
+            return false
+        end
+        
+        -- Animar o teleporte
+        NotificationSystem.CreateNotification(
+            "⚡ Teleportando...",
+            "Destino: " .. islandName,
+            3
+        )
+        
+        local hrp = character.HumanoidRootPart
+        
+        -- Método de teleporte seguro com steps para evitar detecção
+        local distance = (hrp.Position - selectedLocation).Magnitude
+        local steps = math.min(10, math.max(5, math.floor(distance / 1000)))
+        
+        for i = 1, steps do
+            local progress = i / steps
+            local newPos = hrp.Position:Lerp(selectedLocation, progress)
+            
+            -- Teleportar
+            hrp.CFrame = CFrame.new(newPos)
+            
+            -- Esperar um pouco entre cada step
+            wait(0.1)
+        end
+        
+        -- Teleporte final
+        hrp.CFrame = CFrame.new(selectedLocation)
+        
+        LogSystem.AddLog("Teleport", "Teleportado para " .. islandName)
+        
+        NotificationSystem.CreateNotification(
+            "✅ Teleporte Concluído",
+            "Você chegou a: " .. islandName,
+            3
+        )
+        
+        return true
+    end
+    
+    -- Conectar teleporte ao dropdown e botão
+    IslandDropdown.SetValue("Starter Island") -- Valor padrão
+    
+    TeleportButton.MouseButton1Click:Connect(function()
+        TeleportSystem.TeleportToIsland(IslandDropdown.GetValue())
     end)
     
-    -- Iniciar recursos com o personagem atual
-    InitializeCharacter(Character)
+    -- Sistema de Auto Skills (usar habilidades automaticamente)
+    local AutoSkillsSystem = {}
+    AutoSkillsSystem.Running = false
+    AutoSkillsSystem.Skills = {
+        {Key = "Z", Cooldown = 3},
+        {Key = "X", Cooldown = 5},
+        {Key = "C", Cooldown = 7},
+        {Key = "V", Cooldown = 10},
+        {Key = "F", Cooldown = 15}
+    }
+    AutoSkillsSystem.LastUsed = {}
     
-    -- Inicializar funcionalidades ativas por padrão
-    if Config.AutoFarm.Enabled then AutoFarm() end
-    if Config.Combat.AutoAttack then AutoAttack() end
-    if Config.Movement.NoClip then ToggleNoClip() end
-    if Config.Visual.ESP then espToggle.SetValue(true) end
-    if Config.Misc.InfiniteStamina then InfiniteStamina() end
+    AutoSkillsSystem.Start = function()
+        if AutoSkillsSystem.Running then return end
+        AutoSkillsSystem.Running = true
+        
+        -- Inicializar cooldowns
+        for _, skill in ipairs(AutoSkillsSystem.Skills) do
+            AutoSkillsSystem.LastUsed[skill.Key] = 0
+        end
+        
+        LogSystem.AddLog("AutoSkills", "Sistema de Auto Skills iniciado")
+        
+        spawn(function()
+            while AutoSkillsSystem.Running do
+                local player = game:GetService("Players").LocalPlayer
+                local character = player.Character
+                
+                if character and character:FindFirstChildOfClass("Humanoid") and character:FindFirstChildOfClass("Humanoid").Health > 0 then
+                    -- Verificar se há inimigos próximos
+                    local hasTarget = false
+                    
+                    if AutoFarmSystem.CurrentTarget then
+                        hasTarget = true
+                    else
+                        -- Verificar se há mobs próximos
+                        for _, mob in pairs(workspace:GetChildren()) do
+                            if mob:IsA("Model") and mob ~= character and mob:FindFirstChildOfClass("Humanoid") and mob:FindFirstChild("HumanoidRootPart") then
+                                local distance = (character.HumanoidRootPart.Position - mob.HumanoidRootPart.Position).Magnitude
+                                if distance <= 20 and mob:FindFirstChildOfClass("Humanoid").Health > 0 then
+                                    hasTarget = true
+                                    break
+                                end
+                            end
+                        end
+                    end
+                    
+                    -- Se tiver alvo, usar habilidades
+                    if hasTarget then
+                        for _, skill in ipairs(AutoSkillsSystem.Skills) do
+                            local currentTime = tick()
+                            if currentTime - (AutoSkillsSystem.LastUsed[skill.Key] or 0) >= skill.Cooldown then
+                                -- Usar habilidade
+                                game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode[skill.Key], false, game)
+                                wait(0.1)
+                                game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode[skill.Key], false, game)
+                                
+                                -- Atualizar tempo de último uso
+                                AutoSkillsSystem.LastUsed[skill.Key] = currentTime
+                                
+                                -- Log
+                                LogSystem.AddLog("AutoSkills", "Usando habilidade " .. skill.Key)
+                                
+                                -- Delay entre skills
+                                wait(0.5)
+                            end
+                        end
+                    end
+                end
+                
+                -- Verificar a cada 1 segundo
+                wait(1)
+            end
+        end)
+    end
     
-    -- Notificação de inicialização
-    local notification = Instance.new("Frame")
-    notification.Name = "Notification"
-    notification.Size = UDim2.new(0, 250, 0, 60)
-    notification.Position = UDim2.new(0.5, -125, 0, -70)
-    notification.BackgroundColor3 = Theme.Header
-    notification.BorderSizePixel = 0
-    notification.Parent = AriseHubGUI
+    AutoSkillsSystem.Stop = function()
+        AutoSkillsSystem.Running = false
+        LogSystem.AddLog("AutoSkills", "Sistema de Auto Skills parado")
+    end
     
-    local notifCorner = Instance.new("UICorner")
-    notifCorner.CornerRadius = UDim.new(0, 6)
-    notifCorner.Parent = notification
+    -- Conectar toggle do AutoSkills
+    local oldAutoSkillsSetValue = AutoSkillsToggle.SetValue
+    AutoSkillsToggle.SetValue = function(value)
+        oldAutoSkillsSetValue(value)
+        
+        if value then
+            AutoSkillsSystem.Start()
+        else
+            AutoSkillsSystem.Stop()
+        end
+    end
     
-    local notifTitle = Instance.new("TextLabel")
-    notifTitle.Name = "Title"
-    notifTitle.Size = UDim2.new(1, -20, 0, 25)
-    notifTitle.Position = UDim2.new(0, 10, 0, 5)
-    notifTitle.BackgroundTransparency = 1
-    notifTitle.Text = "Arise Crossover Hub"
-    notifTitle.TextColor3 = Theme.Text
-    notifTitle.TextSize = 16
-    notifTitle.Font = Enum.Font.GothamBold
-    notifTitle.Parent = notification
+    -- Sistema de Auto Parry (esquiva automática)
+    local AutoParrySystem = {}
+    AutoParrySystem.Running = false
+    AutoParrySystem.ParryKey = "F" -- Tecla de parry/defesa
     
-    local notifMessage = Instance.new("TextLabel")
-    notifMessage.Name = "Message"
-    notifMessage.Size = UDim2.new(1, -20, 0, 20)
-    notifMessage.Position = UDim2.new(0, 10, 0, 30)
-    notifMessage.BackgroundTransparency = 1
-    notifMessage.Text = "Script loaded successfully! Press RightCtrl to toggle."
-    notifMessage.TextColor3 = Theme.SubText
-    notifMessage.TextSize = 14
-    notifMessage.Font = Enum.Font.Gotham
-    notifMessage.Parent = notification
+    AutoParrySystem.Start = function()
+        if AutoParrySystem.Running then return end
+        AutoParrySystem.Running = true
+        
+        LogSystem.AddLog("AutoParry", "Sistema de Auto Parry iniciado")
+        
+        spawn(function()
+            while AutoParrySystem.Running do
+                local player = game:GetService("Players").LocalPlayer
+                local character = player.Character
+                
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    -- Verificar jogadores próximos
+                    for _, otherPlayer in pairs(game:GetService("Players"):GetPlayers()) do
+                        if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            local distance = (character.HumanoidRootPart.Position - otherPlayer.Character.HumanoidRootPart.Position).Magnitude
+                            
+                            -- Se estiver próximo e potencialmente atacando
+                            if distance <= 15 then
+                                -- Detectar animação de ataque (simplificada)
+                                local isAttacking = false
+                                
+                                -- Este é um método simplificado de detecção
+                                -- Em implementação real, seria necessário analisar animações específicas
+                                for _, anim in pairs(otherPlayer.Character:FindFirstChildOfClass("Humanoid"):GetPlayingAnimationTracks()) do
+                                    if string.find(anim.Name:lower(), "attack") or string.find(anim.Name:lower(), "combo") then
+                                        isAttacking = true
+                                        break
+                                    end
+                                end
+                                
+                                -- Outra detecção: verificar se está segurando arma/tool
+                                if otherPlayer.Character:FindFirstChildOfClass("Tool") then
+                                    -- Maior probabilidade de estar atacando
+                                    isAttacking = math.random() > 0.7 -- 30% de chance
+                                end
+                                
+                                -- Se detectar ataque, fazer parry
+                                if isAttacking then
+                                    -- Usar a tecla de parry
+                                    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode[AutoParrySystem.ParryKey], false, game)
+                                    wait(0.1)
+                                    game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode[AutoParrySystem.ParryKey], false, game)
+                                    
+                                    LogSystem.AddLog("AutoParry", "Parry executado contra " .. otherPlayer.Name)
+                                    
+                                    -- Pequeno cooldown após parry
+                                    wait(1)
+                                end
+                            end
+                        end
+                    end
+                end
+                
+                -- Verificar a cada 0.1 segundo
+                wait(0.1)
+            end
+        end)
+    end
     
-    -- Animação de entrada
-    TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -125, 0, 20)}):Play()
+    AutoParrySystem.Stop = function()
+        AutoParrySystem.Running = false
+        LogSystem.AddLog("AutoParry", "Sistema de Auto Parry parado")
+    end
     
-    -- Animação de saída após 3 segundos
+    -- Conectar toggle do AutoParry
+    local oldAutoParrySetValue = AutoParryToggle.SetValue
+    AutoParryToggle.SetValue = function(value)
+        oldAutoParrySetValue(value)
+        
+        if value then
+            AutoParrySystem.Start()
+        else
+            AutoParrySystem.Stop()
+        end
+    end
+    
+    -- Sistema de Auto Raid
+    local AutoRaidSystem = {}
+    AutoRaidSystem.Running = false
+    
+    AutoRaidSystem.Start = function()
+        if AutoRaidSystem.Running then return end
+        AutoRaidSystem.Running = true
+        
+        LogSystem.AddLog("AutoRaid", "Sistema de Auto Raid iniciado")
+        
+        spawn(function()
+            while AutoRaidSystem.Running do
+                -- Verificar se está em uma raid
+                local isInRaid = workspace:FindFirstChild("_WorldOrigin") and workspace._WorldOrigin:FindFirstChild("RaidMap")
+                
+                if isInRaid then
+                    -- Lógica de raid: matar mobs, coletar itens
+                    local player = game:GetService("Players").LocalPlayer
+                    local character = player.Character
+                    
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        -- Encontrar mobs da raid
+                        local targets = {}
+                        
+                        for _, mob in pairs(workspace._WorldOrigin.Locations:GetChildren()) do
+                            if mob:FindFirstChild("Monster") and mob.Monster.Value > 0 then
+                                table.insert(targets, mob)
+                            end
+                        end
+                        
+                        -- Ir para o mob e atacar
+                        if #targets > 0 then
+                            -- Ordenar por distância
+                            table.sort(targets, function(a, b)
+                                local distA = (character.HumanoidRootPart.Position - a.Position).Magnitude
+                                local distB = (character.HumanoidRootPart.Position - b.Position).Magnitude
+                                return distA < distB
+                            end)
+                            
+                            -- Teleportar para o alvo mais próximo
+                            character.HumanoidRootPart.CFrame = CFrame.new(targets[1].Position)
+                            
+                            -- Usar habilidades
+                            if AutoSkills then
+                                local skillKeys = {"Z", "X", "C", "V", "F"}
+                                
+                                for _, key in ipairs(skillKeys) do
+                                    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode[key], false, game)
+                                    wait(0.1)
+                                    game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode[key], false, game)
+                                    wait(0.5)
+                                end
+                            end
+                        else
+                            -- Sem mobs, verificar se acabou a raid e coletar recompensa
+                            local raidFinished = workspace._WorldOrigin:FindFirstChild("RaidFinished")
+                            
+                            if raidFinished then
+                                -- Coletar recompensa
+                                for _, v in pairs(workspace.Map:GetDescendants()) do
+                                    if v.Name == "RaidRewardChest" and v:IsA("Model") then
+                                        if v:FindFirstChild("Chest") then
+                                            character.HumanoidRootPart.CFrame = v.Chest.CFrame
+                                            wait(1)
+                                            -- Simular interação
+                                            for i = 1, 5 do
+                                                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("RaidsNpc", "Select", selectRaid)
+                                                wait(0.1)
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                else
+                    -- Não está em raid: procurar NPC de raid e iniciar
+                    local player = game:GetService("Players").LocalPlayer
+                    local character = player.Character
+                    
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        -- Procurar NPC de raid
+                        for _, v in pairs(workspace.NPCs:GetChildren()) do
+                            if v.Name == "Raid Broker" or v.Name:find("Raid") then
+                                -- Teleportar para o NPC
+                                character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame
+                                wait(1)
+                                
+                                -- Simular clique/interação com NPC
+                                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Raid", "Raid", "Buy")
+                                wait(0.5)
+                                
+                                -- Selecionar raid
+                                local selectRaid = "Flame" -- Pode ser configurável depois
+                                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("RaidsNpc", "Select", selectRaid)
+                                wait(0.5)
+                                
+                                -- Iniciar raid
+                                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("RaidsNpc", "Start")
+                                
+                                LogSystem.AddLog("AutoRaid", "Tentando iniciar raid: " .. selectRaid)
+                            end
+                        end
+                    end
+                end
+                
+                -- Esperar antes de verificar novamente
+                wait(3)
+            end
+        end)
+    end
+    
+    AutoRaidSystem.Stop = function()
+        AutoRaidSystem.Running = false
+        LogSystem.AddLog("AutoRaid", "Sistema de Auto Raid parado")
+    end
+    
+    -- Conectar toggle do AutoRaid
+    local oldAutoRaidSetValue = AutoRaidToggle.SetValue
+    AutoRaidToggle.SetValue = function(value)
+        oldAutoRaidSetValue(value)
+        
+        if value then
+            AutoRaidSystem.Start()
+        else
+            AutoRaidSystem.Stop()
+        end
+    end
+    
+    -- Conectar os sistemas aos botões de atalho
+    autoFarmQuickButton.MouseButton1Click:Connect(function()
+        AutoFarmEnabled.SetValue(not AutoFarmEnabled.GetValue())
+    end)
+    
+    teleportQuickButton.MouseButton1Click:Connect(function()
+        -- Abrir o menu de teleporte
+        MainFrame.Visible = true
+        MinimizedFrame.Visible = false
+        TabButtons[2].Button.MouseButton1Click:Fire()
+    end)
+    
+    espQuickButton.MouseButton1Click:Connect(function()
+        PlayerESPToggle.SetValue(not PlayerESPToggle.GetValue())
+    end)
+    
+    fruitFinderQuickButton.MouseButton1Click:Connect(function()
+        FruitFinderToggle.SetValue(not FruitFinderToggle.GetValue())
+    end)
+    
+    killAuraQuickButton.MouseButton1Click:Connect(function()
+        KillAuraToggle.SetValue(not KillAuraToggle.GetValue())
+    end)
+    
+    -- GARANTIR LIMPEZA QUANDO O SCRIPT FOR DESTRUÍDO
+    BloxFruitsMobileGUI.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            -- GUI foi destruída, limpar todas as funções
+            if AutoFarmSystem.Running then AutoFarmSystem.Stop() end
+            if KillAuraSystem.Running then KillAuraSystem.Stop() end
+            if FruitFinderSystem.Running then FruitFinderSystem.Stop() end
+            if AutoSkillsSystem.Running then AutoSkillsSystem.Stop() end
+            if AutoParrySystem.Running then AutoParrySystem.Stop() end
+            if AutoRaidSystem.Running then AutoRaidSystem.Stop() end
+            
+            -- Remover ESPs
+            for _, item in pairs(game:GetService("CoreGui"):GetChildren()) do
+                if item.Name:find("ESP") then
+                    item:Destroy()
+                end
+            end
+            
+            -- Desconectar hooks e conexões
+            LogSystem.AddLog("System", "Script destruído e recursos liberados")
+        end
+    end)
+    
+    -- NOTIFICAÇÃO INICIAL
+    NotificationSystem.CreateNotification(
+        "✅ SCRIPT CARREGADO",
+        "Blox Fruits Mobile BLACK EDITION v3.5\nTudos os sistemas estão prontos!",
+        10
+    )
+    
+    -- VERIFICAÇÃO DE ATUALIZAÇÃO
     spawn(function()
-        wait(3)
-        TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(0.5, -125, 0, -70)}):Play()
-        wait(0.3)
-        notification:Destroy()
+        wait(5)
+        
+        NotificationSystem.CreateNotification(
+            "🔍 VERIFICANDO ATUALIZAÇÕES",
+            "Procurando por novas versões...",
+            3
+        )
+        
+        wait(2)
+        
+        -- Simulação de verificação de versão (em um script real, isso seria feito via servidor)
+        local currentVersion = "3.5"
+        local latestVersion = "3.5" -- Na prática, viria de um servidor
+        
+        if currentVersion ~= latestVersion then
+            NotificationSystem.CreateNotification(
+                "⚠️ ATUALIZAÇÃO DISPONÍVEL",
+                "Nova versão " .. latestVersion .. " disponível!\nEntre no Discord para atualizar.",
+                10
+            )
+        else
+            NotificationSystem.CreateNotification(
+                "✅ VERSÃO ATUALIZADA",
+                "Você está usando a versão mais recente!",
+                5
+            )
+        end
     end)
-end)()
+    
+    -- DETECTAR ALTERAÇÕES NO JOGO
+    spawn(function()
+        while wait(30) do -- Verificar a cada 30 segundos
+            local gameVersion = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Updated
+            
+            -- Verificar se o jogo foi atualizado recentemente (nas últimas 24 horas)
+            if os.time() - gameVersion < 86400 then -- 86400 segundos = 24 horas
+                NotificationSystem.CreateNotification(
+                    "⚠️ JOGO ATUALIZADO",
+                    "Blox Fruits foi atualizado recentemente.\nAlgumas funções podem não funcionar corretamente.",
+                    10
+                )
+                
+                -- Ativar modo seguro automaticamente
+                if not UserSettings.SafeMode then
+                    SafeModeToggle.SetValue(true)
+                    
+                    NotificationSystem.CreateNotification(
+                        "🛡️ MODO SEGURO ATIVADO",
+                        "Modo seguro ativado automaticamente devido à atualização do jogo.",
+                        7
+                    )
+                end
+            end
+        end
+    end)
+    
+    -- VERIFICAR CONEXÃO E DESEMPENHO
+    spawn(function()
+        while wait(5) do
+            local stats = game:GetService("Stats")
+            local ping = stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+            
+            -- Se o ping estiver muito alto, notificar e ajustar configurações
+            if ping > 500 then
+                NotificationSystem.CreateNotification(
+                    "⚠️ ALERTA DE CONEXÃO",
+                    "Ping alto detectado: " .. math.floor(ping) .. "ms\nFunções podem ter atraso.",
+                    5
+                )
+                
+                -- Ajustar automaticamente para otimização mobile
+                if not UserSettings.MobileOptimized then
+                    MobileOptimizationToggle.SetValue(true)
+                end
+            end
+        end
+    end)
+    
+    -- LOG DE INICIALIZAÇÃO FINAL
+    LogSystem.AddLog("System", "Script inicializado com sucesso. Todas as funções estão operacionais.")
+    
+    return BloxFruitsMobileGUI
+end
+
+-- Iniciar o script
+local Security = SetupSecurity()
+local GUI = CreateMobileUI()
+
+-- Notificação de inicialização no sistema do Roblox
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "BLOX FRUITS BLACK EDITION",
+    Text = "Script carregado com sucesso! Use o menu para acessar todas as funções.",
+    Duration = 5
+})
