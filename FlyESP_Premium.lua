@@ -1,505 +1,145 @@
--- THEUS-HUB Premium | Fly + ESP + Aimbot
--- Desenvolvido por Yuzure-sudo | github.com/Yuzure-sudo/THEUS-HUB
+-- THEUS-HUB | Script básico de Fly, ESP e Aimbot
+-- Criado por Yuzure-sudo
 
 -- Serviços
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
+
+-- Limpar GUI anterior se existir
+if CoreGui:FindFirstChild("THEUS_HUB") then
+    CoreGui:FindFirstChild("THEUS_HUB"):Destroy()
+end
+
+-- Criar GUI
+local GUI = Instance.new("ScreenGui")
+GUI.Name = "THEUS_HUB"
+GUI.Parent = CoreGui
+GUI.ResetOnSpawn = false
 
 -- Configurações
 local Config = {
     Fly = {
         Enabled = false,
-        Speed = 50,
-        MaxSpeed = 150,
-        Keys = {W = false, A = false, S = false, D = false, Space = false, LeftShift = false}
+        Speed = 50
     },
     ESP = {
         Enabled = false,
-        ShowName = true,
-        ShowDistance = true,
-        ShowHealth = true,
-        TeamCheck = false,
-        TeamColor = true,
-        BoxEnabled = true,
-        TracerEnabled = false,
-        MaxDistance = 1000,
-        Color = Color3.fromRGB(255, 0, 0)
+        MaxDistance = 5000
     },
     Aimbot = {
         Enabled = false,
-        TeamCheck = true,
-        VisibilityCheck = true,
-        TargetPart = "Head",
-        Sensitivity = 3,
         FOV = 100,
-        ShowFOV = true,
         Smoothness = 0.5,
-        MaxDistance = 1000,
-        TriggerKey = Enum.KeyCode.E
+        TeamCheck = true,
+        TargetPart = "Head"
     }
 }
 
--- Limpar GUIs anteriores
-if CoreGui:FindFirstChild("THEUS_HUB") then
-    CoreGui:FindFirstChild("THEUS_HUB"):Destroy()
-end
+-- Main Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -125)
+MainFrame.Size = UDim2.new(0, 300, 0, 250)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = GUI
 
--- Criar GUI principal
-local GUI = Instance.new("ScreenGui")
-GUI.Name = "THEUS_HUB"
-GUI.Parent = CoreGui
-GUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-GUI.ResetOnSpawn = false
-
--- Funções de UI
-local function CreateElement(class, properties)
-    local element = Instance.new(class)
-    for prop, value in pairs(properties) do
-        element[prop] = value
-    end
-    return element
-end
-
-local function CreateCorner(parent, radius)
-    return CreateElement("UICorner", {
-        CornerRadius = UDim.new(0, radius or 8),
-        Parent = parent
-    })
-end
-
-local function CreateStroke(parent, color, thickness)
-    return CreateElement("UIStroke", {
-        Color = color or Color3.fromRGB(60, 60, 70),
-        Thickness = thickness or 1.5,
-        Parent = parent
-    })
-end
-
-local function CreateGradient(parent, colors, rotation)
-    local gradient = CreateElement("UIGradient", {
-        Rotation = rotation or 45,
-        Parent = parent
-    })
-    
-    if colors then
-        local colorSequence = {}
-        for i, color in ipairs(colors) do
-            table.insert(colorSequence, ColorSequenceKeypoint.new((i-1)/(#colors-1), color))
-        end
-        gradient.Color = ColorSequence.new(colorSequence)
-    else
-        gradient.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(45, 45, 65)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 35, 50))
-        })
-    end
-    
-    return gradient
-end
-
--- Sistema de notificações (definido primeiro para poder ser usado em qualquer lugar)
-local NotificationFrame = CreateElement("Frame", {
-    Name = "NotificationFrame",
-    BackgroundColor3 = Color3.fromRGB(35, 35, 45),
-    BorderSizePixel = 0,
-    Position = UDim2.new(0.5, -150, 0, -100),
-    Size = UDim2.new(0, 300, 0, 70),
-    ZIndex = 100,
-    Parent = GUI
-})
-
-CreateCorner(NotificationFrame, 8)
-CreateStroke(NotificationFrame, Color3.fromRGB(60, 60, 80), 1.5)
-CreateGradient(NotificationFrame, {Color3.fromRGB(40, 40, 60), Color3.fromRGB(30, 30, 45)}, 90)
-
-local NotificationTitle = CreateElement("TextLabel", {
-    Name = "Title",
-    BackgroundTransparency = 1,
-    Position = UDim2.new(0, 15, 0, 10),
-    Size = UDim2.new(1, -30, 0, 20),
-    Font = Enum.Font.GothamBold,
-    Text = "Notificação",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextSize = 16,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    ZIndex = 101,
-    Parent = NotificationFrame
-})
-
-local NotificationText = CreateElement("TextLabel", {
-    Name = "Text",
-    BackgroundTransparency = 1,
-    Position = UDim2.new(0, 15, 0, 35),
-    Size = UDim2.new(1, -30, 0, 20),
-    Font = Enum.Font.Gotham,
-    Text = "",
-    TextColor3 = Color3.fromRGB(200, 200, 200),
-    TextSize = 14,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    ZIndex = 101,
-    Parent = NotificationFrame
-})
-
-function ShowNotification(title, text)
-    NotificationTitle.Text = title
-    NotificationText.Text = text
-    
-    TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(0.5, -150, 0, 20)}):Play()
-    
-    task.delay(3, function()
-        TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(0.5, -150, 0, -100)}):Play()
-    end)
-end
-
--- Criar o painel principal
-local MainFrame = CreateElement("Frame", {
-    Name = "MainFrame",
-    BackgroundColor3 = Color3.fromRGB(25, 25, 35),
-    BorderSizePixel = 0,
-    Position = UDim2.new(0.5, -150, 0.5, -125),
-    Size = UDim2.new(0, 300, 0, 250),
-    Active = true,
-    Draggable = true,
-    ZIndex = 10,
-    Parent = GUI
-})
-
-CreateCorner(MainFrame, 10)
-CreateStroke(MainFrame, Color3.fromRGB(60, 60, 80), 1.5)
+-- Cantos arredondados para o MainFrame
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = MainFrame
 
 -- Título
-local TitleBar = CreateElement("Frame", {
-    Name = "TitleBar",
-    BackgroundColor3 = Color3.fromRGB(35, 35, 45),
-    BorderSizePixel = 0,
-    Size = UDim2.new(1, 0, 0, 35),
-    ZIndex = 11,
-    Parent = MainFrame
-})
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+TitleBar.BorderSizePixel = 0
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.Parent = MainFrame
 
-CreateCorner(TitleBar, 10)
-CreateGradient(TitleBar, {Color3.fromRGB(40, 40, 60), Color3.fromRGB(30, 30, 45)}, 90)
+-- Cantos arredondados para o TitleBar
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 10)
+TitleCorner.Parent = TitleBar
 
-local Title = CreateElement("TextLabel", {
-    Name = "Title",
-    BackgroundTransparency = 1,
-    Position = UDim2.new(0, 10, 0, 0),
-    Size = UDim2.new(1, -20, 1, 0),
-    Font = Enum.Font.GothamBold,
-    Text = "THEUS-HUB PREMIUM",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextSize = 16,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    ZIndex = 12,
-    Parent = TitleBar
-})
+-- Texto do título
+local TitleText = Instance.new("TextLabel")
+TitleText.Name = "TitleText"
+TitleText.BackgroundTransparency = 1
+TitleText.Position = UDim2.new(0, 10, 0, 0)
+TitleText.Size = UDim2.new(1, -20, 1, 0)
+TitleText.Font = Enum.Font.GothamBold
+TitleText.Text = "THEUS-HUB"
+TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleText.TextSize = 16
+TitleText.TextXAlignment = Enum.TextXAlignment.Left
+TitleText.Parent = TitleBar
 
--- Funções de criação de abas
-local TabButtons = {}
-local TabFrames = {}
-local CurrentTab = nil
-
-local TabsFrame = CreateElement("Frame", {
-    Name = "TabsFrame",
-    BackgroundTransparency = 1,
-    Position = UDim2.new(0, 0, 0, 35),
-    Size = UDim2.new(1, 0, 0, 30),
-    ZIndex = 11,
-    Parent = MainFrame
-})
-
-local function CreateTab(name)
-    -- Botão da aba
-    local tabButton = CreateElement("TextButton", {
-        Name = name.."Tab",
-        BackgroundColor3 = Color3.fromRGB(35, 35, 45),
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, #TabButtons * 100, 0, 0),
-        Size = UDim2.new(0, 100, 1, 0),
-        Font = Enum.Font.GothamSemibold,
-        Text = name,
-        TextColor3 = Color3.fromRGB(180, 180, 180),
-        TextSize = 14,
-        ZIndex = 12,
-        Parent = TabsFrame
-    })
+-- Botões principais
+local function CreateButton(name, pos, text)
+    local button = Instance.new("TextButton")
+    button.Name = name
+    button.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    button.BorderSizePixel = 0
+    button.Position = pos
+    button.Size = UDim2.new(0, 280, 0, 40)
+    button.Font = Enum.Font.GothamSemibold
+    button.Text = text
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.TextSize = 16
+    button.Parent = MainFrame
     
-    CreateCorner(tabButton, 6)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = button
     
-    -- Conteúdo da aba
-    local tabFrame = CreateElement("ScrollingFrame", {
-        Name = name.."Frame",
-        BackgroundTransparency = 1,
-        Position = UDim2.new(0, 0, 0, 70),
-        Size = UDim2.new(1, 0, 1, -75),
-        CanvasSize = UDim2.new(0, 0, 0, 0),
-        ScrollBarThickness = 4,
-        ScrollBarImageColor3 = Color3.fromRGB(60, 60, 80),
-        Visible = false,
-        ZIndex = 11,
-        Parent = MainFrame
-    })
-    
-    -- Adicionar à lista de abas
-    table.insert(TabButtons, tabButton)
-    TabFrames[name] = tabFrame
-    
-    -- Evento de clique
-    tabButton.MouseButton1Click:Connect(function()
-        if CurrentTab then
-            TabFrames[CurrentTab].Visible = false
-            for _, btn in ipairs(TabButtons) do
-                btn.TextColor3 = Color3.fromRGB(180, 180, 180)
-                btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-            end
-        end
-        
-        CurrentTab = name
-        tabFrame.Visible = true
-        tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        tabButton.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
-    end)
-    
-    return tabFrame
+    return button
 end
 
--- Função para criar controles
-local function CreateToggle(parent, text, default, callback)
-    local toggleFrame = CreateElement("Frame", {
-        Name = text.."Toggle",
-        BackgroundColor3 = Color3.fromRGB(35, 35, 45),
-        BorderSizePixel = 0,
-        Size = UDim2.new(1, -20, 0, 35),
-        Position = UDim2.new(0, 10, 0, #parent:GetChildren() * 40),
-        ZIndex = 12,
-        Parent = parent
-    })
-    
-    CreateCorner(toggleFrame, 6)
-    
-    local toggleLabel = CreateElement("TextLabel", {
-        Name = "Label",
-        BackgroundTransparency = 1,
-        Position = UDim2.new(0, 10, 0, 0),
-        Size = UDim2.new(0.7, 0, 1, 0),
-        Font = Enum.Font.GothamSemibold,
-        Text = text,
-        TextColor3 = Color3.fromRGB(220, 220, 220),
-        TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        ZIndex = 13,
-        Parent = toggleFrame
-    })
-    
-    local toggleButton = CreateElement("Frame", {
-        Name = "Button",
-        BackgroundColor3 = default and Color3.fromRGB(0, 170, 127) or Color3.fromRGB(100, 100, 120),
-        BorderSizePixel = 0,
-        Position = UDim2.new(0.85, -15, 0.5, -10),
-        Size = UDim2.new(0, 40, 0, 20),
-        ZIndex = 13,
-        Parent = toggleFrame
-    })
-    
-    CreateCorner(toggleButton, 10)
-    
-    local toggleCircle = CreateElement("Frame", {
-        Name = "Circle",
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        BorderSizePixel = 0,
-        Position = default and UDim2.new(0.5, 0, 0.5, -8) or UDim2.new(0, 2, 0.5, -8),
-        Size = UDim2.new(0, 16, 0, 16),
-        ZIndex = 14,
-        Parent = toggleButton
-    })
-    
-    CreateCorner(toggleCircle, 8)
-    
-    local toggled = default
-    
-    toggleFrame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            toggled = not toggled
-            
-            if toggled then
-                TweenService:Create(toggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 170, 127)}):Play()
-                TweenService:Create(toggleCircle, TweenInfo.new(0.2), {Position = UDim2.new(0.5, 0, 0.5, -8)}):Play()
-            else
-                TweenService:Create(toggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(100, 100, 120)}):Play()
-                TweenService:Create(toggleCircle, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0.5, -8)}):Play()
-            end
-            
-            callback(toggled)
-        end
-    end)
-    
-    parent.CanvasSize = UDim2.new(0, 0, 0, #parent:GetChildren() * 40 + 10)
-    
-    return toggleFrame, function(value)
-        toggled = value
-        if toggled then
-            toggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
-            toggleCircle.Position = UDim2.new(0.5, 0, 0.5, -8)
-        else
-            toggleButton.BackgroundColor3 = Color3.fromRGB(100, 100, 120)
-            toggleCircle.Position = UDim2.new(0, 2, 0.5, -8)
-        end
-    end
+-- Criar botões
+local FlyButton = CreateButton("FlyButton", UDim2.new(0.5, -140, 0, 50), "Ativar Fly")
+local ESPButton = CreateButton("ESPButton", UDim2.new(0.5, -140, 0, 110), "Ativar ESP")
+local AimbotButton = CreateButton("AimbotButton", UDim2.new(0.5, -140, 0, 170), "Ativar Aimbot")
+
+-- Status de texto
+local StatusText = Instance.new("TextLabel")
+StatusText.Name = "StatusText"
+StatusText.BackgroundTransparency = 1
+StatusText.Position = UDim2.new(0, 10, 1, -30)
+StatusText.Size = UDim2.new(1, -20, 0, 20)
+StatusText.Font = Enum.Font.Gotham
+StatusText.Text = "Status: Carregado com sucesso"
+StatusText.TextColor3 = Color3.fromRGB(100, 255, 100)
+StatusText.TextSize = 14
+StatusText.TextXAlignment = Enum.TextXAlignment.Left
+StatusText.Parent = MainFrame
+
+-- Função de notificação simplificada
+function UpdateStatus(text, color)
+    StatusText.Text = "Status: " .. text
+    StatusText.TextColor3 = color or Color3.fromRGB(100, 255, 100)
 end
 
-local function CreateSlider(parent, text, min, max, default, callback)
-    local sliderFrame = CreateElement("Frame", {
-        Name = text.."Slider",
-        BackgroundColor3 = Color3.fromRGB(35, 35, 45),
-        BorderSizePixel = 0,
-        Size = UDim2.new(1, -20, 0, 50),
-        Position = UDim2.new(0, 10, 0, #parent:GetChildren() * 40),
-        ZIndex = 12,
-        Parent = parent
-    })
-    
-    CreateCorner(sliderFrame, 6)
-    
-    local sliderLabel = CreateElement("TextLabel", {
-        Name = "Label",
-        BackgroundTransparency = 1,
-        Position = UDim2.new(0, 10, 0, 0),
-        Size = UDim2.new(0.5, 0, 0, 25),
-        Font = Enum.Font.GothamSemibold,
-        Text = text,
-        TextColor3 = Color3.fromRGB(220, 220, 220),
-        TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        ZIndex = 13,
-        Parent = sliderFrame
-    })
-    
-    local sliderValue = CreateElement("TextLabel", {
-        Name = "Value",
-        BackgroundTransparency = 1,
-        Position = UDim2.new(0.7, 0, 0, 0),
-        Size = UDim2.new(0.3, -10, 0, 25),
-        Font = Enum.Font.GothamBold,
-        Text = tostring(default),
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Right,
-        ZIndex = 13,
-        Parent = sliderFrame
-    })
-    
-    local sliderBG = CreateElement("Frame", {
-        Name = "Background",
-        BackgroundColor3 = Color3.fromRGB(25, 25, 35),
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, 10, 0, 30),
-        Size = UDim2.new(1, -20, 0, 6),
-        ZIndex = 13,
-        Parent = sliderFrame
-    })
-    
-    CreateCorner(sliderBG, 3)
-    
-    local sliderFill = CreateElement("Frame", {
-        Name = "Fill",
-        BackgroundColor3 = Color3.fromRGB(0, 170, 127),
-        BorderSizePixel = 0,
-        Size = UDim2.new((default - min) / (max - min), 0, 1, 0),
-        ZIndex = 14,
-        Parent = sliderBG
-    })
-    
-    CreateCorner(sliderFill, 3)
-    CreateGradient(sliderFill, {Color3.fromRGB(0, 180, 137), Color3.fromRGB(0, 150, 107)}, 90)
-    
-    local sliderDrag = CreateElement("TextButton", {
-        Name = "Drag",
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        BorderSizePixel = 0,
-        Position = UDim2.new((default - min) / (max - min), -6, 0.5, -6),
-        Size = UDim2.new(0, 12, 0, 12),
-        Text = "",
-        ZIndex = 15,
-        Parent = sliderBG
-    })
-    
-    CreateCorner(sliderDrag, 6)
-    
-    local dragging = false
-    
-    sliderDrag.MouseButton1Down:Connect(function()
-        dragging = true
-    end)
-    
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
-    
-    sliderBG.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            local relX = math.clamp((input.Position.X - sliderBG.AbsolutePosition.X) / sliderBG.AbsoluteSize.X, 0, 1)
-            local value = math.floor(min + relX * (max - min))
-            
-            sliderFill.Size = UDim2.new(relX, 0, 1, 0)
-            sliderDrag.Position = UDim2.new(relX, -6, 0.5, -6)
-            sliderValue.Text = tostring(value)
-            
-            callback(value)
-        end
-    end)
-    
-    RunService.RenderStepped:Connect(function()
-        if dragging then
-            local mousePos = UserInputService:GetMouseLocation()
-            local relX = math.clamp((mousePos.X - sliderBG.AbsolutePosition.X) / sliderBG.AbsoluteSize.X, 0, 1)
-            local value = math.floor(min + relX * (max - min))
-            
-            sliderFill.Size = UDim2.new(relX, 0, 1, 0)
-            sliderDrag.Position = UDim2.new(relX, -6, 0.5, -6)
-            sliderValue.Text = tostring(value)
-            
-            callback(value)
-        end
-    end)
-    
-    parent.CanvasSize = UDim2.new(0, 0, 0, #parent:GetChildren() * 40 + 20)
-    
-    return sliderFrame
-end
-
--- Criar abas
-local FlyTab = CreateTab("Fly")
-local ESPTab = CreateTab("ESP")
-local AimbotTab = CreateTab("Aimbot")
-
--- Implementação do Fly
+-- Fly simples
 local FlyGyro, FlyVel
 
-function EnableFly()
+function StartFly()
     local Character = LocalPlayer.Character
-    if not Character or not Character:FindFirstChild("HumanoidRootPart") then 
-        ShowNotification("Erro", "Personagem não encontrado")
-        return 
+    if not Character or not Character:FindFirstChild("HumanoidRootPart") then
+        UpdateStatus("Erro: Personagem não encontrado", Color3.fromRGB(255, 100, 100))
+        return
     end
     
-    local HRP = Character:FindFirstChild("HumanoidRootPart")
-    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+    local HRP = Character.HumanoidRootPart
     
-    if not HRP or not Humanoid then 
-        ShowNotification("Erro", "Humanoid não encontrado")
-        return 
-    end
-    
-    -- Criar BodyGyro e BodyVelocity
+    -- Criar controles de voo
     FlyGyro = Instance.new("BodyGyro")
     FlyGyro.P = 9e4
     FlyGyro.maxTorque = Vector3.new(9e9, 9e9, 9e9)
@@ -507,50 +147,49 @@ function EnableFly()
     FlyGyro.Parent = HRP
     
     FlyVel = Instance.new("BodyVelocity")
-    FlyVel.MaxForce = Vector3.new(9e9, 9e9, 9e9)
     FlyVel.Velocity = Vector3.new(0, 0.1, 0)
+    FlyVel.MaxForce = Vector3.new(9e9, 9e9, 9e9)
     FlyVel.Parent = HRP
     
-    -- Loop de voo
-    RunService:BindToRenderStep("FlyLoop", 1, function()
+    -- Atualizar status
+    UpdateStatus("Fly ativado - Use WASD e Space/Ctrl", Color3.fromRGB(100, 200, 255))
+    FlyButton.Text = "Desativar Fly"
+    FlyButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+    
+    -- Conectar ao RenderStepped para movimentação fluida
+    RunService:BindToRenderStep("Fly", 1, function()
         if not Config.Fly.Enabled then return end
         
         local Character = LocalPlayer.Character
-        if not Character or not Character:FindFirstChild("HumanoidRootPart") or not FlyGyro or not FlyVel then
-            DisableFly()
+        if not Character or not Character:FindFirstChild("HumanoidRootPart") then
+            StopFly()
             return
         end
         
-        local HRP = Character:FindFirstChild("HumanoidRootPart")
+        local HRP = Character.HumanoidRootPart
         local Humanoid = Character:FindFirstChildOfClass("Humanoid")
         
-        -- Orientação baseada na câmera
+        -- Atualizar orientação
         FlyGyro.CFrame = CFrame.new(HRP.Position, HRP.Position + Camera.CFrame.LookVector)
         
-        -- Movimento baseado no analógico ou teclado
-        local moveDir = Humanoid.MoveDirection
+        -- Calcular velocidade
+        local moveDirection = Humanoid.MoveDirection * Config.Fly.Speed
         
-        -- Usar analógico para movimento vertical se disponível
-        local yVelocity = 0
+        -- Movimento vertical
+        local verticalSpeed = 0
         if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-            yVelocity = Config.Fly.Speed
-        elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) or UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-            yVelocity = -Config.Fly.Speed
+            verticalSpeed = Config.Fly.Speed
+        elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+            verticalSpeed = -Config.Fly.Speed
         end
         
-        -- Aplicar velocidade
-        FlyVel.Velocity = Vector3.new(
-            moveDir.X * Config.Fly.Speed, 
-            yVelocity, 
-            moveDir.Z * Config.Fly.Speed
-        )
+        -- Aplicar movimento
+        FlyVel.Velocity = Vector3.new(moveDirection.X, verticalSpeed, moveDirection.Z)
     end)
-    
-    ShowNotification("Fly Ativado", "Use WASD para mover e Space/Shift para subir/descer")
 end
 
-function DisableFly()
-    RunService:UnbindFromRenderStep("FlyLoop")
+function StopFly()
+    RunService:UnbindFromRenderStep("Fly")
     
     if FlyGyro then FlyGyro:Destroy() end
     if FlyVel then FlyVel:Destroy() end
@@ -558,140 +197,145 @@ function DisableFly()
     FlyGyro = nil
     FlyVel = nil
     
-    ShowNotification("Fly Desativado", "Modo de voo encerrado")
+    UpdateStatus("Fly desativado", Color3.fromRGB(255, 200, 100))
+    FlyButton.Text = "Ativar Fly"
+    FlyButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    
+    Config.Fly.Enabled = false
 end
 
--- Implementação do ESP
-local ESPFolder = Instance.new("Folder", GUI)
+-- ESP simples
+local ESPFolder = Instance.new("Folder")
 ESPFolder.Name = "ESPElements"
+ESPFolder.Parent = GUI
 
-function EnableESP()
-    -- Criar ESP para jogadores existentes
+function StartESP()
+    -- Limpar ESP existente
+    ESPFolder:ClearAllChildren()
+    
+    UpdateStatus("ESP ativado", Color3.fromRGB(100, 255, 100))
+    ESPButton.Text = "Desativar ESP"
+    ESPButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+    
+    -- Criar ESP para jogadores atuais
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
-            UpdateESP(player)
+            CreatePlayerESP(player)
         end
     end
     
-    -- Verificar novos jogadores
+    -- Monitorar novos jogadores
     Players.PlayerAdded:Connect(function(player)
         if Config.ESP.Enabled then
-            UpdateESP(player)
+            CreatePlayerESP(player)
         end
     end)
     
     -- Atualizar ESP constantemente
-    RunService:BindToRenderStep("ESPLoop", 5, function()
+    RunService:BindToRenderStep("ESP", 5, function()
         if not Config.ESP.Enabled then return end
         
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer then
-                UpdateESP(player)
-            end
+        for _, esp in pairs(ESPFolder:GetChildren()) do
+            UpdateESP(esp)
         end
     end)
-    
-    ShowNotification("ESP Ativado", "Agora você pode ver outros jogadores")
 end
 
-function DisableESP()
-    RunService:UnbindFromRenderStep("ESPLoop")
+function StopESP()
+    RunService:UnbindFromRenderStep("ESP")
     ESPFolder:ClearAllChildren()
     
-    ShowNotification("ESP Desativado", "ESP removido")
+    UpdateStatus("ESP desativado", Color3.fromRGB(255, 200, 100))
+    ESPButton.Text = "Ativar ESP"
+    ESPButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    
+    Config.ESP.Enabled = false
 end
 
-function UpdateESP(player)
-    if not Config.ESP.Enabled then return end
+function CreatePlayerESP(player)
+    local esp = Instance.new("BillboardGui")
+    esp.Name = "ESP_" .. player.Name
+    esp.AlwaysOnTop = true
+    esp.Size = UDim2.new(0, 200, 0, 50)
+    esp.StudsOffset = Vector3.new(0, 3, 0)
+    esp.Adornee = nil  -- Será definido em UpdateESP
+    esp.Player = player.Name  -- Armazenar nome do jogador
+    esp.Parent = ESPFolder
     
-    -- Verificar time se necessário
-    if Config.ESP.TeamCheck and player.Team == LocalPlayer.Team then
-        local esp = ESPFolder:FindFirstChild("ESP_" .. player.Name)
-        if esp then esp:Destroy() end
+    -- Nome do jogador
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Name = "NameLabel"
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Position = UDim2.new(0, 0, 0, 0)
+    nameLabel.Size = UDim2.new(1, 0, 0, 20)
+    nameLabel.Font = Enum.Font.GothamSemibold
+    nameLabel.Text = player.Name
+    nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    nameLabel.TextStrokeTransparency = 0.3
+    nameLabel.TextSize = 14
+    nameLabel.Parent = esp
+    
+    -- Distância
+    local distanceLabel = Instance.new("TextLabel")
+    distanceLabel.Name = "DistanceLabel"
+    distanceLabel.BackgroundTransparency = 1
+    distanceLabel.Position = UDim2.new(0, 0, 0, 20)
+    distanceLabel.Size = UDim2.new(1, 0, 0, 20)
+    distanceLabel.Font = Enum.Font.Gotham
+    distanceLabel.Text = "0m"
+    distanceLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    distanceLabel.TextStrokeTransparency = 0.3
+    distanceLabel.TextSize = 12
+    distanceLabel.Parent = esp
+    
+    return esp
+end
+
+function UpdateESP(esp)
+    local playerName = esp.Player
+    local player = Players:FindFirstChild(playerName)
+    
+    if not player then
+        esp.Enabled = false
         return
     end
     
     local character = player.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") or not character:FindFirstChildOfClass("Humanoid") then
-        local esp = ESPFolder:FindFirstChild("ESP_" .. player.Name)
-        if esp then esp.Enabled = false end
+    if not character or not character:FindFirstChild("HumanoidRootPart") then
+        esp.Enabled = false
         return
     end
     
-    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    local hrp = character.HumanoidRootPart
     local humanoid = character:FindFirstChildOfClass("Humanoid")
     
     -- Verificar distância
-    local distance = (humanoidRootPart.Position - Camera.CFrame.Position).Magnitude
+    local distance = (hrp.Position - Camera.CFrame.Position).Magnitude
     if distance > Config.ESP.MaxDistance then
-        local esp = ESPFolder:FindFirstChild("ESP_" .. player.Name)
-        if esp then esp.Enabled = false end
+        esp.Enabled = false
         return
-    end
-    
-    -- Criar ou obter ESP
-    local esp = ESPFolder:FindFirstChild("ESP_" .. player.Name)
-    if not esp then
-        esp = Instance.new("BillboardGui")
-        esp.Name = "ESP_" .. player.Name
-        esp.AlwaysOnTop = true
-        esp.Size = UDim2.new(0, 200, 0, 50)
-        esp.StudsOffset = Vector3.new(0, 3, 0)
-        esp.Adornee = humanoidRootPart
-        esp.Parent = ESPFolder
-        
-        -- Nome
-        local nameLabel = Instance.new("TextLabel")
-        nameLabel.Name = "NameLabel"
-        nameLabel.BackgroundTransparency = 1
-        nameLabel.Position = UDim2.new(0, 0, 0, 0)
-        nameLabel.Size = UDim2.new(1, 0, 0, 20)
-        nameLabel.Font = Enum.Font.GothamSemibold
-        nameLabel.Text = player.Name
-        nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        nameLabel.TextStrokeTransparency = 0.3
-        nameLabel.TextSize = 14
-        nameLabel.ZIndex = 2
-        nameLabel.Parent = esp
-        
-        -- Distância
-        local distanceLabel = Instance.new("TextLabel")
-        distanceLabel.Name = "DistanceLabel"
-        distanceLabel.BackgroundTransparency = 1
-        distanceLabel.Position = UDim2.new(0, 0, 0, 20)
-        distanceLabel.Size = UDim2.new(1, 0, 0, 20)
-        distanceLabel.Font = Enum.Font.Gotham
-        distanceLabel.Text = "0m"
-        distanceLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-        distanceLabel.TextStrokeTransparency = 0.3
-        distanceLabel.TextSize = 12
-        distanceLabel.ZIndex = 2
-        distanceLabel.Parent = esp
     end
     
     -- Atualizar ESP
     esp.Enabled = true
-    esp.Adornee = humanoidRootPart
-    
-    local nameLabel = esp:FindFirstChild("NameLabel")
-    local distanceLabel = esp:FindFirstChild("DistanceLabel")
+    esp.Adornee = hrp
     
     -- Atualizar informações
-    nameLabel.Visible = Config.ESP.ShowName
-    distanceLabel.Visible = Config.ESP.ShowDistance
-    distanceLabel.Text = math.floor(distance) .. "m"
+    local distanceLabel = esp:FindFirstChild("DistanceLabel")
+    if distanceLabel then
+        distanceLabel.Text = math.floor(distance) .. "m"
+    end
     
-    -- Cor baseada no time
-    if Config.ESP.TeamColor and player.Team then
+    -- Cor com base na equipe
+    local nameLabel = esp:FindFirstChild("NameLabel")
+    if nameLabel and player.Team then
         nameLabel.TextColor3 = player.TeamColor.Color
-    else
-        nameLabel.TextColor3 = Config.ESP.Color
     end
 end
 
--- Implementação do Aimbot
+-- Aimbot simples
 local FOVCircle = Drawing.new("Circle")
-FOVCircle.Visible = Config.Aimbot.ShowFOV
+FOVCircle.Visible = false
 FOVCircle.Radius = Config.Aimbot.FOV
 FOVCircle.Color = Color3.fromRGB(255, 255, 255)
 FOVCircle.Thickness = 1
@@ -699,9 +343,51 @@ FOVCircle.Transparency = 1
 FOVCircle.NumSides = 36
 FOVCircle.Filled = false
 
-function UpdateFOVCircle()
-    FOVCircle.Radius = Config.Aimbot.FOV
-    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+function StartAimbot()
+    FOVCircle.Visible = true
+    
+    UpdateStatus("Aimbot ativado - Pressione E para usar", Color3.fromRGB(255, 150, 150))
+    AimbotButton.Text = "Desativar Aimbot"
+    AimbotButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+    
+    RunService:BindToRenderStep("Aimbot", 1, function()
+        if not Config.Aimbot.Enabled then return end
+        
+        -- Atualizar círculo FOV
+        FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+        FOVCircle.Radius = Config.Aimbot.FOV
+        
+        -- Verificar tecla pressionada (E)
+        if not UserInputService:IsKeyDown(Enum.KeyCode.E) then return end
+        
+        -- Encontrar alvo mais próximo
+        local target = GetClosestPlayerToCursor()
+        if not target then return end
+        
+        -- Mirar no alvo
+        local targetPart = target.Character:FindFirstChild(Config.Aimbot.TargetPart)
+        if not targetPart then return end
+        
+        -- Calcular nova orientação da câmera
+        local targetPos = targetPart.Position
+        local cameraPos = Camera.CFrame.Position
+        
+        local targetCFrame = CFrame.new(cameraPos, targetPos)
+        
+        -- Aplicar suavização
+        Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, Config.Aimbot.Smoothness)
+    end)
+end
+
+function StopAimbot()
+    RunService:UnbindFromRenderStep("Aimbot")
+    FOVCircle.Visible = false
+    
+    UpdateStatus("Aimbot desativado", Color3.fromRGB(255, 200, 100))
+    AimbotButton.Text = "Ativar Aimbot"
+    AimbotButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    
+    Config.Aimbot.Enabled = false
 end
 
 function GetClosestPlayerToCursor()
@@ -715,40 +401,27 @@ function GetClosestPlayerToCursor()
                 continue
             end
             
+            -- Verificar personagem
             local character = player.Character
             if not character or not character:FindFirstChild(Config.Aimbot.TargetPart) then
                 continue
             end
             
-            local targetPart = character:FindFirstChild(Config.Aimbot.TargetPart)
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            
             -- Verificar se está vivo
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
             if not humanoid or humanoid.Health <= 0 then
                 continue
             end
             
-            -- Verificar distância
-            local distance = (targetPart.Position - Camera.CFrame.Position).Magnitude
-            if distance > Config.Aimbot.MaxDistance then
-                continue
-            end
-            
-            -- Verificar visibilidade
-            if Config.Aimbot.VisibilityCheck then
-                local ray = Ray.new(Camera.CFrame.Position, targetPart.Position - Camera.CFrame.Position)
-                local hit, _ = workspace:FindPartOnRayWithIgnoreList(ray, {LocalPlayer.Character, character})
-                if hit then
-                    continue
-                end
-            end
-            
-            -- Verificar se está dentro do FOV
+            -- Obter posição na tela
+            local targetPart = character[Config.Aimbot.TargetPart]
             local screenPos, onScreen = Camera:WorldToScreenPoint(targetPart.Position)
+            
             if not onScreen then
                 continue
             end
             
+            -- Calcular distância até o cursor
             local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
             local screenDistance = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
             
@@ -762,234 +435,83 @@ function GetClosestPlayerToCursor()
     return closestPlayer
 end
 
-function EnableAimbot()
-    RunService:BindToRenderStep("AimbotLoop", 1, function()
-        UpdateFOVCircle()
-        
-        if not Config.Aimbot.Enabled then return end
-        
-        if UserInputService:IsKeyDown(Config.Aimbot.TriggerKey) then
-            local target = GetClosestPlayerToCursor()
-            if target then
-                local character = target.Character
-                if character and character:FindFirstChild(Config.Aimbot.TargetPart) then
-                    local targetPart = character:FindFirstChild(Config.Aimbot.TargetPart)
-                    
-                    -- Suavidade do aimbot (menor = mais suave)
-                    local smoothness = Config.Aimbot.Smoothness
-                    
-                    -- Calcular ângulo para mirar
-                    local targetPos = targetPart.Position
-                    local cameraPos = Camera.CFrame.Position
-                    
-                    local targetCFrame = CFrame.new(cameraPos, targetPos)
-                    local cameraCFrame = Camera.CFrame
-                    
-                    -- Suavizar movimento da câmera
-                    local newCFrame = cameraCFrame:Lerp(targetCFrame, smoothness)
-                    
-                    -- Aplicar nova rotação da câmera
-                    Camera.CFrame = newCFrame
-                end
-            end
-        end
-    end)
+-- Conectar eventos de botões
+FlyButton.MouseButton1Click:Connect(function()
+    Config.Fly.Enabled = not Config.Fly.Enabled
     
-    ShowNotification("Aimbot Ativado", "Pressione E para ativar o aimbot")
-end
+    if Config.Fly.Enabled then
+        StartFly()
+    else
+        StopFly()
+    end
+end)
 
-function DisableAimbot()
-    RunService:UnbindFromRenderStep("AimbotLoop")
-    FOVCircle.Visible = false
+ESPButton.MouseButton1Click:Connect(function()
+    Config.ESP.Enabled = not Config.ESP.Enabled
     
-    ShowNotification("Aimbot Desativado", "Aimbot desligado")
-end
-
--- Configurar abas
--- Aba Fly
-local FlyToggle, UpdateFlyToggle = CreateToggle(FlyTab, "Ativar Fly", Config.Fly.Enabled, function(value)
-    Config.Fly.Enabled = value
-    if value then
-        EnableFly()
+    if Config.ESP.Enabled then
+        StartESP()
     else
-        DisableFly()
+        StopESP()
     end
 end)
 
-CreateSlider(FlyTab, "Velocidade", 10, 150, Config.Fly.Speed, function(value)
-    Config.Fly.Speed = value
-end)
-
--- Aba ESP
-local ESPToggle, UpdateESPToggle = CreateToggle(ESPTab, "Ativar ESP", Config.ESP.Enabled, function(value)
-    Config.ESP.Enabled = value
-    if value then
-        EnableESP()
+AimbotButton.MouseButton1Click:Connect(function()
+    Config.Aimbot.Enabled = not Config.Aimbot.Enabled
+    
+    if Config.Aimbot.Enabled then
+        StartAimbot()
     else
-        DisableESP()
+        StopAimbot()
     end
 end)
 
-CreateToggle(ESPTab, "Mostrar Nomes", Config.ESP.ShowName, function(value)
-    Config.ESP.ShowName = value
-end)
-
-CreateToggle(ESPTab, "Mostrar Distância", Config.ESP.ShowDistance, function(value)
-    Config.ESP.ShowDistance = value
-end)
-
-CreateToggle(ESPTab, "Verificar Time", Config.ESP.TeamCheck, function(value)
-    Config.ESP.TeamCheck = value
-end)
-
-CreateToggle(ESPTab, "Caixas", Config.ESP.BoxEnabled, function(value)
-    Config.ESP.BoxEnabled = value
-end)
-
-CreateToggle(ESPTab, "Tracers", Config.ESP.TracerEnabled, function(value)
-    Config.ESP.TracerEnabled = value
-end)
-
--- Aba Aimbot
-local AimbotToggle, UpdateAimbotToggle = CreateToggle(AimbotTab, "Ativar Aimbot", Config.Aimbot.Enabled, function(value)
-    Config.Aimbot.Enabled = value
-    if value then
-        EnableAimbot()
-    else
-        DisableAimbot()
-    end
-end)
-
-CreateToggle(AimbotTab, "Verificar Time", Config.Aimbot.TeamCheck, function(value)
-    Config.Aimbot.TeamCheck = value
-end)
-
-CreateToggle(AimbotTab, "Verificar Visibilidade", Config.Aimbot.VisibilityCheck, function(value)
-    Config.Aimbot.VisibilityCheck = value
-end)
-
-CreateToggle(AimbotTab, "Mostrar FOV", Config.Aimbot.ShowFOV, function(value)
-    Config.Aimbot.ShowFOV = value
-    FOVCircle.Visible = value and Config.Aimbot.Enabled
-end)
-
-CreateSlider(AimbotTab, "FOV", 30, 500, Config.Aimbot.FOV, function(value)
-    Config.Aimbot.FOV = value
-    UpdateFOVCircle()
-end)
-
-CreateSlider(AimbotTab, "Suavidade", 1, 10, Config.Aimbot.Smoothness * 10, function(value)
-    Config.Aimbot.Smoothness = value / 10
-end)
-
--- Inicializar o FOV do Aimbot
-UpdateFOVCircle()
-
--- Atalhos de teclado
+-- Teclas de atalho
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     
-    -- Tecla X para ativar/desativar o fly
     if input.KeyCode == Enum.KeyCode.X then
-        Config.Fly.Enabled = not Config.Fly.Enabled
-        UpdateFlyToggle(Config.Fly.Enabled)
-        if Config.Fly.Enabled then
-            EnableFly()
-        else
-            DisableFly()
-        end
-    end
-    
-    -- Tecla V para ativar/desativar o ESP
-    if input.KeyCode == Enum.KeyCode.V then
-        Config.ESP.Enabled = not Config.ESP.Enabled
-        UpdateESPToggle(Config.ESP.Enabled)
-        if Config.ESP.Enabled then
-            EnableESP()
-        else
-            DisableESP()
-        end
-    end
-    
-    -- Tecla B para ativar/desativar o Aimbot
-    if input.KeyCode == Enum.KeyCode.B then
-        Config.Aimbot.Enabled = not Config.Aimbot.Enabled
-        UpdateAimbotToggle(Config.Aimbot.Enabled)
-        if Config.Aimbot.Enabled then
-            EnableAimbot()
-        else
-            DisableAimbot()
-        end
+        -- Alternar Fly
+        FlyButton.MouseButton1Click:Fire()
+    elseif input.KeyCode == Enum.KeyCode.C then
+        -- Alternar ESP
+        ESPButton.MouseButton1Click:Fire()
+    elseif input.KeyCode == Enum.KeyCode.V then
+        -- Alternar Aimbot
+        AimbotButton.MouseButton1Click:Fire()
     end
 end)
 
--- Watermark
-local Watermark = CreateElement("TextLabel", {
-    Name = "Watermark",
-    BackgroundTransparency = 1,
-    Position = UDim2.new(0, 5, 1, -25),
-    Size = UDim2.new(0, 200, 0, 20),
-    Font = Enum.Font.Gotham,
-    Text = "THEUS-HUB Premium v1.0",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextTransparency = 0.7,
-    TextSize = 13,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    ZIndex = 1,
-    Parent = GUI
-})
+-- Botão de fechar
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+CloseButton.BorderSizePixel = 0
+CloseButton.Position = UDim2.new(1, -25, 0, 5)
+CloseButton.Size = UDim2.new(0, 20, 0, 20)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 12
+CloseButton.Parent = TitleBar
 
--- Limpar ao sair
-LocalPlayer.CharacterRemoving:Connect(function()
-    if Config.Fly.Enabled then
-        Config.Fly.Enabled = false
-        DisableFly()
-        UpdateFlyToggle(false)
-    end
-end)
-
--- Inicializar automaticamente o FOV do Aimbot
-spawn(function()
-    while true do
-        if Config.Aimbot.ShowFOV and Config.Aimbot.Enabled then
-            UpdateFOVCircle()
-        end
-        wait(0.1)
-    end
-end)
-
--- Fechar script
-local CloseButton = CreateElement("TextButton", {
-    Name = "CloseButton",
-    BackgroundColor3 = Color3.fromRGB(255, 80, 80),
-    BorderSizePixel = 0,
-    Position = UDim2.new(1, -30, 0, 5),
-    Size = UDim2.new(0, 25, 0, 25),
-    Font = Enum.Font.GothamBold,
-    Text = "X",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextSize = 14,
-    ZIndex = 15,
-    Parent = TitleBar
-})
-
-CreateCorner(CloseButton, 4)
+-- Cantos arredondados para o botão de fechar
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 4)
+CloseCorner.Parent = CloseButton
 
 CloseButton.MouseButton1Click:Connect(function()
     -- Desativar todas as funcionalidades
-    if Config.Fly.Enabled then DisableFly() end
-    if Config.ESP.Enabled then DisableESP() end
-    if Config.Aimbot.Enabled then DisableAimbot() end
+    if Config.Fly.Enabled then StopFly() end
+    if Config.ESP.Enabled then StopESP() end
+    if Config.Aimbot.Enabled then StopAimbot() end
     
-    -- Limpar FOV Circle
+    -- Remover FOV Circle
     FOVCircle:Remove()
     
     -- Destruir GUI
     GUI:Destroy()
 end)
 
--- Iniciar na primeira aba
-TabButtons[1].MouseButton1Click:Fire()
-
--- Notificação inicial
-ShowNotification("THEUS-HUB Premium", "Script carregado com sucesso!")
+-- Mensagem inicial
+UpdateStatus("Script carregado com sucesso", Color3.fromRGB(100, 255, 100))
