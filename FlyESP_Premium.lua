@@ -103,6 +103,60 @@ local function CreateGradient(parent, colors, rotation)
     return gradient
 end
 
+-- Sistema de notificações (definido primeiro para poder ser usado em qualquer lugar)
+local NotificationFrame = CreateElement("Frame", {
+    Name = "NotificationFrame",
+    BackgroundColor3 = Color3.fromRGB(35, 35, 45),
+    BorderSizePixel = 0,
+    Position = UDim2.new(0.5, -150, 0, -100),
+    Size = UDim2.new(0, 300, 0, 70),
+    ZIndex = 100,
+    Parent = GUI
+})
+
+CreateCorner(NotificationFrame, 8)
+CreateStroke(NotificationFrame, Color3.fromRGB(60, 60, 80), 1.5)
+CreateGradient(NotificationFrame, {Color3.fromRGB(40, 40, 60), Color3.fromRGB(30, 30, 45)}, 90)
+
+local NotificationTitle = CreateElement("TextLabel", {
+    Name = "Title",
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0, 15, 0, 10),
+    Size = UDim2.new(1, -30, 0, 20),
+    Font = Enum.Font.GothamBold,
+    Text = "Notificação",
+    TextColor3 = Color3.fromRGB(255, 255, 255),
+    TextSize = 16,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    ZIndex = 101,
+    Parent = NotificationFrame
+})
+
+local NotificationText = CreateElement("TextLabel", {
+    Name = "Text",
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0, 15, 0, 35),
+    Size = UDim2.new(1, -30, 0, 20),
+    Font = Enum.Font.Gotham,
+    Text = "",
+    TextColor3 = Color3.fromRGB(200, 200, 200),
+    TextSize = 14,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    ZIndex = 101,
+    Parent = NotificationFrame
+})
+
+function ShowNotification(title, text)
+    NotificationTitle.Text = title
+    NotificationText.Text = text
+    
+    TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(0.5, -150, 0, 20)}):Play()
+    
+    task.delay(3, function()
+        TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(0.5, -150, 0, -100)}):Play()
+    end)
+end
+
 -- Criar o painel principal
 local MainFrame = CreateElement("Frame", {
     Name = "MainFrame",
@@ -215,11 +269,6 @@ local function CreateTab(name)
     return tabFrame
 end
 
--- Criar abas
-local FlyTab = CreateTab("Fly")
-local ESPTab = CreateTab("ESP")
-local AimbotTab = CreateTab("Aimbot")
-
 -- Função para criar controles
 local function CreateToggle(parent, text, default, callback)
     local toggleFrame = CreateElement("Frame", {
@@ -292,7 +341,16 @@ local function CreateToggle(parent, text, default, callback)
     
     parent.CanvasSize = UDim2.new(0, 0, 0, #parent:GetChildren() * 40 + 10)
     
-    return toggleFrame
+    return toggleFrame, function(value)
+        toggled = value
+        if toggled then
+            toggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
+            toggleCircle.Position = UDim2.new(0.5, 0, 0.5, -8)
+        else
+            toggleButton.BackgroundColor3 = Color3.fromRGB(100, 100, 120)
+            toggleCircle.Position = UDim2.new(0, 2, 0.5, -8)
+        end
+    end
 end
 
 local function CreateSlider(parent, text, min, max, default, callback)
@@ -418,92 +476,28 @@ local function CreateSlider(parent, text, min, max, default, callback)
     return sliderFrame
 end
 
--- Configurar abas
--- Aba Fly
-CreateToggle(FlyTab, "Ativar Fly", Config.Fly.Enabled, function(value)
-    Config.Fly.Enabled = value
-    if value then
-        EnableFly()
-    else
-        DisableFly()
-    end
-end)
-
-CreateSlider(FlyTab, "Velocidade", 10, 150, Config.Fly.Speed, function(value)
-    Config.Fly.Speed = value
-end)
-
--- Aba ESP
-CreateToggle(ESPTab, "Ativar ESP", Config.ESP.Enabled, function(value)
-    Config.ESP.Enabled = value
-    if value then
-        EnableESP()
-    else
-        DisableESP()
-    end
-end)
-
-CreateToggle(ESPTab, "Mostrar Nomes", Config.ESP.ShowName, function(value)
-    Config.ESP.ShowName = value
-end)
-
-CreateToggle(ESPTab, "Mostrar Distância", Config.ESP.ShowDistance, function(value)
-    Config.ESP.ShowDistance = value
-end)
-
-CreateToggle(ESPTab, "Verificar Time", Config.ESP.TeamCheck, function(value)
-    Config.ESP.TeamCheck = value
-end)
-
-CreateToggle(ESPTab, "Caixas", Config.ESP.BoxEnabled, function(value)
-    Config.ESP.BoxEnabled = value
-end)
-
-CreateToggle(ESPTab, "Tracers", Config.ESP.TracerEnabled, function(value)
-    Config.ESP.TracerEnabled = value
-end)
-
--- Aba Aimbot
-CreateToggle(AimbotTab, "Ativar Aimbot", Config.Aimbot.Enabled, function(value)
-    Config.Aimbot.Enabled = value
-end)
-
-CreateToggle(AimbotTab, "Verificar Time", Config.Aimbot.TeamCheck, function(value)
-    Config.Aimbot.TeamCheck = value
-end)
-
-CreateToggle(AimbotTab, "Verificar Visibilidade", Config.Aimbot.VisibilityCheck, function(value)
-    Config.Aimbot.VisibilityCheck = value
-end)
-
-CreateToggle(AimbotTab, "Mostrar FOV", Config.Aimbot.ShowFOV, function(value)
-    Config.Aimbot.ShowFOV = value
-    FOVCircle.Visible = value
-end)
-
-CreateSlider(AimbotTab, "FOV", 30, 500, Config.Aimbot.FOV, function(value)
-    Config.Aimbot.FOV = value
-    UpdateFOVCircle()
-end)
-
-CreateSlider(AimbotTab, "Suavidade", 1, 10, Config.Aimbot.Smoothness * 10, function(value)
-    Config.Aimbot.Smoothness = value / 10
-end)
-
--- Selecionar a primeira aba por padrão
-TabButtons[1].MouseButton1Click:Fire()
+-- Criar abas
+local FlyTab = CreateTab("Fly")
+local ESPTab = CreateTab("ESP")
+local AimbotTab = CreateTab("Aimbot")
 
 -- Implementação do Fly
 local FlyGyro, FlyVel
 
 function EnableFly()
     local Character = LocalPlayer.Character
-    if not Character or not Character:FindFirstChild("HumanoidRootPart") then return end
+    if not Character or not Character:FindFirstChild("HumanoidRootPart") then 
+        ShowNotification("Erro", "Personagem não encontrado")
+        return 
+    end
     
     local HRP = Character:FindFirstChild("HumanoidRootPart")
     local Humanoid = Character:FindFirstChildOfClass("Humanoid")
     
-    if not HRP or not Humanoid then return end
+    if not HRP or not Humanoid then 
+        ShowNotification("Erro", "Humanoid não encontrado")
+        return 
+    end
     
     -- Criar BodyGyro e BodyVelocity
     FlyGyro = Instance.new("BodyGyro")
@@ -540,7 +534,7 @@ function EnableFly()
         local yVelocity = 0
         if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
             yVelocity = Config.Fly.Speed
-        elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+        elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) or UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
             yVelocity = -Config.Fly.Speed
         end
         
@@ -552,7 +546,7 @@ function EnableFly()
         )
     end)
     
-    ShowNotification("Fly Ativado", "Use o analógico/WASD para mover e Space/Shift para subir/descer")
+    ShowNotification("Fly Ativado", "Use WASD para mover e Space/Shift para subir/descer")
 end
 
 function DisableFly()
@@ -572,7 +566,24 @@ local ESPFolder = Instance.new("Folder", GUI)
 ESPFolder.Name = "ESPElements"
 
 function EnableESP()
+    -- Criar ESP para jogadores existentes
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            UpdateESP(player)
+        end
+    end
+    
+    -- Verificar novos jogadores
+    Players.PlayerAdded:Connect(function(player)
+        if Config.ESP.Enabled then
+            UpdateESP(player)
+        end
+    end)
+    
+    -- Atualizar ESP constantemente
     RunService:BindToRenderStep("ESPLoop", 5, function()
+        if not Config.ESP.Enabled then return end
+        
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= LocalPlayer then
                 UpdateESP(player)
@@ -717,7 +728,7 @@ function GetClosestPlayerToCursor()
                 continue
             end
             
-           -- Verificar distância
+            -- Verificar distância
             local distance = (targetPart.Position - Camera.CFrame.Position).Magnitude
             if distance > Config.Aimbot.MaxDistance then
                 continue
@@ -751,108 +762,137 @@ function GetClosestPlayerToCursor()
     return closestPlayer
 end
 
--- Sistema de Aimbot
-RunService.RenderStepped:Connect(function()
-    UpdateFOVCircle()
-    
-    if Config.Aimbot.Enabled and UserInputService:IsKeyDown(Config.Aimbot.TriggerKey) then
-        local target = GetClosestPlayerToCursor()
-        if target then
-            local character = target.Character
-            if character and character:FindFirstChild(Config.Aimbot.TargetPart) then
-                local targetPart = character:FindFirstChild(Config.Aimbot.TargetPart)
-                
-                -- Suavidade do aimbot (menor = mais suave)
-                local smoothness = Config.Aimbot.Smoothness
-                
-                -- Calcular ângulo para mirar
-                local targetPos = targetPart.Position
-                local cameraPos = Camera.CFrame.Position
-                
-                local targetCFrame = CFrame.new(cameraPos, targetPos)
-                local cameraCFrame = Camera.CFrame
-                
-                -- Suavizar movimento da câmera
-                local newCFrame = cameraCFrame:Lerp(targetCFrame, smoothness)
-                
-                -- Aplicar nova rotação da câmera
-                Camera.CFrame = newCFrame
+function EnableAimbot()
+    RunService:BindToRenderStep("AimbotLoop", 1, function()
+        UpdateFOVCircle()
+        
+        if not Config.Aimbot.Enabled then return end
+        
+        if UserInputService:IsKeyDown(Config.Aimbot.TriggerKey) then
+            local target = GetClosestPlayerToCursor()
+            if target then
+                local character = target.Character
+                if character and character:FindFirstChild(Config.Aimbot.TargetPart) then
+                    local targetPart = character:FindFirstChild(Config.Aimbot.TargetPart)
+                    
+                    -- Suavidade do aimbot (menor = mais suave)
+                    local smoothness = Config.Aimbot.Smoothness
+                    
+                    -- Calcular ângulo para mirar
+                    local targetPos = targetPart.Position
+                    local cameraPos = Camera.CFrame.Position
+                    
+                    local targetCFrame = CFrame.new(cameraPos, targetPos)
+                    local cameraCFrame = Camera.CFrame
+                    
+                    -- Suavizar movimento da câmera
+                    local newCFrame = cameraCFrame:Lerp(targetCFrame, smoothness)
+                    
+                    -- Aplicar nova rotação da câmera
+                    Camera.CFrame = newCFrame
+                end
             end
         end
-    end
-end)
-
--- Sistema de notificações
-local NotificationFrame = CreateElement("Frame", {
-    Name = "NotificationFrame",
-    BackgroundColor3 = Color3.fromRGB(35, 35, 45),
-    BorderSizePixel = 0,
-    Position = UDim2.new(0.5, -150, 0, -100),
-    Size = UDim2.new(0, 300, 0, 70),
-    ZIndex = 100,
-    Parent = GUI
-})
-
-CreateCorner(NotificationFrame, 8)
-CreateStroke(NotificationFrame, Color3.fromRGB(60, 60, 80), 1.5)
-CreateGradient(NotificationFrame, {Color3.fromRGB(40, 40, 60), Color3.fromRGB(30, 30, 45)}, 90)
-
-local NotificationTitle = CreateElement("TextLabel", {
-    Name = "Title",
-    BackgroundTransparency = 1,
-    Position = UDim2.new(0, 15, 0, 10),
-    Size = UDim2.new(1, -30, 0, 20),
-    Font = Enum.Font.GothamBold,
-    Text = "Notificação",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextSize = 16,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    ZIndex = 101,
-    Parent = NotificationFrame
-})
-
-local NotificationText = CreateElement("TextLabel", {
-    Name = "Text",
-    BackgroundTransparency = 1,
-    Position = UDim2.new(0, 15, 0, 35),
-    Size = UDim2.new(1, -30, 0, 20),
-    Font = Enum.Font.Gotham,
-    Text = "",
-    TextColor3 = Color3.fromRGB(200, 200, 200),
-    TextSize = 14,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    ZIndex = 101,
-    Parent = NotificationFrame
-})
-
-function ShowNotification(title, text)
-    NotificationTitle.Text = title
-    NotificationText.Text = text
-    
-    TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(0.5, -150, 0, 20)}):Play()
-    
-    task.delay(3, function()
-        TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(0.5, -150, 0, -100)}):Play()
     end)
+    
+    ShowNotification("Aimbot Ativado", "Pressione E para ativar o aimbot")
 end
 
--- Inicialização
-ShowNotification("THEUS-HUB Premium", "Script carregado com sucesso!")
+function DisableAimbot()
+    RunService:UnbindFromRenderStep("AimbotLoop")
+    FOVCircle.Visible = false
+    
+    ShowNotification("Aimbot Desativado", "Aimbot desligado")
+end
 
--- Evento de jogador adicionado para ESP
-Players.PlayerAdded:Connect(function(player)
-    if Config.ESP.Enabled then
-        UpdateESP(player)
+-- Configurar abas
+-- Aba Fly
+local FlyToggle, UpdateFlyToggle = CreateToggle(FlyTab, "Ativar Fly", Config.Fly.Enabled, function(value)
+    Config.Fly.Enabled = value
+    if value then
+        EnableFly()
+    else
+        DisableFly()
     end
 end)
+
+CreateSlider(FlyTab, "Velocidade", 10, 150, Config.Fly.Speed, function(value)
+    Config.Fly.Speed = value
+end)
+
+-- Aba ESP
+local ESPToggle, UpdateESPToggle = CreateToggle(ESPTab, "Ativar ESP", Config.ESP.Enabled, function(value)
+    Config.ESP.Enabled = value
+    if value then
+        EnableESP()
+    else
+        DisableESP()
+    end
+end)
+
+CreateToggle(ESPTab, "Mostrar Nomes", Config.ESP.ShowName, function(value)
+    Config.ESP.ShowName = value
+end)
+
+CreateToggle(ESPTab, "Mostrar Distância", Config.ESP.ShowDistance, function(value)
+    Config.ESP.ShowDistance = value
+end)
+
+CreateToggle(ESPTab, "Verificar Time", Config.ESP.TeamCheck, function(value)
+    Config.ESP.TeamCheck = value
+end)
+
+CreateToggle(ESPTab, "Caixas", Config.ESP.BoxEnabled, function(value)
+    Config.ESP.BoxEnabled = value
+end)
+
+CreateToggle(ESPTab, "Tracers", Config.ESP.TracerEnabled, function(value)
+    Config.ESP.TracerEnabled = value
+end)
+
+-- Aba Aimbot
+local AimbotToggle, UpdateAimbotToggle = CreateToggle(AimbotTab, "Ativar Aimbot", Config.Aimbot.Enabled, function(value)
+    Config.Aimbot.Enabled = value
+    if value then
+        EnableAimbot()
+    else
+        DisableAimbot()
+    end
+end)
+
+CreateToggle(AimbotTab, "Verificar Time", Config.Aimbot.TeamCheck, function(value)
+    Config.Aimbot.TeamCheck = value
+end)
+
+CreateToggle(AimbotTab, "Verificar Visibilidade", Config.Aimbot.VisibilityCheck, function(value)
+    Config.Aimbot.VisibilityCheck = value
+end)
+
+CreateToggle(AimbotTab, "Mostrar FOV", Config.Aimbot.ShowFOV, function(value)
+    Config.Aimbot.ShowFOV = value
+    FOVCircle.Visible = value and Config.Aimbot.Enabled
+end)
+
+CreateSlider(AimbotTab, "FOV", 30, 500, Config.Aimbot.FOV, function(value)
+    Config.Aimbot.FOV = value
+    UpdateFOVCircle()
+end)
+
+CreateSlider(AimbotTab, "Suavidade", 1, 10, Config.Aimbot.Smoothness * 10, function(value)
+    Config.Aimbot.Smoothness = value / 10
+end)
+
+-- Inicializar o FOV do Aimbot
+UpdateFOVCircle()
 
 -- Atalhos de teclado
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     
-    -- Tecla F para ativar/desativar o fly
+    -- Tecla X para ativar/desativar o fly
     if input.KeyCode == Enum.KeyCode.X then
         Config.Fly.Enabled = not Config.Fly.Enabled
+        UpdateFlyToggle(Config.Fly.Enabled)
         if Config.Fly.Enabled then
             EnableFly()
         else
@@ -863,10 +903,22 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     -- Tecla V para ativar/desativar o ESP
     if input.KeyCode == Enum.KeyCode.V then
         Config.ESP.Enabled = not Config.ESP.Enabled
+        UpdateESPToggle(Config.ESP.Enabled)
         if Config.ESP.Enabled then
             EnableESP()
         else
             DisableESP()
+        end
+    end
+    
+    -- Tecla B para ativar/desativar o Aimbot
+    if input.KeyCode == Enum.KeyCode.B then
+        Config.Aimbot.Enabled = not Config.Aimbot.Enabled
+        UpdateAimbotToggle(Config.Aimbot.Enabled)
+        if Config.Aimbot.Enabled then
+            EnableAimbot()
+        else
+            DisableAimbot()
         end
     end
 end)
@@ -892,8 +944,52 @@ LocalPlayer.CharacterRemoving:Connect(function()
     if Config.Fly.Enabled then
         Config.Fly.Enabled = false
         DisableFly()
+        UpdateFlyToggle(false)
     end
+end)
+
+-- Inicializar automaticamente o FOV do Aimbot
+spawn(function()
+    while true do
+        if Config.Aimbot.ShowFOV and Config.Aimbot.Enabled then
+            UpdateFOVCircle()
+        end
+        wait(0.1)
+    end
+end)
+
+-- Fechar script
+local CloseButton = CreateElement("TextButton", {
+    Name = "CloseButton",
+    BackgroundColor3 = Color3.fromRGB(255, 80, 80),
+    BorderSizePixel = 0,
+    Position = UDim2.new(1, -30, 0, 5),
+    Size = UDim2.new(0, 25, 0, 25),
+    Font = Enum.Font.GothamBold,
+    Text = "X",
+    TextColor3 = Color3.fromRGB(255, 255, 255),
+    TextSize = 14,
+    ZIndex = 15,
+    Parent = TitleBar
+})
+
+CreateCorner(CloseButton, 4)
+
+CloseButton.MouseButton1Click:Connect(function()
+    -- Desativar todas as funcionalidades
+    if Config.Fly.Enabled then DisableFly() end
+    if Config.ESP.Enabled then DisableESP() end
+    if Config.Aimbot.Enabled then DisableAimbot() end
+    
+    -- Limpar FOV Circle
+    FOVCircle:Remove()
+    
+    -- Destruir GUI
+    GUI:Destroy()
 end)
 
 -- Iniciar na primeira aba
 TabButtons[1].MouseButton1Click:Fire()
+
+-- Notificação inicial
+ShowNotification("THEUS-HUB Premium", "Script carregado com sucesso!")
