@@ -2829,4 +2829,256 @@ Server: %s
                 Background = Color3.fromRGB(20, 80, 20),
                 Section = Color3.fromRGB(30, 90, 30),
                 Button = Color3.fromRGB(40, 100, 40),
-                Accent = Color3.fromRGB(50, 255,
+                Accent = Color3.fromRGB(50, 255, 50)
+            },
+            Purple = {
+                Background = Color3.fromRGB(60, 20, 80),
+                Section = Color3.fromRGB(70, 30, 90),
+                Button = Color3.fromRGB(80, 40, 100),
+                Accent = Color3.fromRGB(170, 50, 255)
+            }
+        }
+        
+        local Colors = ThemeColors[Value]
+        
+        -- Update UI colors
+        MainFrame.BackgroundColor3 = Colors.Background
+        TopBar.BackgroundColor3 = Colors.Section
+        TabButtons.BackgroundColor3 = Colors.Section
+        TabContent.BackgroundColor3 = Colors.Section
+        
+        -- Update all sections
+        for _, Tab in pairs(Tabs) do
+            for _, Child in pairs(Tab.Frame:GetChildren()) do
+                if Child:IsA("Frame") and Child.Name:find("Section") then
+                    Child.BackgroundColor3 = Colors.Section
+                    
+                    -- Update section content
+                    for _, Content in pairs(Child:GetDescendants()) do
+                        if Content:IsA("TextButton") and not Content:FindFirstChild("Circle") then
+                            Content.BackgroundColor3 = Colors.Button
+                        elseif Content.Name == "Button" and Content:IsA("Frame") then
+                            -- Toggle button background
+                            if Content.BackgroundColor3 ~= ThemeColors[Settings.UISettings.Theme].Accent then
+                                Content.BackgroundColor3 = Colors.Button
+                            else
+                                Content.BackgroundColor3 = Colors.Accent
+                            end
+                        elseif Content.Name == "Background" and Content:IsA("Frame") then
+                            -- Slider background
+                            Content.BackgroundColor3 = Colors.Button
+                        elseif Content.Name == "Fill" and Content:IsA("Frame") then
+                            -- Slider fill
+                            Content.BackgroundColor3 = Colors.Accent
+                        end
+                    end
+                end
+            end
+        end
+    end)
+    
+    local TransparencySlider = CreateSlider(UISettingsSection, "UI Transparency", 0, 1, Settings.UISettings.Transparency, function(Value)
+        Settings.UISettings.Transparency = Value
+        
+        -- Apply transparency to main elements
+        MainFrame.BackgroundTransparency = Value
+        TopBar.BackgroundTransparency = Value
+        TabButtons.BackgroundTransparency = Value
+        TabContent.BackgroundTransparency = Value
+        
+        -- Apply to all sections
+        for _, Tab in pairs(Tabs) do
+            for _, Child in pairs(Tab.Frame:GetChildren()) do
+                if Child:IsA("Frame") and Child.Name:find("Section") then
+                    Child.BackgroundTransparency = Value
+                end
+            end
+        end
+    end)
+    
+    local UISizeDropdown = CreateDropdown(UISettingsSection, "UI Size", {"Small", "Normal", "Large"}, Settings.UISettings.UISize, function(Value)
+        Settings.UISettings.UISize = Value
+        
+        -- Apply size changes
+        local SizeMultipliers = {
+            Small = 0.8,
+            Normal = 1,
+            Large = 1.2
+        }
+        
+        local Multiplier = SizeMultipliers[Value](MainFrame.Size) = UDim2.new(0, 700 * Multiplier, 0, 450 * Multiplier)
+        OriginalSize = MainFrame.Size
+        
+        -- Adjust positions if minimized
+        if Minimized then
+            MainFrame.Size = UDim2.new(0, MainFrame.Size.X.Offset, 0, TopBar.Size.Y.Offset)
+        end
+    end)
+    
+    local HotkeySection = CreateSection(SettingsTab, "Hotkeys")
+    
+    local MinimizeKeyDropdown = CreateDropdown(HotkeySection, "Minimize Key", {"RightControl", "RightAlt", "LeftControl", "LeftAlt"}, "RightControl", function(Value)
+        -- Map string to KeyCode
+        local KeyMap = {
+            RightControl = Enum.KeyCode.RightControl,
+            RightAlt = Enum.KeyCode.RightAlt,
+            LeftControl = Enum.KeyCode.LeftControl,
+            LeftAlt = Enum.KeyCode.LeftAlt
+        }
+        
+        Settings.UISettings.MinimizeKey = KeyMap[Value]
+    end)
+    
+    -- Setup minimize hotkey
+    UserInputService.InputBegan:Connect(function(Input, GameProcessed)
+        if not GameProcessed and Input.KeyCode == Settings.UISettings.MinimizeKey then
+            MinimizeButton.MouseButton1Click:Fire()
+        end
+    end)
+    
+    local WebhookSection = CreateSection(SettingsTab, "Discord Webhook")
+    
+    local WebhookToggle = CreateToggle(WebhookSection, "Enable Webhook", Settings.Webhooks.Enabled, function(Value)
+        Settings.Webhooks.Enabled = Value
+    end)
+    
+    local WebhookURLInput = Instance.new("TextBox")
+    WebhookURLInput.Name = "WebhookURL"
+    WebhookURLInput.PlaceholderText = "Enter Discord Webhook URL"
+    WebhookURLInput.Text = Settings.Webhooks.URL
+    WebhookURLInput.ClearTextOnFocus = false
+    WebhookURLInput.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    WebhookURLInput.BorderSizePixel = 0
+    WebhookURLInput.Size = UDim2.new(1, 0, 0, 30)
+    WebhookURLInput.Font = Enum.Font.Gotham
+    WebhookURLInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+    WebhookURLInput.TextSize = 14
+    WebhookURLInput.Parent = WebhookSection
+    
+    local UICorner_WebhookURLInput = Instance.new("UICorner")
+    UICorner_WebhookURLInput.CornerRadius = UDim.new(0, 6)
+    UICorner_WebhookURLInput.Parent = WebhookURLInput
+    
+    WebhookURLInput.FocusLost:Connect(function()
+        Settings.Webhooks.URL = WebhookURLInput.Text
+    end)
+    
+    local NotifyRareFruitToggle = CreateToggle(WebhookSection, "Notify on Rare Fruit", Settings.Webhooks.NotifyOnRareFruit, function(Value)
+        Settings.Webhooks.NotifyOnRareFruit = Value
+    end)
+    
+    local NotifyLevelUpToggle = CreateToggle(WebhookSection, "Notify on Level Up", Settings.Webhooks.NotifyOnLevelUp, function(Value)
+        Settings.Webhooks.NotifyOnLevelUp = Value
+    end)
+    
+    local WebhookCooldownSlider = CreateSlider(WebhookSection, "Notification Cooldown (seconds)", 60, 600, Settings.Webhooks.NotifyCooldown, function(Value)
+        Settings.Webhooks.NotifyCooldown = Value
+    end)
+    
+    CreateButton(WebhookSection, "Test Webhook", function()
+        if Settings.Webhooks.URL == "" then
+            ShowNotification("Webhook", "Please enter a webhook URL first", 3, "Warning")
+            return
+        end
+        
+        SendWebhook(
+            "Webhook Test",
+            "This is a test webhook from HoHo Hub Premium",
+            65280, -- Green
+            {
+                {name = "Player", value = Player.Name, inline = true},
+                {name = "Level", value = GetPlayerLevel(), inline = true},
+                {name = "Current Sea", value = GetCurrentSea(), inline = true}
+            }
+        )
+        
+        ShowNotification("Webhook", "Test webhook sent", 3, "Success")
+    end)
+    
+    local CreditsSection = CreateSection(SettingsTab, "Credits")
+    
+    local CreditsText = Instance.new("TextLabel")
+    CreditsText.BackgroundTransparency = 1
+    CreditsText.Size = UDim2.new(1, 0, 0, 60)
+    CreditsText.Font = Enum.Font.Gotham
+    CreditsText.Text = "HoHo Hub Premium\nDeveloped by LuaXpert Team\n\nThank you for using our script!"
+    CreditsText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CreditsText.TextSize = 14
+    CreditsText.Parent = CreditsSection
+    
+    -- Initialize the GUI
+    ShowNotification("HoHo Hub", "Successfully loaded HoHo Hub Premium v" .. CurrentVersion, 5, "Success")
+    
+    -- Set up anti-AFK
+    Player.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+        ShowNotification("Anti-AFK", "Prevented AFK kick", 3, "Info")
+    end)
+    
+    -- Setup level-up notification
+    local CurrentLevel = GetPlayerLevel()
+    spawn(function()
+        while wait(5) do
+            local NewLevel = GetPlayerLevel()
+            if NewLevel > CurrentLevel then
+                ShowNotification("Level Up", "You leveled up from " .. CurrentLevel .. " to " .. NewLevel, 5, "Success")
+                
+                if Settings.Webhooks.Enabled and Settings.Webhooks.NotifyOnLevelUp then
+                    SendWebhook(
+                        "Level Up",
+                        "Player has leveled up",
+                        65280, -- Green
+                        {
+                            {name = "Player", value = Player.Name, inline = true},
+                            {name = "From Level", value = CurrentLevel, inline = true},
+                            {name = "To Level", value = NewLevel, inline = true}
+                        }
+                    )
+                end
+                
+                CurrentLevel = NewLevel
+            end
+        end
+    end)
+    
+    -- Setup fruit finder
+    workspace.ChildAdded:Connect(function(Child)
+        if Child.Name:find("Fruit") and Child:IsA("Tool") then
+            if Settings.Miscellaneous.FruitFinder.Notify then
+                ShowNotification("Fruit Finder", "Found " .. Child.Name .. " in the world!", 5, "Success")
+            end
+            
+            local IsRare, Rarity = IsRareFruit(Child.Name)
+            if IsRare and Settings.Webhooks.Enabled and Settings.Webhooks.NotifyOnRareFruit then
+                SendWebhook(
+                    "Rare Fruit Found!",
+                    "HoHo Hub found a rare fruit in the world",
+                    65280, -- Green
+                    {
+                        {name = "Fruit", value = Child.Name, inline = true},
+                        {name = "Rarity", value = Rarity, inline = true},
+                        {name = "Player", value = Player.Name, inline = true},
+                        {name = "Level", value = GetPlayerLevel(), inline = true}
+                    }
+                )
+            end
+            
+            if Settings.Miscellaneous.FruitFinder.AutoPickup then
+                TeleportTo(Child.Handle.Position)
+                task.wait(0.5)
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CollectFruit", Child.Name)
+            end
+        end
+    end)
+    
+    IsExecuted = true
+    return HoHoHub
+end
+
+-- Main execution check
+if not IsExecuted then
+    CreateMainGUI()
+else
+    warn("HoHo Hub is already running!")
+end
