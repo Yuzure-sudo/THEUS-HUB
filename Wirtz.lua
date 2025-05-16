@@ -2178,3 +2178,655 @@ local function CreateMainGUI()
     -- Select the first tab by default
     MainTab.Button.MouseButton1Click:Fire()
     
+    -- Main Tab Content
+    local MainInfoSection = CreateSection(MainTab, "Information")
+    
+    local InfoText = Instance.new("TextLabel")
+    InfoText.BackgroundTransparency = 1
+    InfoText.Size = UDim2.new(1, 0, 0, 80)
+    InfoText.Font = Enum.Font.Gotham
+    InfoText.Text = "Welcome to Wirtz Premium for Blox Fruits!\n\nThis script provides powerful features to enhance your gameplay experience.\nUse the tabs to navigate between different feature categories."
+    InfoText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    InfoText.TextSize = 14
+    InfoText.TextWrapped = true
+    InfoText.TextXAlignment = Enum.TextXAlignment.Left
+    InfoText.TextYAlignment = Enum.TextYAlignment.Top
+    InfoText.Parent = MainInfoSection
+    
+    local PlayerInfoSection = CreateSection(MainTab, "Player Information")
+    
+    local PlayerInfoText = Instance.new("TextLabel")
+    PlayerInfoText.BackgroundTransparency = 1
+    PlayerInfoText.Size = UDim2.new(1, 0, 0, 120)
+    PlayerInfoText.Font = Enum.Font.Gotham
+    PlayerInfoText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    PlayerInfoText.TextSize = 14
+    PlayerInfoText.TextWrapped = true
+    PlayerInfoText.TextXAlignment = Enum.TextXAlignment.Left
+    PlayerInfoText.TextYAlignment = Enum.TextYAlignment.Top
+    PlayerInfoText.Parent = PlayerInfoSection
+    
+    -- Update player info periodically
+    local function UpdatePlayerInfo()
+        local CurrentSea = GetCurrentSea()
+        local PlayerLevel = GetPlayerLevel() or "N/A"
+        local Beli = Player.Data.Beli.Value or 0
+        local Fragments = Player.Data.Fragments.Value or 0
+        
+        local InfoString = string.format([[
+Player: %s
+Level: %s
+Beli: %s
+Fragments: %s
+Current Sea: %s
+Server: %s
+        ]], 
+        Player.Name,
+        PlayerLevel,
+        tostring(Beli),
+        tostring(Fragments),
+        CurrentSea,
+        game.JobId)
+        
+        PlayerInfoText.Text = InfoString
+    end
+    
+    UpdatePlayerInfo()
+    
+    -- Update player info every 5 seconds
+    spawn(function()
+        while wait(5) do
+            if PlayerInfoText and PlayerInfoText.Parent then
+                UpdatePlayerInfo()
+            else
+                break
+            end
+        end
+    end)
+    
+    local QuickActionsSection = CreateSection(MainTab, "Quick Actions")
+    
+    CreateButton(QuickActionsSection, "Redeem All Codes", function()
+        local Codes = {
+            "JULYUPDATE", "KITT_RESET", "SUB2CAPTAINMAUI", "DEVSCOOKING", 
+            "KITT_RESET", "SUB2DAIGROCK", "SUB2NOOBMASTER123", "XMASEXP",
+            "GAMERROBOT_YT", "SUBGAMERROBOT_RESET1", "GAMER_ROBOT_1M",
+            "TY_FOR_WATCHING", "ENYU_IS_PRO", "FUDD10", "BIGNEWS", "THEGREATACE",
+            "SUB2GAMERROBOT_EXP1", "STRAWHATMAINE", "SUB2OFFICIALNOOBIE",
+            "TANTAIGAMING", "JCWK", "STARCODEHEO", "MAGICBUS", "NEWTROLL",
+            "KITT_RESET", "SUB2UNCLEKIZARU", "SUB2NOOBMASTER123", "KITT_RESET",
+            "KITT_RESET", "KITT_RESET", "KITT_RESET", "KITT_RESET"
+        }
+        
+        for _, Code in pairs(Codes) do
+            game:GetService("ReplicatedStorage").Remotes.Redeem:InvokeServer(Code)
+            wait(0.5)
+        end
+        
+        ShowNotification("Codes", "All codes have been redeemed!", 5, "Success")
+    end)
+    
+    CreateButton(QuickActionsSection, "Server Hop", function()
+        ServerHop()
+    end)
+    
+    CreateButton(QuickActionsSection, "Rejoin Server", function()
+        game:GetService("TeleportService"):Teleport(game.PlaceId, Player)
+    end)
+    
+    -- Auto Farm Tab Content
+    local AutoFarmSection = CreateSection(AutoFarmTab, "Auto Farm Settings")
+    
+    local AutoFarmToggle = CreateToggle(AutoFarmSection, "Enable Auto Farm", Settings.AutoFarm.Enabled, function(Value)
+        Settings.AutoFarm.Enabled = Value
+        
+        if Value then
+            StartAutoFarm()
+        else
+            StopAutoFarm()
+        end
+    end)
+    
+    local AutoFarmTypeDropdown = CreateDropdown(AutoFarmSection, "Farm Type", {"Level", "Mob", "Boss", "Fruit", "Material"}, Settings.AutoFarm.Type, function(Value)
+        Settings.AutoFarm.Type = Value
+        
+        -- Restart auto farm if it's running
+        if Settings.AutoFarm.Enabled then
+            StopAutoFarm()
+            StartAutoFarm()
+        end
+    end)
+    
+    local DistanceSlider = CreateSlider(AutoFarmSection, "Distance From Mob", 1, 20, Settings.AutoFarm.DistanceFromMob, function(Value)
+        Settings.AutoFarm.DistanceFromMob = Value
+    end)
+    
+    local AttackMethodDropdown = CreateDropdown(AutoFarmSection, "Attack Method", {"Normal", "Skill", "Fruit", "Gun", "Sword"}, Settings.AutoFarm.AttackMethod, function(Value)
+        Settings.AutoFarm.AttackMethod = Value
+    end)
+    
+    local AutoEquipToggle = CreateToggle(AutoFarmSection, "Auto Equip Weapon", Settings.AutoFarm.AutoEquipWeapon, function(Value)
+        Settings.AutoFarm.AutoEquipWeapon = Value
+    end)
+    
+    local SafeModeToggle = CreateToggle(AutoFarmSection, "Safe Mode", Settings.AutoFarm.SafeMode, function(Value)
+        Settings.AutoFarm.SafeMode = Value
+    end)
+    
+    local TweenSpeedSlider = CreateSlider(AutoFarmSection, "Tween Speed", 50, 300, Settings.AutoFarm.TweenSpeed, function(Value)
+        Settings.AutoFarm.TweenSpeed = Value
+    end)
+    
+    local HopIfLagsToggle = CreateToggle(AutoFarmSection, "Hop If Server Lags", Settings.AutoFarm.HopIfServerLags, function(Value)
+        Settings.AutoFarm.HopIfServerLags = Value
+    end)
+    
+    -- Boss Farm Section
+    local BossFarmSection = CreateSection(AutoFarmTab, "Boss Farm")
+    
+    -- Get boss names for current sea
+    local CurrentSeaBosses = {}
+    for _, Boss in pairs(BossData[GetCurrentSea()]) do
+        table.insert(CurrentSeaBosses, Boss.Name)
+    end
+    
+    local BossDropdown = CreateDropdown(BossFarmSection, "Select Boss", CurrentSeaBosses, Settings.AutoFarm.TargetBoss or CurrentSeaBosses[1], function(Value)
+        Settings.AutoFarm.TargetBoss = Value
+    end)
+    
+    CreateButton(BossFarmSection, "Start Boss Farm", function()
+        Settings.AutoFarm.Type = "Boss"
+        Settings.AutoFarm.Enabled = true
+        StartAutoFarm()
+        ShowNotification("Auto Farm", "Boss farm started for " .. Settings.AutoFarm.TargetBoss, 3, "Success")
+    end)
+    
+    -- Material Farm Section
+    local MaterialFarmSection = CreateSection(AutoFarmTab, "Material Farm")
+    
+    local Materials = {"Angel Wings", "Leather", "Scrap Metal", "Demonic Wisp", "Conjured Cocoa", "Dragon Scale", "Gunpowder", "Fish Tail", "Magma Ore", "Vampire Fang"}
+    
+    local MaterialDropdown = CreateDropdown(MaterialFarmSection, "Select Material", Materials, Settings.AutoFarm.TargetItem or Materials[1], function(Value)
+        Settings.AutoFarm.TargetItem = Value
+    end)
+    
+    CreateButton(MaterialFarmSection, "Start Material Farm", function()
+        Settings.AutoFarm.Type = "Item"
+        Settings.AutoFarm.Enabled = true
+        StartAutoFarm()
+        ShowNotification("Auto Farm", "Material farm started for " .. Settings.AutoFarm.TargetItem, 3, "Success")
+    end)
+    
+    -- Fruit Farm Section
+    local FruitFarmSection = CreateSection(AutoFarmTab, "Fruit Farm")
+    
+    local FruitFarmToggle = CreateToggle(FruitFarmSection, "Auto Collect Fruits", Settings.Miscellaneous.FruitFinder.Enabled, function(Value)
+        Settings.Miscellaneous.FruitFinder.Enabled = Value
+        
+        if Value then
+            Settings.AutoFarm.Type = "Fruit"
+            Settings.AutoFarm.Enabled = true
+            StartAutoFarm()
+            ShowNotification("Auto Farm", "Fruit farm started", 3, "Success")
+        else
+            if Settings.AutoFarm.Type == "Fruit" then
+                Settings.AutoFarm.Enabled = false
+                StopAutoFarm()
+            end
+        end
+    end)
+    
+    local NotifyFruitToggle = CreateToggle(FruitFarmSection, "Notify on Fruit Spawn", Settings.Miscellaneous.FruitFinder.Notify, function(Value)
+        Settings.Miscellaneous.FruitFinder.Notify = Value
+    end)
+    
+    local AutoPickupToggle = CreateToggle(FruitFarmSection, "Auto Pickup Fruits", Settings.Miscellaneous.FruitFinder.AutoPickup, function(Value)
+        Settings.Miscellaneous.FruitFinder.AutoPickup = Value
+    end)
+    
+    -- Teleport Tab Content
+    local IslandTeleportSection = CreateSection(TeleportTab, "Island Teleport")
+    
+    local CurrentSeaIslands = {}
+    for _, Island in pairs(IslandLocations[GetCurrentSea()]) do
+        table.insert(CurrentSeaIslands, Island.Name)
+    end
+    
+    local IslandDropdown = CreateDropdown(IslandTeleportSection, "Select Island", CurrentSeaIslands, Settings.Teleportation.SelectedIsland or CurrentSeaIslands[1], function(Value)
+        Settings.Teleportation.SelectedIsland = Value
+    end)
+    
+    local TeleportMethodDropdown = CreateDropdown(IslandTeleportSection, "Teleport Method", {"Instant", "Smooth"}, Settings.Teleportation.TeleportMethod, function(Value)
+        Settings.Teleportation.TeleportMethod = Value
+    end)
+    
+    CreateButton(IslandTeleportSection, "Teleport to Island", function()
+        for _, Island in pairs(IslandLocations[GetCurrentSea()]) do
+            if Island.Name == Settings.Teleportation.SelectedIsland then
+                TeleportTo(Island.Position, Settings.Teleportation.TeleportMethod)
+                ShowNotification("Teleport", "Teleporting to " .. Island.Name, 3, "Info")
+                break
+            end
+        end
+    end)
+    
+    -- NPC Teleport Section
+    local NPCTeleportSection = CreateSection(TeleportTab, "NPC Teleport")
+    
+    local NPCTypes = {"Quest Givers", "Fruit Dealers", "Special NPCs"}
+    
+    local NPCTypeDropdown = CreateDropdown(NPCTeleportSection, "NPC Type", NPCTypes, NPCTypes[1], function(Value)
+        -- Update NPC list based on selected type
+        local NPCList = {}
+        
+        if Value == "Quest Givers" then
+            for _, NPC in pairs(workspace.NPCs:GetChildren()) do
+                if NPC:FindFirstChild("QuestLevel") then
+                    table.insert(NPCList, NPC.Name)
+                end
+            end
+        elseif Value == "Fruit Dealers" then
+            for _, Dealer in pairs(DevilFruitShops[GetCurrentSea()]) do
+                table.insert(NPCList, Dealer.Name)
+            end
+        elseif Value == "Special NPCs" then
+            local SpecialNPCs = {"Mysterious Man", "Mysterious Scientist", "Boat Dealer", "Blox Fruits Dealer", "Sword Dealer", "Legendary Sword Dealer"}
+            NPCList = SpecialNPCs
+        end
+        
+        -- Update dropdown
+        NPCDropdown:RemoveOption(NPCDropdown:GetValue())
+        for _, NPC in pairs(NPCList) do
+            NPCDropdown:AddOption(NPC)
+        end
+        
+        if #NPCList > 0 then
+            NPCDropdown:SetValue(NPCList[1])
+        end
+    end)
+    
+    local NPCDropdown = CreateDropdown(NPCTeleportSection, "Select NPC", {}, "Select...", function(Value)
+        -- NPC selected
+    end)
+    
+    CreateButton(NPCTeleportSection, "Teleport to NPC", function()
+        local SelectedNPC = NPCDropdown:GetValue()
+        
+        if SelectedNPC == "Select..." then
+            ShowNotification("Teleport", "Please select an NPC first", 3, "Warning")
+            return
+        end
+        
+        -- Find NPC in workspace
+        for _, NPC in pairs(workspace.NPCs:GetChildren()) do
+            if NPC.Name == SelectedNPC and NPC:FindFirstChild("HumanoidRootPart") then
+                TeleportTo(NPC.HumanoidRootPart.Position, Settings.Teleportation.TeleportMethod)
+                ShowNotification("Teleport", "Teleporting to " .. SelectedNPC, 3, "Info")
+                return
+            end
+        end
+        
+        -- Check fruit dealers
+        for _, Dealer in pairs(DevilFruitShops[GetCurrentSea()]) do
+            if Dealer.Name == SelectedNPC then
+                TeleportTo(Dealer.Position, Settings.Teleportation.TeleportMethod)
+                ShowNotification("Teleport", "Teleporting to " .. SelectedNPC, 3, "Info")
+                return
+            end
+        end
+        
+        ShowNotification("Teleport", "Could not find " .. SelectedNPC, 3, "Error")
+    end)
+    
+    -- Sea Teleport Section
+    local SeaTeleportSection = CreateSection(TeleportTab, "Sea Teleport")
+    
+    local Seas = {"First Sea", "Second Sea", "Third Sea"}
+    
+    local SeaDropdown = CreateDropdown(SeaTeleportSection, "Select Sea", Seas, GetCurrentSea(), function(Value)
+        -- Sea selected
+    end)
+    
+    CreateButton(SeaTeleportSection, "Teleport to Sea", function()
+        local SelectedSea = SeaDropdown:GetValue()
+        
+        if SelectedSea == GetCurrentSea() then
+            ShowNotification("Teleport", "You are already in " .. SelectedSea, 3, "Warning")
+            return
+        end
+        
+        local PlaceIds = {
+            ["First Sea"] = 2753915549,
+            ["Second Sea"] = 4442272183,
+            ["Third Sea"] = 7449423635
+        }
+        
+        if PlaceIds[SelectedSea] then
+            ShowNotification("Teleport", "Teleporting to " .. SelectedSea, 3, "Info")
+            game:GetService("TeleportService"):Teleport(PlaceIds[SelectedSea], Player)
+        else
+            ShowNotification("Teleport", "Invalid sea selected", 3, "Error")
+        end
+    end)
+    
+    -- Raid Tab Content
+    local RaidSettingsSection = CreateSection(RaidTab, "Raid Settings")
+    
+    local RaidToggle = CreateToggle(RaidSettingsSection, "Auto Raid", Settings.AutoRaid.Enabled, function(Value)
+        Settings.AutoRaid.Enabled = Value
+        
+        if Value then
+            StartAutoRaid()
+        else
+            StopAutoRaid()
+        end
+    end)
+    
+    local RaidTypeDropdown = CreateDropdown(RaidSettingsSection, "Raid Type", FruitsList.Common, Settings.AutoRaid.SelectedRaids[1] or FruitsList.Common[1], function(Value)
+        Settings.AutoRaid.SelectedRaids[1] = Value
+    end)
+    
+    local BuyChipToggle = CreateToggle(RaidSettingsSection, "Auto Buy Microchip", Settings.AutoRaid.AutoBuyMicrochip, function(Value)
+        Settings.AutoRaid.AutoBuyMicrochip = Value
+    end)
+    
+    local RaidModeDropdown = CreateDropdown(RaidSettingsSection, "Raid Mode", {"Normal", "Private"}, Settings.AutoRaid.RaidMode, function(Value)
+        Settings.AutoRaid.RaidMode = Value
+    end)
+    
+    local EatFruitsToggle = CreateToggle(RaidSettingsSection, "Eat Fruits for Raids", Settings.AutoRaid.EatFruits, function(Value)
+        Settings.AutoRaid.EatFruits = Value
+    end)
+    
+    -- Raid Rewards Section
+    local RaidRewardsSection = CreateSection(RaidTab, "Raid Rewards")
+    
+    local StoreFruitsToggle = CreateToggle(RaidRewardsSection, "Store Specific Fruits", true, function(Value)
+        -- Toggle for storing specific fruits
+    end)
+    
+    local SpecificFruits = {"Dragon", "Dough", "Leopard", "Venom", "Shadow", "Control", "Paw", "Rumble"}
+    
+    for _, Fruit in pairs(SpecificFruits) do
+        CreateToggle(RaidRewardsSection, "Store " .. Fruit, table.find(Settings.AutoRaid.StoreSpecificFruits, Fruit) ~= nil, function(Value)
+            if Value then
+                if not table.find(Settings.AutoRaid.StoreSpecificFruits, Fruit) then
+                    table.insert(Settings.AutoRaid.StoreSpecificFruits, Fruit)
+                end
+            else
+                local Index = table.find(Settings.AutoRaid.StoreSpecificFruits, Fruit)
+                if Index then
+                    table.remove(Settings.AutoRaid.StoreSpecificFruits, Index)
+                end
+            end
+        end)
+    end
+    
+    -- Combat Tab Content
+    local PVPSection = CreateSection(CombatTab, "PVP Enhancements")
+    
+    local KillAuraToggle = CreateToggle(PVPSection, "Kill Aura", Settings.PVP.KillAura.Enabled, function(Value)
+        Settings.PVP.KillAura.Enabled = Value
+        ToggleKillAura()
+    end)
+    
+    local KillAuraRangeSlider = CreateSlider(PVPSection, "Kill Aura Range", 5, 50, Settings.PVP.KillAura.Range, function(Value)
+        Settings.PVP.KillAura.Range = Value
+    end)
+    
+    local TargetPlayersToggle = CreateToggle(PVPSection, "Target Players", Settings.PVP.KillAura.TargetPlayer, function(Value)
+        Settings.PVP.KillAura.TargetPlayer = Value
+    end)
+    
+    local TargetNPCsToggle = CreateToggle(PVPSection, "Target NPCs", Settings.PVP.KillAura.TargetNPC, function(Value)
+        Settings.PVP.KillAura.TargetNPC = Value
+    end)
+    
+    local AimBotToggle = CreateToggle(PVPSection, "Aim Bot", Settings.PVP.AimBot.Enabled, function(Value)
+        Settings.PVP.AimBot.Enabled = Value
+        
+        if Value then
+            -- Implement Aim Bot
+            if not PlayerConnections.AimBot then
+                PlayerConnections.AimBot = RunService.RenderStepped:Connect(function()
+                    if not Settings.PVP.AimBot.Enabled then
+                        PlayerConnections.AimBot:Disconnect()
+                        PlayerConnections.AimBot = nil
+                        return
+                    end
+                    
+                    local ClosestPlayer = nil
+                    local ClosestDistance = math.huge
+                    local ClosestAngle = math.rad(Settings.PVP.AimBot.FovSize)
+                    
+                    for _, Target in pairs(game:GetService("Players"):GetPlayers()) do
+                        if Target ~= Player and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart") and Target.Character:FindFirstChild("Humanoid") and Target.Character.Humanoid.Health > 0 then
+                            local TargetPos = Target.Character[Settings.PVP.AimBot.TargetPart].Position
+                            local Distance = GetDistance(HumanoidRootPart.Position, TargetPos)
+                            
+                            -- Check if target is within FOV
+                            local ScreenPoint = workspace.CurrentCamera:WorldToScreenPoint(TargetPos)
+                            local MousePos = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
+                            local Angle = math.atan2(ScreenPoint.Y - MousePos.Y, ScreenPoint.X - MousePos.X)
+                            
+                            if Distance < ClosestDistance and Angle < ClosestAngle then
+                                ClosestDistance = Distance
+                                ClosestPlayer = Target
+                            end
+                        end
+                    end
+                    
+                    if ClosestPlayer then
+                        workspace.CurrentCamera.CFrame = CFrame.new(
+                            workspace.CurrentCamera.CFrame.Position,
+                            ClosestPlayer.Character[Settings.PVP.AimBot.TargetPart].Position
+                        )
+                    end
+                end)
+            end
+        else
+            if PlayerConnections.AimBot then
+                PlayerConnections.AimBot:Disconnect()
+                PlayerConnections.AimBot = nil
+            end
+        end
+    end)
+    
+    local SilentAimToggle = CreateToggle(PVPSection, "Silent Aim", Settings.PVP.SilentAim, function(Value)
+        Settings.PVP.SilentAim = Value
+        
+        -- Implement Silent Aim
+        if Value then
+            local OldNamecall
+            OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
+                local Args = {...}
+                local Method = getnamecallmethod()
+                
+                if Method == "FireServer" and Self.Name == "RemoteEvent" and Args[1] == "Hit" then
+                    -- Find closest player
+                    local ClosestPlayer = nil
+                    local ClosestDistance = math.huge
+                    
+                    for _, Target in pairs(game:GetService("Players"):GetPlayers()) do
+                        if Target ~= Player and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart") and Target.Character:FindFirstChild("Humanoid") and Target.Character.Humanoid.Health > 0 then
+                            local Distance = GetDistance(HumanoidRootPart.Position, Target.Character.HumanoidRootPart.Position)
+                            
+                            if Distance < ClosestDistance then
+                                ClosestDistance = Distance
+                                ClosestPlayer = Target
+                            end
+                        end
+                    end
+                    
+                    if ClosestPlayer and ClosestDistance < 50 then
+                        Args[2] = ClosestPlayer.Character.HumanoidRootPart
+                    end
+                end
+                
+                return OldNamecall(Self, unpack(Args))
+            end)
+        end
+    end)
+    
+    local ESPSection = CreateSection(CombatTab, "ESP")
+    
+    local ESPToggle = CreateToggle(ESPSection, "Enable ESP", Settings.PVP.ESP.Enabled, function(Value)
+        Settings.PVP.ESP.Enabled = Value
+        ToggleESP()
+    end)
+    
+    local ShowPlayersToggle = CreateToggle(ESPSection, "Show Players", Settings.PVP.ESP.ShowPlayers, function(Value)
+        Settings.PVP.ESP.ShowPlayers = Value
+        
+        if Settings.PVP.ESP.Enabled then
+            ToggleESP() -- Refresh ESP
+            ToggleESP()
+        end
+    end)
+    
+    local ShowNPCsToggle = CreateToggle(ESPSection, "Show NPCs", Settings.PVP.ESP.ShowNPC, function(Value)
+        Settings.PVP.ESP.ShowNPC = Value
+        
+        if Settings.PVP.ESP.Enabled then
+            ToggleESP() -- Refresh ESP
+            ToggleESP()
+        end
+    end)
+    
+    local ShowChestsToggle = CreateToggle(ESPSection, "Show Chests", Settings.PVP.ESP.ShowChests, function(Value)
+        Settings.PVP.ESP.ShowChests = Value
+        
+        if Settings.PVP.ESP.Enabled then
+            ToggleESP() -- Refresh ESP
+            ToggleESP()
+        end
+    end)
+    
+    -- Misc Tab Content
+    local CharacterSection = CreateSection(MiscTab, "Character Enhancements")
+    
+    local WalkSpeedSlider = CreateSlider(CharacterSection, "Walk Speed", 16, 500, Settings.CharacterEnhancements.WalkSpeed, function(Value)
+        Settings.CharacterEnhancements.WalkSpeed = Value
+        UpdatePlayerSpeed()
+    end)
+    
+    local JumpPowerSlider = CreateSlider(CharacterSection, "Jump Power", 50, 500, Settings.CharacterEnhancements.JumpPower, function(Value)
+        Settings.CharacterEnhancements.JumpPower = Value
+        UpdatePlayerJump()
+    end)
+    
+    local InfiniteJumpToggle = CreateToggle(CharacterSection, "Infinite Jump", Settings.CharacterEnhancements.InfiniteJump, function(Value)
+        Settings.CharacterEnhancements.InfiniteJump = Value
+        
+        if Value then
+            EnableInfiniteJump()
+        else
+            DisableInfiniteJump()
+        end
+    end)
+    
+    local NoClipToggle = CreateToggle(CharacterSection, "No Clip", Settings.CharacterEnhancements.NoClip, function(Value)
+        Settings.CharacterEnhancements.NoClip = Value
+        
+        if Value then
+            EnableNoClip()
+        else
+            DisableNoClip()
+        end
+    end)
+    
+    local AutoHakiToggle = CreateToggle(CharacterSection, "Auto Buso Haki", Settings.CharacterEnhancements.AutoHaki, function(Value)
+        Settings.CharacterEnhancements.AutoHaki = Value
+        
+        if Value then
+            if not PlayerConnections.AutoHaki then
+                PlayerConnections.AutoHaki = RunService.Heartbeat:Connect(function()
+                    if not Player.Character:FindFirstChild("HasBuso") then
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Buso")
+                    end
+                end)
+            end
+        else
+            if PlayerConnections.AutoHaki then
+                PlayerConnections.AutoHaki:Disconnect()
+                PlayerConnections.AutoHaki = nil
+            end
+        end
+    end)
+    
+    local UtilitySection = CreateSection(MiscTab, "Utility")
+    
+    local FastAttackToggle = CreateToggle(UtilitySection, "Fast Attack", Settings.Miscellaneous.FastAttack.Enabled, function(Value)
+        Settings.Miscellaneous.FastAttack.Enabled = Value
+    end)
+    
+    local AttackSpeedSlider = CreateSlider(UtilitySection, "Attack Speed", 1, 3, Settings.Miscellaneous.FastAttack.AttackSpeed, function(Value)
+        Settings.Miscellaneous.FastAttack.AttackSpeed = Value
+    end)
+    
+    local ChestFarmToggle = CreateToggle(UtilitySection, "Auto Collect Chests", Settings.Miscellaneous.ChestFarm, function(Value)
+        Settings.Miscellaneous.ChestFarm = Value
+        
+        if Value then
+            if not PlayerConnections.ChestFarm then
+                PlayerConnections.ChestFarm = RunService.Heartbeat:Connect(function()
+                    if not Settings.Miscellaneous.ChestFarm then
+                        PlayerConnections.ChestFarm:Disconnect()
+                        PlayerConnections.ChestFarm = nil
+                        return
+                    end
+                    
+                    for _, Chest in pairs(workspace:GetChildren()) do
+                        if Chest.Name:find("Chest") and Chest:IsA("BasePart") then
+                            TeleportTo(Chest.Position)
+                            task.wait(1)
+                            break
+                        end
+                    end
+                end)
+            end
+        else
+            if PlayerConnections.ChestFarm then
+                PlayerConnections.ChestFarm:Disconnect()
+                PlayerConnections.ChestFarm = nil
+            end
+        end
+    end)
+    
+    -- Settings Tab Content
+    local UISettingsSection = CreateSection(SettingsTab, "UI Settings")
+    
+    local ThemeDropdown = CreateDropdown(UISettingsSection, "Theme", {"Dark", "Light", "Blue", "Red", "Green", "Purple"}, Settings.UISettings.Theme, function(Value)
+        Settings.UISettings.Theme = Value
+        
+        -- Apply theme
+        local ThemeColors = {
+            Dark = {
+                Background = Color3.fromRGB(30, 30, 30),
+                Section = Color3.fromRGB(40, 40, 40),
+                Button = Color3.fromRGB(60, 60, 60),
+                Accent = Color3.fromRGB(0, 170, 255)
+            },
+            Light = {
+                Background = Color3.fromRGB(240, 240, 240),
+                Section = Color3.fromRGB(220, 220, 220),
+                Button = Color3.fromRGB(200, 200, 200),
+                Accent = Color3.fromRGB(0, 120, 215)
+            },
+            Blue = {
+                Background = Color3.fromRGB(20, 40, 80),
+                Section = Color3.fromRGB(30, 50, 90),
+                Button = Color3.fromRGB(40, 60, 100),
+                Accent = Color3.fromRGB(0, 150, 255)
+            },
+            Red = {
+                Background = Color3.fromRGB(80, 20, 20),
+                Section = Color3.fromRGB(90, 30, 30),
+                Button = Color3.fromRGB(100, 40, 40),
+                Accent = Color3.fromRGB(255, 50, 50)
+            },
+            Green = {
+                Background = Color3.fromRGB(20, 80, 20),
+                Section = Color3.fromRGB(30, 90, 30),
+                Button = Color3.fromRGB(40, 100, 40),
+                Accent = Color3.fromRGB(50, 255,
