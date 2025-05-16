@@ -36,7 +36,7 @@
 -- end
 -- _G._secondaryData = nil
 -- _G.__userKey = nil
-print("✅ Security verification passed. Loading NoxHub...")
+print("✅ Security verification passed. Loading Wirtz Scripts...")
 if game.PlaceId == 2753915549 then
 	World1 = true;
 elseif game.PlaceId == 4442272183 then
@@ -97,16 +97,16 @@ _G.Settings = {
 		["Farm Mode"] = "Normal",
 		["Auto Farm"] = false,
 		["Auto Farm Fast"] = false,
-		["Selected Mastery Mode"] = "Quest",
-		["Auto Farm Fruit Mastery"] = false,
-		["Auto Farm Gun Mastery"] = false,
-		["Selected Mastery Sword"] = nil,
-		["Auto Farm Sword Mastery"] = false,
-		["Selected Mob"] = nil,
+		["Selected Maestria Mode"] = "Quest",
+		["Auto Farm Fruta Maestria"] = false,
+		["Auto Farm Arma Maestria"] = false,
+		["Selected Maestria Espada"] = nil,
+		["Auto Farm Espada Mastery"] = false,
+		["Selecione o Mob"] = nil,
 		["Auto Farm Mob"] = false,
-		["Selected Boss"] = nil,
+		["Selecione o Boss"] = nil,
 		["Auto Farm Boss"] = false,
-		["Auto Farm All Boss"] = false
+		["Auto Farm Todos os Boss"] = false
 	},
 	Event = {},
 	Farm = {
