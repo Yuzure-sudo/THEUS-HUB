@@ -1487,5 +1487,5 @@ return {
     Config = CONFIG,
     Version = "6.1",
     Creator = "WixT",
-    Discord = "wixttrokstire"
+    Discord = "wixttroks"
 }
