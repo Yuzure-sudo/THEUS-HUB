@@ -1460,7 +1460,7 @@ print("║                                                                      
 print("║                         📱 OTIMIZADO PARA DISPOSITIVOS MÓVEIS                        ║")
 print("║                               🎨 5000+ LINHAS DE CÓDIGO                              ║")
 print("║                              👨‍💻 CRIADO POR WIXT COM ❤️                               ║")
-print("║                                DC: wixttrokstire                                     ║")
+print("║                                DC: wixttroks                                     ║")
 print("╚══════════════════════════════════════════════════════════════════════════════════════╝")
 
 -- 🎮 RETORNO PARA CONTROLE EXTERNO
