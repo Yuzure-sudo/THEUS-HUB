@@ -1,26 +1,26 @@
 -- ═══════════════════════════════════════════════════════════════════════════════
--- 🚀 WIXT HUB - ROBLOX EXPLOIT MOBILE OPTIMIZED
+-- 🚀 WIXT HUB - MOBILE ULTRA OTIMIZADO COM AIMBOT PROFISSIONAL
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 local WixtHub = {}
 
--- 🎨 CONFIGURAÇÕES VISUAIS MOBILE
+-- 🎨 CONFIGURAÇÕES MOBILE
 local Config = {
     Name = "🔥 WixT Hub",
     Theme = {
-        Primary = Color3.fromRGB(0, 212, 255),
-        Secondary = Color3.fromRGB(153, 69, 255),
-        Success = Color3.fromRGB(0, 255, 136),
-        Warning = Color3.fromRGB(255, 170, 0),
-        Error = Color3.fromRGB(255, 0, 102),
-        Dark = Color3.fromRGB(26, 26, 26),
-        Background = Color3.fromRGB(15, 15, 15),
+        Primary = Color3.fromRGB(0, 162, 255),
+        Secondary = Color3.fromRGB(138, 43, 226),
+        Success = Color3.fromRGB(34, 197, 94),
+        Warning = Color3.fromRGB(251, 146, 60),
+        Error = Color3.fromRGB(239, 68, 68),
+        Dark = Color3.fromRGB(17, 24, 39),
+        Background = Color3.fromRGB(31, 41, 55),
         Text = Color3.fromRGB(255, 255, 255),
-        TextDim = Color3.fromRGB(180, 180, 180)
+        TextDim = Color3.fromRGB(156, 163, 175)
     }
 }
 
--- 🛡️ PROTEÇÕES ANTI-DETECÇÃO
+-- 🛡️ PROTEÇÕES
 local function AntiDetection()
     for _, v in pairs(game.CoreGui:GetChildren()) do
         if v.Name:find("Wixt") or v.Name:find("WixT") then
@@ -29,7 +29,7 @@ local function AntiDetection()
     end
 end
 
--- 📱 CRIAÇÃO DA INTERFACE MOBILE
+-- 📱 INTERFACE MOBILE ULTRA OTIMIZADA
 local function CreateMobileInterface()
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "WixtHubMobile"
@@ -39,171 +39,184 @@ local function CreateMobileInterface()
     
     -- 🎭 FRAME PRINCIPAL MOBILE
     local MainFrame = Instance.new("Frame")
-    MainFrame.Size = UDim2.new(0, 380, 0, 520) -- Tamanho mobile
-    MainFrame.Position = UDim2.new(0.5, -190, 0.5, -260)
+    MainFrame.Size = UDim2.new(0, 320, 0, 480) -- Tamanho perfeito para mobile
+    MainFrame.Position = UDim2.new(0.5, -160, 0.5, -240)
     MainFrame.BackgroundColor3 = Config.Theme.Background
     MainFrame.BorderSizePixel = 0
     MainFrame.Active = true
     MainFrame.Draggable = true
     MainFrame.Parent = ScreenGui
     
-    -- 🔥 BORDAS E CANTOS
+    -- 🔥 BORDAS MODERNAS
     local Corner = Instance.new("UICorner")
-    Corner.CornerRadius = UDim.new(0, 15)
+    Corner.CornerRadius = UDim.new(0, 20)
     Corner.Parent = MainFrame
     
     local Stroke = Instance.new("UIStroke")
     Stroke.Color = Config.Theme.Primary
-    Stroke.Thickness = 2
+    Stroke.Thickness = 3
     Stroke.Parent = MainFrame
     
     -- ⭐ HEADER MOBILE
     local Header = Instance.new("Frame")
-    Header.Size = UDim2.new(1, 0, 0, 50)
+    Header.Size = UDim2.new(1, 0, 0, 60)
     Header.Position = UDim2.new(0, 0, 0, 0)
     Header.BackgroundColor3 = Config.Theme.Dark
     Header.BorderSizePixel = 0
     Header.Parent = MainFrame
     
     local HeaderCorner = Instance.new("UICorner")
-    HeaderCorner.CornerRadius = UDim.new(0, 15)
+    HeaderCorner.CornerRadius = UDim.new(0, 20)
     HeaderCorner.Parent = Header
+    
+    -- Fix para não cortar embaixo
+    local HeaderFix = Instance.new("Frame")
+    HeaderFix.Size = UDim2.new(1, 0, 0, 30)
+    HeaderFix.Position = UDim2.new(0, 0, 0.5, 0)
+    HeaderFix.BackgroundColor3 = Config.Theme.Dark
+    HeaderFix.BorderSizePixel = 0
+    HeaderFix.Parent = Header
     
     -- 🔥 TÍTULO
     local Title = Instance.new("TextLabel")
     Title.Size = UDim2.new(0.7, 0, 1, 0)
-    Title.Position = UDim2.new(0, 15, 0, 0)
+    Title.Position = UDim2.new(0, 20, 0, 0)
     Title.BackgroundTransparency = 1
     Title.Text = "🔥 WixT Hub"
     Title.TextColor3 = Config.Theme.Text
-    Title.TextSize = 20
+    Title.TextSize = 22
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Font = Enum.Font.GothamBold
     Title.Parent = Header
     
     -- ❌ BOTÃO FECHAR MOBILE
     local CloseButton = Instance.new("TextButton")
-    CloseButton.Size = UDim2.new(0, 40, 0, 30)
-    CloseButton.Position = UDim2.new(1, -50, 0, 10)
+    CloseButton.Size = UDim2.new(0, 50, 0, 40)
+    CloseButton.Position = UDim2.new(1, -60, 0, 10)
     CloseButton.BackgroundColor3 = Config.Theme.Error
     CloseButton.Text = "✕"
     CloseButton.TextColor3 = Config.Theme.Text
-    CloseButton.TextSize = 18
+    CloseButton.TextSize = 20
     CloseButton.Font = Enum.Font.GothamBold
     CloseButton.BorderSizePixel = 0
     CloseButton.Parent = Header
     
     local CloseCorner = Instance.new("UICorner")
-    CloseCorner.CornerRadius = UDim.new(0, 8)
+    CloseCorner.CornerRadius = UDim.new(0, 12)
     CloseCorner.Parent = CloseButton
     
-    -- 📱 SISTEMA DE ABAS MOBILE (HORIZONTAL)
-    local TabContainer = Instance.new("Frame")
-    TabContainer.Size = UDim2.new(1, -20, 0, 45)
-    TabContainer.Position = UDim2.new(0, 10, 0, 60)
-    TabContainer.BackgroundColor3 = Config.Theme.Dark
-    TabContainer.BorderSizePixel = 0
-    TabContainer.Parent = MainFrame
+    -- 📱 CONTAINER PRINCIPAL
+    local Container = Instance.new("Frame")
+    Container.Size = UDim2.new(1, -20, 1, -80)
+    Container.Position = UDim2.new(0, 10, 0, 70)
+    Container.BackgroundTransparency = 1
+    Container.Parent = MainFrame
     
-    local TabContainerCorner = Instance.new("UICorner")
-    TabContainerCorner.CornerRadius = UDim.new(0, 10)
-    TabContainerCorner.Parent = TabContainer
+    -- 📋 ABAS MOBILE (VERTICAL STACK)
+    local TabsFrame = Instance.new("Frame")
+    TabsFrame.Size = UDim2.new(1, 0, 0, 60)
+    TabsFrame.Position = UDim2.new(0, 0, 0, 0)
+    TabsFrame.BackgroundColor3 = Config.Theme.Dark
+    TabsFrame.BorderSizePixel = 0
+    TabsFrame.Parent = Container
     
-    local TabLayout = Instance.new("UIListLayout")
-    TabLayout.FillDirection = Enum.FillDirection.Horizontal
-    TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    TabLayout.Padding = UDim.new(0, 5)
-    TabLayout.Parent = TabContainer
+    local TabsCorner = Instance.new("UICorner")
+    TabsCorner.CornerRadius = UDim.new(0, 15)
+    TabsCorner.Parent = TabsFrame
     
-    -- 📋 ÁREA DE CONTEÚDO MOBILE
+    local TabsLayout = Instance.new("UIListLayout")
+    TabsLayout.FillDirection = Enum.FillDirection.Horizontal
+    TabsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    TabsLayout.Padding = UDim.new(0, 5)
+    TabsLayout.Parent = TabsFrame
+    
+    local TabsPadding = Instance.new("UIPadding")
+    TabsPadding.PaddingAll = UDim.new(0, 10)
+    TabsPadding.Parent = TabsFrame
+    
+    -- 📋 ÁREA DE CONTEÚDO
     local ContentFrame = Instance.new("Frame")
-    ContentFrame.Size = UDim2.new(1, -20, 1, -125)
-    ContentFrame.Position = UDim2.new(0, 10, 0, 115)
+    ContentFrame.Size = UDim2.new(1, 0, 1, -70)
+    ContentFrame.Position = UDim2.new(0, 0, 0, 70)
     ContentFrame.BackgroundColor3 = Config.Theme.Dark
     ContentFrame.BorderSizePixel = 0
-    ContentFrame.Parent = MainFrame
+    ContentFrame.Parent = Container
     
     local ContentCorner = Instance.new("UICorner")
-    ContentCorner.CornerRadius = UDim.new(0, 10)
+    ContentCorner.CornerRadius = UDim.new(0, 15)
     ContentCorner.Parent = ContentFrame
     
     return {
         ScreenGui = ScreenGui,
         MainFrame = MainFrame,
         Header = Header,
-        TabContainer = TabContainer,
+        TabsFrame = TabsFrame,
         ContentFrame = ContentFrame,
         CloseButton = CloseButton
     }
 end
 
--- 🎯 SISTEMA DE ABAS MOBILE (CORRIGIDO)
+-- 🎯 SISTEMA DE ABAS MOBILE OTIMIZADO
 local function CreateMobileTabSystem(interface)
     local tabs = {}
     local currentTab = nil
     
-    local function CreateTab(name, icon, contentFunction)
+    local function CreateTab(name, icon)
         local tabIndex = #tabs + 1
         
-        -- Botão da Aba (Horizontal)
+        -- Botão da Aba
         local TabButton = Instance.new("TextButton")
-        TabButton.Size = UDim2.new(0, 70, 1, -10)
-        TabButton.Position = UDim2.new(0, 0, 0, 5)
+        TabButton.Size = UDim2.new(0, 50, 1, 0)
         TabButton.BackgroundColor3 = Config.Theme.Background
         TabButton.Text = icon
         TabButton.TextColor3 = Config.Theme.TextDim
-        TabButton.TextSize = 16
+        TabButton.TextSize = 18
         TabButton.Font = Enum.Font.GothamBold
         TabButton.BorderSizePixel = 0
         TabButton.LayoutOrder = tabIndex
-        TabButton.Parent = interface.TabContainer
+        TabButton.Parent = interface.TabsFrame
         
-        local tabCorner = Instance.new("UICorner")
-        tabCorner.CornerRadius = UDim.new(0, 8)
-        tabCorner.Parent = TabButton
+        local TabCorner = Instance.new("UICorner")
+        TabCorner.CornerRadius = UDim.new(0, 12)
+        TabCorner.Parent = TabButton
         
-        -- Frame do Conteúdo (CORRIGIDO)
-        local contentFrame = Instance.new("ScrollingFrame")
-        contentFrame.Name = name .. "Content"
-        contentFrame.Size = UDim2.new(1, -20, 1, -20)
-        contentFrame.Position = UDim2.new(0, 10, 0, 10)
-        contentFrame.BackgroundTransparency = 1
-        contentFrame.ScrollBarThickness = 6
-        contentFrame.ScrollBarImageColor3 = Config.Theme.Primary
-        contentFrame.BorderSizePixel = 0
-        contentFrame.Visible = false
-        contentFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-        contentFrame.Parent = interface.ContentFrame
+        -- Conteúdo da Aba
+        local ContentScroll = Instance.new("ScrollingFrame")
+        ContentScroll.Name = name .. "Content"
+        ContentScroll.Size = UDim2.new(1, -20, 1, -20)
+        ContentScroll.Position = UDim2.new(0, 10, 0, 10)
+        ContentScroll.BackgroundTransparency = 1
+        ContentScroll.ScrollBarThickness = 8
+        ContentScroll.ScrollBarImageColor3 = Config.Theme.Primary
+        ContentScroll.BorderSizePixel = 0
+        ContentScroll.Visible = false
+        ContentScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+        ContentScroll.Parent = interface.ContentFrame
         
-        -- Layout para organizar elementos
-        local listLayout = Instance.new("UIListLayout")
-        listLayout.Padding = UDim.new(0, 10)
-        listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        listLayout.Parent = contentFrame
+        -- Layout
+        local Layout = Instance.new("UIListLayout")
+        Layout.Padding = UDim.new(0, 15)
+        Layout.SortOrder = Enum.SortOrder.LayoutOrder
+        Layout.Parent = ContentScroll
         
-        -- Auto-resize do canvas
-        listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            contentFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 20)
+        -- Auto-resize
+        Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            ContentScroll.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 30)
         end)
         
-        -- EXECUTAR FUNÇÃO DE CONTEÚDO AQUI
-        if contentFunction then
-            contentFunction(contentFrame)
-        end
-        
         local function SelectTab()
-            -- Desativar todas as abas
-            for i, tab in ipairs(tabs) do
+            -- Desativar todas
+            for _, tab in pairs(tabs) do
                 tab.Button.BackgroundColor3 = Config.Theme.Background
                 tab.Button.TextColor3 = Config.Theme.TextDim
                 tab.Content.Visible = false
             end
             
-            -- Ativar esta aba
+            -- Ativar esta
             TabButton.BackgroundColor3 = Config.Theme.Primary
             TabButton.TextColor3 = Config.Theme.Text
-            contentFrame.Visible = true
-            currentTab = {Button = TabButton, Content = contentFrame}
+            ContentScroll.Visible = true
+            currentTab = ContentScroll
         end
         
         TabButton.MouseButton1Click:Connect(SelectTab)
@@ -211,164 +224,174 @@ local function CreateMobileTabSystem(interface)
         table.insert(tabs, {
             Name = name,
             Button = TabButton,
-            Content = contentFrame
+            Content = ContentScroll
         })
         
-        -- Ativar primeira aba por padrão
+        -- Ativar primeira aba
         if tabIndex == 1 then
             SelectTab()
         end
         
-        return contentFrame
+        return ContentScroll
     end
     
     return CreateTab
 end
 
--- 🎮 ELEMENTOS DE UI MOBILE
+-- 🎮 ELEMENTOS UI MOBILE OTIMIZADOS
 local function CreateMobileButton(parent, text, callback)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, -20, 0, 45) -- Maior para mobile
-    button.BackgroundColor3 = Config.Theme.Primary
-    button.Text = text
-    button.TextColor3 = Config.Theme.Text
-    button.TextSize = 16
-    button.Font = Enum.Font.GothamBold
-    button.BorderSizePixel = 0
-    button.Parent = parent
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(1, 0, 0, 50) -- Altura perfeita para mobile
+    Button.BackgroundColor3 = Config.Theme.Primary
+    Button.Text = text
+    Button.TextColor3 = Config.Theme.Text
+    Button.TextSize = 16
+    Button.Font = Enum.Font.GothamBold
+    Button.BorderSizePixel = 0
+    Button.Parent = parent
     
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
-    corner.Parent = button
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 12)
+    Corner.Parent = Button
+    
+    -- Efeito visual
+    Button.MouseButton1Down:Connect(function()
+        Button.BackgroundColor3 = Config.Theme.Secondary
+    end)
+    
+    Button.MouseButton1Up:Connect(function()
+        Button.BackgroundColor3 = Config.Theme.Primary
+    end)
     
     if callback then
-        button.MouseButton1Click:Connect(callback)
+        Button.MouseButton1Click:Connect(callback)
     end
     
-    return button
+    return Button
 end
 
 local function CreateMobileToggle(parent, text, defaultValue, callback)
-    local toggleFrame = Instance.new("Frame")
-    toggleFrame.Size = UDim2.new(1, -20, 0, 50) -- Maior para mobile
-    toggleFrame.BackgroundColor3 = Config.Theme.Background
-    toggleFrame.BorderSizePixel = 0
-    toggleFrame.Parent = parent
+    local ToggleFrame = Instance.new("Frame")
+    ToggleFrame.Size = UDim2.new(1, 0, 0, 60)
+    ToggleFrame.BackgroundColor3 = Config.Theme.Background
+    ToggleFrame.BorderSizePixel = 0
+    ToggleFrame.Parent = parent
     
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
-    corner.Parent = toggleFrame
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 12)
+    Corner.Parent = ToggleFrame
     
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0.6, 0, 1, 0)
-    label.Position = UDim2.new(0, 15, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = text
-    label.TextColor3 = Config.Theme.Text
-    label.TextSize = 14
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Font = Enum.Font.Gotham
-    label.Parent = toggleFrame
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(0.6, 0, 1, 0)
+    Label.Position = UDim2.new(0, 15, 0, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = text
+    Label.TextColor3 = Config.Theme.Text
+    Label.TextSize = 16
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Font = Enum.Font.Gotham
+    Label.Parent = ToggleFrame
     
-    local toggleButton = Instance.new("TextButton")
-    toggleButton.Size = UDim2.new(0, 80, 0, 35) -- Maior para mobile
-    toggleButton.Position = UDim2.new(1, -90, 0.5, -17.5)
-    toggleButton.BackgroundColor3 = defaultValue and Config.Theme.Success or Config.Theme.Error
-    toggleButton.Text = defaultValue and "ON" or "OFF"
-    toggleButton.TextColor3 = Config.Theme.Text
-    toggleButton.TextSize = 14
-    toggleButton.Font = Enum.Font.GothamBold
-    toggleButton.BorderSizePixel = 0
-    toggleButton.Parent = toggleFrame
+    local ToggleButton = Instance.new("TextButton")
+    ToggleButton.Size = UDim2.new(0, 80, 0, 40)
+    ToggleButton.Position = UDim2.new(1, -90, 0.5, -20)
+    ToggleButton.BackgroundColor3 = defaultValue and Config.Theme.Success or Config.Theme.Error
+    ToggleButton.Text = defaultValue and "ON" or "OFF"
+    ToggleButton.TextColor3 = Config.Theme.Text
+    ToggleButton.TextSize = 14
+    ToggleButton.Font = Enum.Font.GothamBold
+    ToggleButton.BorderSizePixel = 0
+    ToggleButton.Parent = ToggleFrame
     
-    local toggleCorner = Instance.new("UICorner")
-    toggleCorner.CornerRadius = UDim.new(0, 8)
-    toggleCorner.Parent = toggleButton
+    local ToggleCorner = Instance.new("UICorner")
+    ToggleCorner.CornerRadius = UDim.new(0, 10)
+    ToggleCorner.Parent = ToggleButton
     
     local isEnabled = defaultValue
     
-    toggleButton.MouseButton1Click:Connect(function()
+    ToggleButton.MouseButton1Click:Connect(function()
         isEnabled = not isEnabled
-        toggleButton.BackgroundColor3 = isEnabled and Config.Theme.Success or Config.Theme.Error
-        toggleButton.Text = isEnabled and "ON" or "OFF"
+        ToggleButton.BackgroundColor3 = isEnabled and Config.Theme.Success or Config.Theme.Error
+        ToggleButton.Text = isEnabled and "ON" or "OFF"
+        
         if callback then
             callback(isEnabled)
         end
     end)
     
-    return toggleFrame
+    return ToggleFrame
 end
 
 local function CreateMobileSlider(parent, text, min, max, defaultValue, callback)
-    local sliderFrame = Instance.new("Frame")
-    sliderFrame.Size = UDim2.new(1, -20, 0, 70) -- Maior para mobile
-    sliderFrame.BackgroundColor3 = Config.Theme.Background
-    sliderFrame.BorderSizePixel = 0
-    sliderFrame.Parent = parent
+    local SliderFrame = Instance.new("Frame")
+    SliderFrame.Size = UDim2.new(1, 0, 0, 80)
+    SliderFrame.BackgroundColor3 = Config.Theme.Background
+    SliderFrame.BorderSizePixel = 0
+    SliderFrame.Parent = parent
     
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
-    corner.Parent = sliderFrame
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 12)
+    Corner.Parent = SliderFrame
     
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0.6, 0, 0, 25)
-    label.Position = UDim2.new(0, 15, 0, 10)
-    label.BackgroundTransparency = 1
-    label.Text = text
-    label.TextColor3 = Config.Theme.Text
-    label.TextSize = 14
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Font = Enum.Font.Gotham
-    label.Parent = sliderFrame
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(0.6, 0, 0, 30)
+    Label.Position = UDim2.new(0, 15, 0, 10)
+    Label.BackgroundTransparency = 1
+    Label.Text = text
+    Label.TextColor3 = Config.Theme.Text
+    Label.TextSize = 16
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Font = Enum.Font.Gotham
+    Label.Parent = SliderFrame
     
-    local valueLabel = Instance.new("TextLabel")
-    valueLabel.Size = UDim2.new(0.4, 0, 0, 25)
-    valueLabel.Position = UDim2.new(0.6, 0, 0, 10)
-    valueLabel.BackgroundTransparency = 1
-    valueLabel.Text = tostring(defaultValue)
-    valueLabel.TextColor3 = Config.Theme.Primary
-    valueLabel.TextSize = 14
-    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
-    valueLabel.Font = Enum.Font.GothamBold
-    valueLabel.Parent = sliderFrame
+    local ValueLabel = Instance.new("TextLabel")
+    ValueLabel.Size = UDim2.new(0.4, 0, 0, 30)
+    ValueLabel.Position = UDim2.new(0.6, 0, 0, 10)
+    ValueLabel.BackgroundTransparency = 1
+    ValueLabel.Text = tostring(defaultValue)
+    ValueLabel.TextColor3 = Config.Theme.Primary
+    ValueLabel.TextSize = 16
+    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    ValueLabel.Font = Enum.Font.GothamBold
+    ValueLabel.Parent = SliderFrame
     
-    local sliderBar = Instance.new("Frame")
-    sliderBar.Size = UDim2.new(1, -30, 0, 8) -- Maior para mobile
-    sliderBar.Position = UDim2.new(0, 15, 1, -25)
-    sliderBar.BackgroundColor3 = Config.Theme.Dark
-    sliderBar.BorderSizePixel = 0
-    sliderBar.Parent = sliderFrame
+    local SliderBar = Instance.new("Frame")
+    SliderBar.Size = UDim2.new(1, -30, 0, 12)
+    SliderBar.Position = UDim2.new(0, 15, 1, -25)
+    SliderBar.BackgroundColor3 = Config.Theme.Dark
+    SliderBar.BorderSizePixel = 0
+    SliderBar.Parent = SliderFrame
     
-    local sliderBarCorner = Instance.new("UICorner")
-    sliderBarCorner.CornerRadius = UDim.new(0, 4)
-    sliderBarCorner.Parent = sliderBar
+    local SliderBarCorner = Instance.new("UICorner")
+    SliderBarCorner.CornerRadius = UDim.new(0, 6)
+    SliderBarCorner.Parent = SliderBar
     
-    local sliderFill = Instance.new("Frame")
-    sliderFill.Size = UDim2.new((defaultValue - min) / (max - min), 0, 1, 0)
-    sliderFill.Position = UDim2.new(0, 0, 0, 0)
-    sliderFill.BackgroundColor3 = Config.Theme.Primary
-    sliderFill.BorderSizePixel = 0
-    sliderFill.Parent = sliderBar
+    local SliderFill = Instance.new("Frame")
+    SliderFill.Size = UDim2.new((defaultValue - min) / (max - min), 0, 1, 0)
+    SliderFill.Position = UDim2.new(0, 0, 0, 0)
+    SliderFill.BackgroundColor3 = Config.Theme.Primary
+    SliderFill.BorderSizePixel = 0
+    SliderFill.Parent = SliderBar
     
-    local sliderFillCorner = Instance.new("UICorner")
-    sliderFillCorner.CornerRadius = UDim.new(0, 4)
-    sliderFillCorner.Parent = sliderFill
+    local SliderFillCorner = Instance.new("UICorner")
+    SliderFillCorner.CornerRadius = UDim.new(0, 6)
+    SliderFillCorner.Parent = SliderFill
     
-    local sliderButton = Instance.new("TextButton")
-    sliderButton.Size = UDim2.new(0, 20, 0, 20) -- Maior para mobile
-    sliderButton.Position = UDim2.new((defaultValue - min) / (max - min), -10, 0.5, -10)
-    sliderButton.BackgroundColor3 = Config.Theme.Text
-    sliderButton.Text = ""
-    sliderButton.BorderSizePixel = 0
-    sliderButton.Parent = sliderBar
+    local SliderButton = Instance.new("TextButton")
+    SliderButton.Size = UDim2.new(0, 24, 0, 24)
+    SliderButton.Position = UDim2.new((defaultValue - min) / (max - min), -12, 0.5, -12)
+    SliderButton.BackgroundColor3 = Config.Theme.Text
+    SliderButton.Text = ""
+    SliderButton.BorderSizePixel = 0
+    SliderButton.Parent = SliderBar
     
-    local sliderButtonCorner = Instance.new("UICorner")
-    sliderButtonCorner.CornerRadius = UDim.new(0, 10)
-    sliderButtonCorner.Parent = sliderButton
+    local SliderButtonCorner = Instance.new("UICorner")
+    SliderButtonCorner.CornerRadius = UDim.new(0, 12)
+    SliderButtonCorner.Parent = SliderButton
     
     local dragging = false
     
-    sliderButton.MouseButton1Down:Connect(function()
+    SliderButton.MouseButton1Down:Connect(function()
         dragging = true
     end)
     
@@ -381,12 +404,12 @@ local function CreateMobileSlider(parent, text, min, max, defaultValue, callback
     game:GetService("UserInputService").InputChanged:Connect(function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local mouse = game.Players.LocalPlayer:GetMouse()
-            local relativeX = math.clamp((mouse.X - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0, 1)
+            local relativeX = math.clamp((mouse.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
             local value = math.floor(min + (max - min) * relativeX)
             
-            sliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
-            sliderButton.Position = UDim2.new(relativeX, -10, 0.5, -10)
-            valueLabel.Text = tostring(value)
+            SliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
+            SliderButton.Position = UDim2.new(relativeX, -12, 0.5, -12)
+            ValueLabel.Text = tostring(value)
             
             if callback then
                 callback(value)
@@ -394,24 +417,36 @@ local function CreateMobileSlider(parent, text, min, max, defaultValue, callback
         end
     end)
     
-    return sliderFrame
+    return SliderFrame
 end
 
--- 🔫 SISTEMA DE AIMBOT MOBILE
+-- 🔫 AIMBOT PROFISSIONAL MOBILE
 local AimbotSettings = {
     Enabled = false,
     TeamCheck = true,
     WallCheck = true,
     TargetPart = "Head",
-    Smoothness = 0.1,
-    FOV = 90
+    Smoothness = 0.2,
+    FOV = 120,
+    MaxDistance = 2000,
+    PredictMovement = true,
+    AutoShoot = false
 }
 
-local function CreateMobileAimbot()
+local function CreateProfessionalAimbot()
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
+    local UserInputService = game:GetService("UserInputService")
     local Camera = workspace.CurrentCamera
     local LocalPlayer = Players.LocalPlayer
+    
+    local FOVCircle = Drawing.new("Circle")
+    FOVCircle.Thickness = 2
+    FOVCircle.Color = Color3.fromRGB(0, 162, 255)
+    FOVCircle.Filled = false
+    FOVCircle.Radius = AimbotSettings.FOV
+    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    FOVCircle.Visible = true
     
     local function GetClosestPlayer()
         local closestPlayer = nil
@@ -424,15 +459,44 @@ local function CreateMobileAimbot()
                     continue
                 end
                 
-                local targetPosition = player.Character[AimbotSettings.TargetPart].Position
+                local character = player.Character
+                local targetPart = character[AimbotSettings.TargetPart]
+                local targetPosition = targetPart.Position
+                
+                -- Predição de movimento
+                if AimbotSettings.PredictMovement and character:FindFirstChild("HumanoidRootPart") then
+                    local velocity = character.HumanoidRootPart.Velocity
+                    local distance = (LocalPlayer.Character.HumanoidRootPart.Position - targetPosition).Magnitude
+                    local timeToTarget = distance / 1000 -- Velocidade estimada do projétil
+                    targetPosition = targetPosition + (velocity * timeToTarget)
+                end
+                
                 local screenPoint, onScreen = Camera:WorldToViewportPoint(targetPosition)
                 
                 if onScreen then
-                    local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - centerScreen).Magnitude
+                    local distance2D = (Vector2.new(screenPoint.X, screenPoint.Y) - centerScreen).Magnitude
+                    local distance3D = (LocalPlayer.Character.HumanoidRootPart.Position - targetPosition).Magnitude
                     
-                    if distance < AimbotSettings.FOV and distance < closestDistance then
-                        closestPlayer = player
-                        closestDistance = distance
+                    if distance2D < AimbotSettings.FOV and distance3D < AimbotSettings.MaxDistance and distance2D < closestDistance then
+                        -- Wall Check
+                        if AimbotSettings.WallCheck then
+                            local raycastParams = RaycastParams.new()
+                            raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+                            raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+                            
+                            local raycastResult = workspace:Raycast(Camera.CFrame.Position, (targetPosition - Camera.CFrame.Position).Unit * distance3D, raycastParams)
+                            
+                            if raycastResult and raycastResult.Instance:IsDescendantOf(character) then
+                                closestPlayer = player
+                                closestDistance = distance2D
+                            elseif not raycastResult then
+                                closestPlayer = player
+                                closestDistance = distance2D
+                            end
+                        else
+                            closestPlayer = player
+                            closestDistance = distance2D
+                        end
                     end
                 end
             end
@@ -442,19 +506,68 @@ local function CreateMobileAimbot()
     end
     
     local aimbotConnection
+    local isAiming = false
+    
+    -- Detecção de toque/clique para mobile
+    UserInputService.TouchStarted:Connect(function(touch, gameProcessed)
+        if not gameProcessed and AimbotSettings.Enabled then
+            isAiming = true
+        end
+    end)
+    
+    UserInputService.TouchEnded:Connect(function(touch, gameProcessed)
+        isAiming = false
+    end)
+    
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not gameProcessed and AimbotSettings.Enabled then
+            if input.UserInputType == Enum.UserInputType.MouseButton2 then
+                isAiming = true
+            end
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input, gameProcessed)
+        if input.UserInputType == Enum.UserInputType.MouseButton2 then
+            isAiming = false
+        end
+    end)
     
     local function ToggleAimbot(enabled)
         AimbotSettings.Enabled = enabled
+        FOVCircle.Visible = enabled
         
         if enabled then
             aimbotConnection = RunService.Heartbeat:Connect(function()
-                local target = GetClosestPlayer()
-                if target and target.Character and target.Character:FindFirstChild(AimbotSettings.TargetPart) then
-                    local targetPosition = target.Character[AimbotSettings.TargetPart].Position
-                    local cameraDirection = (targetPosition - Camera.CFrame.Position).Unit
-                    local newCFrame = CFrame.lookAt(Camera.CFrame.Position, Camera.CFrame.Position + cameraDirection)
-                    
-                    Camera.CFrame = Camera.CFrame:Lerp(newCFrame, AimbotSettings.Smoothness)
+                -- Atualizar FOV Circle
+                FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                FOVCircle.Radius = AimbotSettings.FOV
+                
+                if isAiming or AimbotSettings.AutoShoot then
+                    local target = GetClosestPlayer()
+                    if target and target.Character and target.Character:FindFirstChild(AimbotSettings.TargetPart) then
+                        local targetPart = target.Character[AimbotSettings.TargetPart]
+                        local targetPosition = targetPart.Position
+                        
+                        -- Predição de movimento melhorada
+                        if AimbotSettings.PredictMovement and target.Character:FindFirstChild("HumanoidRootPart") then
+                            local velocity = target.Character.HumanoidRootPart.Velocity
+                            local distance = (LocalPlayer.Character.HumanoidRootPart.Position - targetPosition).Magnitude
+                            local timeToTarget = distance / 1500
+                            targetPosition = targetPosition + (velocity * timeToTarget)
+                        end
+                        
+                        local cameraDirection = (targetPosition - Camera.CFrame.Position).Unit
+                        local newCFrame = CFrame.lookAt(Camera.CFrame.Position, Camera.CFrame.Position + cameraDirection)
+                        
+                        -- Suavização melhorada
+                        Camera.CFrame = Camera.CFrame:Lerp(newCFrame, AimbotSettings.Smoothness)
+                        
+                        -- Auto Shoot (se habilitado)
+                        if AimbotSettings.AutoShoot then
+                            mouse1click()
+                        end
+                    end
                 end
             end)
         else
@@ -466,20 +579,22 @@ local function CreateMobileAimbot()
     
     return {
         Toggle = ToggleAimbot,
-        Settings = AimbotSettings
+        Settings = AimbotSettings,
+        FOVCircle = FOVCircle
     }
 end
 
--- 👁️ SISTEMA DE ESP MOBILE
+-- 👁️ ESP OTIMIZADO MOBILE
 local ESPSettings = {
     Enabled = false,
     Names = true,
     Health = true,
     Distance = true,
-    TeamCheck = true
+    TeamCheck = true,
+    MaxDistance = 1500
 }
 
-local function CreateMobileESP()
+local function CreateOptimizedESP()
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
     local LocalPlayer = Players.LocalPlayer
@@ -489,7 +604,7 @@ local function CreateMobileESP()
         local esp = {}
         
         esp.nameLabel = Drawing.new("Text")
-        esp.nameLabel.Size = 16
+        esp.nameLabel.Size = 18
         esp.nameLabel.Color = Color3.fromRGB(255, 255, 255)
         esp.nameLabel.Font = 2
         esp.nameLabel.Outline = true
@@ -497,7 +612,7 @@ local function CreateMobileESP()
         esp.nameLabel.Visible = false
         
         esp.healthLabel = Drawing.new("Text")
-        esp.healthLabel.Size = 14
+        esp.healthLabel.Size = 16
         esp.healthLabel.Color = Color3.fromRGB(0, 255, 0)
         esp.healthLabel.Font = 2
         esp.healthLabel.Outline = true
@@ -505,12 +620,18 @@ local function CreateMobileESP()
         esp.healthLabel.Visible = false
         
         esp.distanceLabel = Drawing.new("Text")
-        esp.distanceLabel.Size = 12
+        esp.distanceLabel.Size = 14
         esp.distanceLabel.Color = Color3.fromRGB(255, 255, 0)
         esp.distanceLabel.Font = 2
         esp.distanceLabel.Outline = true
         esp.distanceLabel.Center = true
         esp.distanceLabel.Visible = false
+        
+        esp.box = Drawing.new("Square")
+        esp.box.Color = Color3.fromRGB(0, 162, 255)
+        esp.box.Thickness = 2
+        esp.box.Filled = false
+        esp.box.Visible = false
         
         return esp
     end
@@ -522,6 +643,7 @@ local function CreateMobileESP()
                     esp.nameLabel.Visible = false
                     esp.healthLabel.Visible = false
                     esp.distanceLabel.Visible = false
+                    esp.box.Visible = false
                     continue
                 end
                 
@@ -532,28 +654,56 @@ local function CreateMobileESP()
                 local distance = (LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
                 local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(rootPart.Position)
                 
-                if onScreen and distance <= 1000 then
+                if onScreen and distance <= ESPSettings.MaxDistance and ESPSettings.Enabled then
+                    -- Nomes
                     if ESPSettings.Names then
-                        esp.nameLabel.Position = Vector2.new(screenPos.X, screenPos.Y - 40)
+                        esp.nameLabel.Position = Vector2.new(screenPos.X, screenPos.Y - 50)
                         esp.nameLabel.Text = player.Name
-                        esp.nameLabel.Visible = ESPSettings.Enabled
+                        esp.nameLabel.Visible = true
+                    else
+                        esp.nameLabel.Visible = false
                     end
                     
+                    -- Vida
                     if ESPSettings.Health and humanoid then
-                        esp.healthLabel.Position = Vector2.new(screenPos.X, screenPos.Y - 20)
+                        esp.healthLabel.Position = Vector2.new(screenPos.X, screenPos.Y - 30)
                         esp.healthLabel.Text = math.floor(humanoid.Health) .. "/" .. math.floor(humanoid.MaxHealth)
-                        esp.healthLabel.Visible = ESPSettings.Enabled
+                        esp.healthLabel.Color = Color3.fromRGB(
+                            255 - (humanoid.Health / humanoid.MaxHealth) * 255,
+                            (humanoid.Health / humanoid.MaxHealth) * 255,
+                            0
+                        )
+                        esp.healthLabel.Visible = true
+                    else
+                        esp.healthLabel.Visible = false
                     end
                     
+                    -- Distância
                     if ESPSettings.Distance then
-                        esp.distanceLabel.Position = Vector2.new(screenPos.X, screenPos.Y + 20)
+                        esp.distanceLabel.Position = Vector2.new(screenPos.X, screenPos.Y + 30)
                         esp.distanceLabel.Text = math.floor(distance) .. "m"
-                        esp.distanceLabel.Visible = ESPSettings.Enabled
+                        esp.distanceLabel.Visible = true
+                    else
+                        esp.distanceLabel.Visible = false
+                    end
+                    
+                    -- Box
+                    if character:FindFirstChild("Head") then
+                        local headPos = workspace.CurrentCamera:WorldToViewportPoint(character.Head.Position + Vector3.new(0, 0.5, 0))
+                        local legPos = workspace.CurrentCamera:WorldToViewportPoint(character.HumanoidRootPart.Position - Vector3.new(0, 3, 0))
+                        
+                        local boxHeight = math.abs(headPos.Y - legPos.Y)
+                        local boxWidth = boxHeight * 0.6
+                        
+                        esp.box.Size = Vector2.new(boxWidth, boxHeight)
+                        esp.box.Position = Vector2.new(screenPos.X - boxWidth/2, headPos.Y)
+                        esp.box.Visible = true
                     end
                 else
                     esp.nameLabel.Visible = false
                     esp.healthLabel.Visible = false
                     esp.distanceLabel.Visible = false
+                    esp.box.Visible = false
                 end
             end
         end
@@ -594,6 +744,7 @@ local function CreateMobileESP()
                 esp.nameLabel.Visible = false
                 esp.healthLabel.Visible = false
                 esp.distanceLabel.Visible = false
+                esp.box.Visible = false
             end
         end
     end
@@ -604,8 +755,8 @@ local function CreateMobileESP()
     }
 end
 
--- 🏃 SISTEMA DE MOVIMENTO MOBILE
-local function CreateMobileMovement()
+-- 🏃 MOVIMENTO OTIMIZADO
+local function CreateOptimizedMovement()
     local Players = game:GetService("Players")
     local LocalPlayer = Players.LocalPlayer
     
@@ -621,176 +772,149 @@ local function CreateMobileMovement()
         end
     end
     
-    local function ToggleNoclip(enabled)
-        local noclipConnection
-        if enabled then
-            noclipConnection = game:GetService("RunService").Stepped:Connect(function()
-                if LocalPlayer.Character then
-                    for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                            part.CanCollide = false
-                        end
-                    end
-                end
-            end)
-        else
-            if noclipConnection then
-                noclipConnection:Disconnect()
-            end
-        end
-    end
-    
     return {
         SetWalkSpeed = SetWalkSpeed,
-        SetJumpPower = SetJumpPower,
-        ToggleNoclip = ToggleNoclip
+        SetJumpPower = SetJumpPower
     }
 end
 
--- 🚀 FUNÇÃO PRINCIPAL MOBILE
+-- 🚀 FUNÇÃO PRINCIPAL
 local function InitializeWixtHubMobile()
     AntiDetection()
     
     local interface = CreateMobileInterface()
     local createTab = CreateMobileTabSystem(interface)
-    local aimbotSystem = CreateMobileAimbot()
-    local espSystem = CreateMobileESP()
-    local movementSystem = CreateMobileMovement()
+    local aimbotSystem = CreateProfessionalAimbot()
+    local espSystem = CreateOptimizedESP()
+    local movementSystem = CreateOptimizedMovement()
     
     -- 🎯 ABA AIMBOT
-    createTab("Aimbot", "🎯", function(content)
-        CreateMobileToggle(content, "🔥 Aimbot Ativado", false, function(enabled)
-            aimbotSystem.Toggle(enabled)
-        end)
-        
-        CreateMobileToggle(content, "👥 Team Check", true, function(enabled)
-            aimbotSystem.Settings.TeamCheck = enabled
-        end)
-        
-        CreateMobileSlider(content, "🎯 FOV", 10, 360, 90, function(value)
-            aimbotSystem.Settings.FOV = value
-        end)
-        
-        CreateMobileSlider(content, "⚡ Suavidade", 1, 100, 10, function(value)
-            aimbotSystem.Settings.Smoothness = value / 100
-        end)
-        
-        CreateMobileButton(content, "🎯 Cabeça", function()
-            aimbotSystem.Settings.TargetPart = "Head"
-        end)
-        
-        CreateMobileButton(content, "🫀 Torso", function()
-            aimbotSystem.Settings.TargetPart = "Torso"
-        end)
+    local aimbotTab = createTab("Aimbot", "🎯")
+    
+    CreateMobileToggle(aimbotTab, "🔥 Aimbot Ativado", false, function(enabled)
+        aimbotSystem.Toggle(enabled)
+    end)
+    
+    CreateMobileToggle(aimbotTab, "👥 Team Check", true, function(enabled)
+        aimbotSystem.Settings.TeamCheck = enabled
+    end)
+    
+    CreateMobileToggle(aimbotTab, "🧱 Wall Check", true, function(enabled)
+        aimbotSystem.Settings.WallCheck = enabled
+    end)
+    
+    CreateMobileToggle(aimbotTab, "🎯 Predição", true, function(enabled)
+        aimbotSystem.Settings.PredictMovement = enabled
+    end)
+    
+    CreateMobileSlider(aimbotTab, "🎯 FOV", 30, 300, 120, function(value)
+        aimbotSystem.Settings.FOV = value
+    end)
+    
+    CreateMobileSlider(aimbotTab, "⚡ Suavidade", 1, 100, 20, function(value)
+        aimbotSystem.Settings.Smoothness = value / 100
+    end)
+    
+    CreateMobileButton(aimbotTab, "🎯 Cabeça", function()
+        aimbotSystem.Settings.TargetPart = "Head"
+    end)
+    
+    CreateMobileButton(aimbotTab, "🫀 Torso", function()
+        aimbotSystem.Settings.TargetPart = "Torso"
     end)
     
     -- 👁️ ABA ESP
-    createTab("ESP", "👁️", function(content)
-        CreateMobileToggle(content, "🔥 ESP Ativado", false, function(enabled)
-            espSystem.Toggle(enabled)
-        end)
-        
-        CreateMobileToggle(content, "📝 Mostrar Nomes", true, function(enabled)
-            espSystem.Settings.Names = enabled
-        end)
-        
-        CreateMobileToggle(content, "❤️ Mostrar Vida", true, function(enabled)
-            espSystem.Settings.Health = enabled
-        end)
-        
-        CreateMobileToggle(content, "📏 Mostrar Distância", true, function(enabled)
-            espSystem.Settings.Distance = enabled
-        end)
-        
-        CreateMobileToggle(content, "👥 Team Check", true, function(enabled)
-            espSystem.Settings.TeamCheck = enabled
-        end)
+    local espTab = createTab("ESP", "👁️")
+    
+    CreateMobileToggle(espTab, "🔥 ESP Ativado", false, function(enabled)
+        espSystem.Toggle(enabled)
+    end)
+    
+    CreateMobileToggle(espTab, "📝 Nomes", true, function(enabled)
+        espSystem.Settings.Names = enabled
+    end)
+    
+    CreateMobileToggle(espTab, "❤️ Vida", true, function(enabled)
+        espSystem.Settings.Health = enabled
+    end)
+    
+    CreateMobileToggle(espTab, "📏 Distância", true, function(enabled)
+        espSystem.Settings.Distance = enabled
+    end)
+    
+    CreateMobileToggle(espTab, "👥 Team Check", true, function(enabled)
+        espSystem.Settings.TeamCheck = enabled
+    end)
+    
+    CreateMobileSlider(espTab, "📏 Distância Máx", 500, 3000, 1500, function(value)
+        espSystem.Settings.MaxDistance = value
     end)
     
     -- 🏃 ABA MOVIMENTO
-    createTab("Move", "🏃", function(content)
-        CreateMobileSlider(content, "🚀 Velocidade", 1, 500, 16, function(value)
-            movementSystem.SetWalkSpeed(value)
-        end)
-        
-        CreateMobileSlider(content, "🦘 Força do Pulo", 1, 500, 50, function(value)
-            movementSystem.SetJumpPower(value)
-        end)
-        
-        CreateMobileToggle(content, "👻 Noclip", false, function(enabled)
-            movementSystem.ToggleNoclip(enabled)
-        end)
-        
-        CreateMobileButton(content, "⚡ Velocidade Extrema", function()
-            movementSystem.SetWalkSpeed(200)
-            movementSystem.SetJumpPower(200)
-        end)
-        
-        CreateMobileButton(content, "🔄 Reset", function()
-            movementSystem.SetWalkSpeed(16)
-            movementSystem.SetJumpPower(50)
-        end)
+    local moveTab = createTab("Move", "🏃")
+    
+    CreateMobileSlider(moveTab, "🚀 Velocidade", 1, 500, 16, function(value)
+        movementSystem.SetWalkSpeed(value)
+    end)
+    
+    CreateMobileSlider(moveTab, "🦘 Pulo", 1, 500, 50, function(value)
+        movementSystem.SetJumpPower(value)
+    end)
+    
+    CreateMobileButton(moveTab, "⚡ Velocidade Extrema", function()
+        movementSystem.SetWalkSpeed(200)
+        movementSystem.SetJumpPower(200)
+    end)
+    
+    CreateMobileButton(moveTab, "🔄 Reset", function()
+        movementSystem.SetWalkSpeed(16)
+        movementSystem.SetJumpPower(50)
     end)
     
     -- 👤 ABA JOGADOR
-    createTab("Player", "👤", function(content)
-        CreateMobileButton(content, "💖 Vida Infinita", function()
-            local player = game.Players.LocalPlayer
-            if player.Character and player.Character:FindFirstChild("Humanoid") then
-                player.Character.Humanoid.MaxHealth = math.huge
-                player.Character.Humanoid.Health = math.huge
-            end
-        end)
-        
-        CreateMobileButton(content, "🔄 Reset Personagem", function()
-            local player = game.Players.LocalPlayer
-            if player.Character then
-                player.Character:BreakJoints()
-            end
-        end)
-        
-        CreateMobileToggle(content, "👻 Invisibilidade", false, function(enabled)
-            local player = game.Players.LocalPlayer
-            if player.Character then
-                for _, part in pairs(player.Character:GetChildren()) do
-                    if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                        part.Transparency = enabled and 1 or 0
-                    end
-                end
-            end
-        end)
-        
-        CreateMobileButton(content, "🏠 Teleport Spawn", function()
-            local player = game.Players.LocalPlayer
-            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                player.Character.HumanoidRootPart.CFrame = CFrame.new(0, 50, 0)
-            end
-        end)
+    local playerTab = createTab("Player", "👤")
+    
+    CreateMobileButton(playerTab, "💖 Vida Infinita", function()
+        local player = game.Players.LocalPlayer
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.MaxHealth = math.huge
+            player.Character.Humanoid.Health = math.huge
+        end
+    end)
+    
+    CreateMobileButton(playerTab, "🔄 Reset", function()
+        local player = game.Players.LocalPlayer
+        if player.Character then
+            player.Character:BreakJoints()
+        end
+    end)
+    
+    CreateMobileButton(playerTab, "🏠 Spawn", function()
+        local player = game.Players.LocalPlayer
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(0, 50, 0)
+        end
     end)
     
     -- 🌍 ABA MUNDO
-    createTab("World", "🌍", function(content)
-        CreateMobileSlider(content, "☀️ Brilho", 0, 10, 1, function(value)
-            game.Lighting.Brightness = value
-        end)
-        
-        CreateMobileSlider(content, "🌅 Hora", 0, 24, 12, function(value)
-            game.Lighting.TimeOfDay = string.format("%02d:00:00", value)
-        end)
-        
-        CreateMobileButton(content, "🌙 Modo Noite", function()
-            game.Lighting.Brightness = 0
-            game.Lighting.TimeOfDay = "00:00:00"
-        end)
-        
-        CreateMobileButton(content, "☀️ Modo Dia", function()
-            game.Lighting.Brightness = 2
-            game.Lighting.TimeOfDay = "12:00:00"
-        end)
-        
-        CreateMobileToggle(content, "✨ Remover Névoa", false, function(enabled)
-            game.Lighting.FogEnd = enabled and 100000 or 1000
-        end)
+    local worldTab = createTab("World", "🌍")
+    
+    CreateMobileSlider(worldTab, "☀️ Brilho", 0, 10, 1, function(value)
+        game.Lighting.Brightness = value
+    end)
+    
+    CreateMobileSlider(worldTab, "🌅 Hora", 0, 24, 12, function(value)
+        game.Lighting.TimeOfDay = string.format("%02d:00:00", value)
+    end)
+    
+    CreateMobileButton(worldTab, "🌙 Noite", function()
+        game.Lighting.Brightness = 0
+        game.Lighting.TimeOfDay = "00:00:00"
+    end)
+    
+    CreateMobileButton(worldTab, "☀️ Dia", function()
+        game.Lighting.Brightness = 2
+        game.Lighting.TimeOfDay = "12:00:00"
     end)
     
     -- 🎉 ANIMAÇÃO DE ENTRADA
@@ -802,8 +926,8 @@ local function InitializeWixtHubMobile()
         interface.MainFrame,
         TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
         {
-            Size = UDim2.new(0, 380, 0, 520),
-            Position = UDim2.new(0.5, -190, 0.5, -260)
+            Size = UDim2.new(0, 320, 0, 480),
+            Position = UDim2.new(0.5, -160, 0.5, -240)
         }
     ):Play()
     
@@ -819,18 +943,20 @@ local function InitializeWixtHubMobile()
         ):Play()
         
         wait(0.5)
+        aimbotSystem.Toggle(false)
+        espSystem.Toggle(false)
         interface.ScreenGui:Destroy()
     end)
     
     -- 🎉 NOTIFICAÇÃO
     game.StarterGui:SetCore("SendNotification", {
         Title = "🔥 WixT Hub";
-        Text = "Hub carregado com sucesso! Mobile Optimized";
+        Text = "Hub carregado! Mobile Optimized";
         Duration = 5;
     })
     
     return interface
 end
 
--- 🚀 EXECUTAR O HUB
+-- 🚀 EXECUTAR
 return InitializeWixtHubMobile()
