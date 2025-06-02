@@ -1,1513 +1,564 @@
--- ═══════════════════════════════════════════════════════════════════════════════
--- 🚀 WIXT HUB - ULTIMATE MOBILE EXPLOIT (REVISÃO DE INTERFACE E ABAS)
--- ═══════════════════════════════════════════════════════════════════════════════
+-- 🔥 WIXT HUB ULTIMATE - MOBILE PERFECT v3.0
+-- 🚀 FEITO DO ZERO PARA FUNCIONAR 100%
 
--- 🛡️ LIMPEZA TOTAL
-pcall(function()
-    for _, v in pairs(game.CoreGui:GetChildren()) do
-        if v.Name:find("Wixt") or v.Name:find("WixT") or v.Name:find("Hub") then
-            v:Destroy()
-        end
+-- 🧹 LIMPEZA TOTAL
+for _, gui in pairs(game.CoreGui:GetChildren()) do
+    if gui.Name:lower():find("wixt") or gui.Name:lower():find("hub") then
+        gui:Destroy()
     end
-end)
+end
 
--- 🎨 CONFIGURAÇÕES ULTIMATE
-local WixtHub = {
-    Version = "2.0 Ultimate (Rev. Interface)",
-    Theme = {
-        Primary = Color3.fromRGB(138, 43, 226),    -- Roxo Principal
-        Secondary = Color3.fromRGB(75, 0, 130),    -- Roxo Escuro
-        Accent = Color3.fromRGB(255, 20, 147),     -- Rosa Complementar
-        Success = Color3.fromRGB(46, 204, 113),    -- Verde Sucesso
-        Warning = Color3.fromRGB(241, 196, 15),     -- Amarelo Aviso
-        Error = Color3.fromRGB(231, 76, 60),       -- Vermelho Erro
-        Background = Color3.fromRGB(23, 23, 23),   -- Fundo Escuro Principal
-        Surface = Color3.fromRGB(35, 35, 35),      -- Superfície dos containers
-        Card = Color3.fromRGB(45, 45, 45),         -- Cartões de elementos
-        Text = Color3.fromRGB(255, 255, 255),      -- Texto Claro
-        TextSecondary = Color3.fromRGB(170, 170, 170), -- Texto Secundário
-        Border = Color3.fromRGB(60, 60, 60),       -- Bordas
-        Hover = Color3.fromRGB(160, 82, 45),       -- Cor de Hover (Alterada)
-    }
-}
-
--- 🎯 SERVIÇOS
+-- 📦 SERVIÇOS
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
-local Lighting = game:GetService("Lighting")
-local SoundService = game:GetService("SoundService")
-
-local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
--- 📱 CRIAÇÃO DA INTERFACE ULTIMATE (REVISADA)
-local function CreateUltimateInterface()
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "WixtHubUltimate"
-    ScreenGui.Parent = game.CoreGui
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    ScreenGui.ResetOnSpawn = false
-    ScreenGui.IgnoreGuiInset = true -- Ignora a barra de cima do celular
+-- 🎨 INTERFACE PRINCIPAL
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "WixtHubUltimatev3"
+screenGui.Parent = game.CoreGui
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    -- Adiciona um Frame de fundo semi-transparente
-    local BackgroundDim = Instance.new("Frame")
-    BackgroundDim.Size = UDim2.new(1, 0, 1, 0)
-    BackgroundDim.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    BackgroundDim.BackgroundTransparency = 0.6 -- Ajuste conforme o gosto
-    BackgroundDim.Parent = ScreenGui
-    BackgroundDim.Visible = false -- Esconde por padrão
+-- 🌟 FRAME PRINCIPAL
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 400, 0, 600)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -300)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
 
-    -- Frame Principal Mobile
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 380, 0, 600) -- Ajuste no tamanho
-    MainFrame.Position = UDim2.new(0.5, -190, 0.5, -300)
-    MainFrame.BackgroundColor3 = WixtHub.Theme.Background
-    MainFrame.BorderSizePixel = 0
-    MainFrame.Active = true
-    MainFrame.Draggable = true
-    MainFrame.Parent = ScreenGui
-    MainFrame.Visible = false -- Esconde por padrão
+-- 🎨 CANTOS ARREDONDADOS
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 15)
+corner.Parent = mainFrame
 
-    -- Corner Principal
-    local MainCorner = Instance.new("UICorner")
-    MainCorner.CornerRadius = UDim.new(0, 25)
-    MainCorner.Parent = MainFrame
+-- ✨ SOMBRA
+local shadow = Instance.new("Frame")
+shadow.Size = UDim2.new(1, 10, 1, 10)
+shadow.Position = UDim2.new(0, -5, 0, -5)
+shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+shadow.BackgroundTransparency = 0.5
+shadow.ZIndex = mainFrame.ZIndex - 1
+shadow.Parent = mainFrame
 
-    -- Stroke Principal
-    local MainStroke = Instance.new("UIStroke")
-    MainStroke.Color = WixtHub.Theme.Primary
-    MainStroke.Thickness = 3
-    MainStroke.Parent = MainFrame
+local shadowCorner = Instance.new("UICorner")
+shadowCorner.CornerRadius = UDim.new(0, 20)
+shadowCorner.Parent = shadow
 
-    -- Header
-    local Header = Instance.new("Frame")
-    Header.Name = "Header"
-    Header.Size = UDim2.new(1, 0, 0, 70) -- Altura ajustada
-    Header.Position = UDim2.new(0, 0, 0, 0)
-    Header.BackgroundColor3 = WixtHub.Theme.Primary
-    Header.BorderSizePixel = 0
-    Header.Parent = MainFrame
+-- 🎯 HEADER
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1, 0, 0, 60)
+header.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+header.BorderSizePixel = 0
+header.Parent = mainFrame
 
-    local HeaderCorner = Instance.new("UICorner")
-    HeaderCorner.CornerRadius = UDim.new(0, 25)
-    HeaderCorner.Parent = Header
+local headerCorner = Instance.new("UICorner")
+headerCorner.CornerRadius = UDim.new(0, 15)
+headerCorner.Parent = header
 
-    -- Fix Header Bottom
-    local HeaderFix = Instance.new("Frame")
-    HeaderFix.Size = UDim2.new(1, 0, 0, 35)
-    HeaderFix.Position = UDim2.new(0, 0, 0.5, 0)
-    HeaderFix.BackgroundColor3 = WixtHub.Theme.Primary
-    HeaderFix.BorderSizePixel = 0
-    HeaderFix.Parent = Header
+-- 🔥 TÍTULO
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -60, 1, 0)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "🔥 WixT Hub Ultimate"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 20
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Font = Enum.Font.GothamBold
+title.Parent = header
 
-    -- Título
-    local Title = Instance.new("TextLabel")
-    Title.Name = "Title"
-    Title.Size = UDim2.new(0.65, 0, 1, 0)
-    Title.Position = UDim2.new(0, 25, 0, 0)
-    Title.BackgroundTransparency = 1
-    Title.Text = "🔥 WixT Hub"
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.TextSize = 28
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-    Title.Font = Enum.Font.GothamBold
-    Title.Parent = Header
+-- ❌ BOTÃO FECHAR
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 40, 0, 40)
+closeButton.Position = UDim2.new(1, -50, 0, 10)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+closeButton.Text = "✕"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.TextSize = 18
+closeButton.Font = Enum.Font.GothamBold
+closeButton.BorderSizePixel = 0
+closeButton.Parent = header
 
-    -- Botão Fechar
-    local CloseButton = Instance.new("TextButton")
-    CloseButton.Name = "CloseButton"
-    CloseButton.Size = UDim2.new(0, 60, 0, 60)
-    CloseButton.Position = UDim2.new(1, -85, 0, 5) -- Posição ajustada
-    CloseButton.BackgroundColor3 = WixtHub.Theme.Error
-    CloseButton.Text = "✕"
-    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    CloseButton.TextSize = 24
-    CloseButton.Font = Enum.Font.GothamBold
-    CloseButton.BorderSizePixel = 0
-    CloseButton.Parent = Header
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 8)
+closeCorner.Parent = closeButton
 
-    local CloseCorner = Instance.new("UICorner")
-    CloseCorner.CornerRadius = UDim.new(0, 30)
-    CloseCorner.Parent = CloseButton
+-- 📂 CONTAINER DE CONTEÚDO
+local contentFrame = Instance.new("ScrollingFrame")
+contentFrame.Size = UDim2.new(1, -20, 1, -80)
+contentFrame.Position = UDim2.new(0, 10, 0, 70)
+contentFrame.BackgroundTransparency = 1
+contentFrame.ScrollBarThickness = 8
+contentFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
+contentFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+contentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+contentFrame.Parent = mainFrame
 
-    -- Container Principal
-    local Container = Instance.new("Frame")
-    Container.Name = "Container"
-    Container.Size = UDim2.new(1, -20, 1, -90) -- Tamanho ajustado
-    Container.Position = UDim2.new(0, 10, 0, 80) -- Posição ajustada
-    Container.BackgroundTransparency = 1
-    Container.Parent = MainFrame
+-- 📐 LAYOUT
+local layout = Instance.new("UIListLayout")
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Padding = UDim.new(0, 10)
+layout.Parent = contentFrame
 
-    -- Tabs Container (Horizontal)
-    local TabsContainer = Instance.new("Frame")
-    TabsContainer.Name = "TabsContainer"
-    TabsContainer.Size = UDim2.new(1, 0, 0, 80) -- Altura ajustada
-    TabsContainer.Position = UDim2.new(0, 0, 0, 0)
-    TabsContainer.BackgroundColor3 = WixtHub.Theme.Dark
-    TabsContainer.BorderSizePixel = 0
-    TabsContainer.Parent = Container
+-- 🎨 FUNÇÕES DE CRIAÇÃO DE ELEMENTOS
 
-    local TabsCorner = Instance.new("UICorner")
-    TabsCorner.CornerRadius = UDim.new(0, 20)
-    TabsCorner.Parent = TabsContainer
-
-    local TabsLayout = Instance.new("UIListLayout")
-    TabsLayout.FillDirection = Enum.FillDirection.Horizontal
-    TabsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    TabsLayout.Padding = UDim.new(0, 10) -- Padding ajustado
-    TabsLayout.Parent = TabsContainer
-
-    local TabsPadding = Instance.new("UIPadding")
-    TabsPadding.PaddingAll = UDim.new(0, 15) -- Padding ajustado
-    TabsPadding.Parent = TabsContainer
-
-    -- Content Container (Área onde o conteúdo das abas aparece)
-    local ContentContainer = Instance.new("Frame")
-    ContentContainer.Name = "ContentContainer"
-    ContentContainer.Size = UDim2.new(1, 0, 1, -90) -- Tamanho ajustado
-    ContentContainer.Position = UDim2.new(0, 0, 0, 90) -- Posição ajustada
-    ContentContainer.BackgroundColor3 = WixtHub.Theme.Dark -- Cor ajustada
-    ContentContainer.BorderSizePixel = 0
-    ContentContainer.Parent = Container
-
-    local ContentCorner = Instance.new("UICorner")
-    ContentCorner.CornerRadius = UDim.new(0, 20)
-    ContentCorner.Parent = ContentContainer
-
-    return {
-        ScreenGui = ScreenGui,
-        MainFrame = MainFrame,
-        BackgroundDim = BackgroundDim, -- Incluído
-        Header = Header,
-        TabsContainer = TabsContainer,
-        ContentContainer = ContentContainer,
-        CloseButton = CloseButton
-    }
+-- 📋 CRIAR SEÇÃO
+local function createSection(name)
+    local section = Instance.new("Frame")
+    section.Size = UDim2.new(1, 0, 0, 40)
+    section.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
+    section.BorderSizePixel = 0
+    section.Parent = contentFrame
+    
+    local sectionCorner = Instance.new("UICorner")
+    sectionCorner.CornerRadius = UDim.new(0, 8)
+    sectionCorner.Parent = section
+    
+    local sectionLabel = Instance.new("TextLabel")
+    sectionLabel.Size = UDim2.new(1, -20, 1, 0)
+    sectionLabel.Position = UDim2.new(0, 10, 0, 0)
+    sectionLabel.BackgroundTransparency = 1
+    sectionLabel.Text = name
+    sectionLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    sectionLabel.TextSize = 16
+    sectionLabel.TextXAlignment = Enum.TextXAlignment.Left
+    sectionLabel.Font = Enum.Font.GothamBold
+    sectionLabel.Parent = section
+    
+    return section
 end
 
--- 🎯 SISTEMA DE ABAS ULTIMATE (CORRIGIDO)
-local function CreateTabSystem(interface)
-    local tabs = {}
-    local currentTabName = nil -- Guarda o nome da aba atual
-
-    local function CreateTab(name, icon)
-        local tabIndex = #tabs + 1
-
-        -- Botão da Aba
-        local TabButton = Instance.new("TextButton")
-        TabButton.Name = name .. "Tab"
-        TabButton.Size = UDim2.new(0, 80, 1, 0) -- Tamanho ajustado
-        TabButton.BackgroundColor3 = WixtHub.Theme.Card
-        TabButton.Text = icon
-        TabButton.TextColor3 = WixtHub.Theme.TextSecondary
-        TabButton.TextSize = 24 -- Tamanho do ícone ajustado
-        TabButton.Font = Enum.Font.GothamBold
-        TabButton.BorderSizePixel = 0
-        TabButton.LayoutOrder = tabIndex
-        TabButton.Parent = interface.TabsContainer
-
-        local TabCorner = Instance.new("UICorner")
-        TabCorner.CornerRadius = UDim.new(0, 15) -- Corner ajustado
-        TabCorner.Parent = TabButton
-
-        -- Conteúdo da Aba
-        local ContentFrame = Instance.new("ScrollingFrame")
-        ContentFrame.Name = name .. "Content"
-        ContentFrame.Size = UDim2.new(1, -30, 1, -30) -- Tamanho ajustado
-        ContentFrame.Position = UDim2.new(0, 15, 0, 15) -- Posição ajustada
-        ContentFrame.BackgroundTransparency = 1 -- Transparente para mostrar o fundo do ContentContainer
-        ContentFrame.ScrollBarThickness = 10
-        ContentFrame.ScrollBarImageColor3 = WixtHub.Theme.Accent -- Cor ajustada
-        ContentFrame.BorderSizePixel = 0
-        ContentFrame.Visible = false -- Esconde por padrão
-        ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-        ContentFrame.Parent = interface.ContentContainer -- Pai correto
-
-        -- Layout
-        local Layout = Instance.new("UIListLayout")
-        Layout.Padding = UDim.new(0, 20) -- Padding ajustado
-        Layout.SortOrder = Enum.SortOrder.LayoutOrder
-        Layout.Parent = ContentFrame
-
-        -- Auto-resize
-        Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            ContentFrame.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 40)
-        end)
-
-        local function SelectTab()
-            -- Desativar todas
-            for _, tabData in pairs(tabs) do
-                TweenService:Create(tabData.Button, TweenInfo.new(0.3), {
-                    BackgroundColor3 = WixtHub.Theme.Card,
-                    TextColor3 = WixtHub.Theme.TextSecondary
-                }):Play()
-                tabData.Content.Visible = false
-            end
-
-            -- Ativar esta
-            TweenService:Create(TabButton, TweenInfo.new(0.3), {
-                BackgroundColor3 = WixtHub.Theme.Primary,
-                TextColor3 = Color3.fromRGB(255, 255, 255)
-            }):Play()
-            ContentFrame.Visible = true
-            currentTabName = name -- Atualiza o nome da aba ativa
-
-            -- Força um update para garantir que os elementos internos apareçam
-            ContentFrame.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 41) -- +1 pixel hack
-            ContentFrame.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 40)
-        end
-
-        TabButton.MouseButton1Click:Connect(SelectTab)
-
-        table.insert(tabs, {
-            Name = name,
-            Button = TabButton,
-            Content = ContentFrame
-        })
-
-        -- Ativar primeira aba por padrão
-        if tabIndex == 1 then
-            SelectTab()
-        end
-
-        return ContentFrame -- Retorna o frame de conteúdo da aba
-    end
-
-    return CreateTab -- Retorna a função para criar abas
-end
-
--- 🎮 ELEMENTOS UI ULTIMATE (CORRIGIDOS E MELHORADOS)
-local function CreateButton(parent, text, callback)
-    local Button = Instance.new("TextButton")
-    Button.Size = UDim2.new(1, 0, 0, 60) -- Altura ajustada
-    Button.BackgroundColor3 = WixtHub.Theme.Primary
-    Button.Text = text
-    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Button.TextSize = 18
-    Button.Font = Enum.Font.GothamBold
-    Button.BorderSizePixel = 0
-    Button.Parent = parent
-
-    local Corner = Instance.new("UICorner")
-    Corner.CornerRadius = UDim.new(0, 15)
-    Corner.Parent = Button
-
-    local Stroke = Instance.new("UIStroke")
-    Stroke.Color = WixtHub.Theme.Border
-    Stroke.Thickness = 2
-    Stroke.Parent = Button
-
-    -- Efeitos Touch melhores
-    Button.MouseButton1Down:Connect(function()
-        TweenService:Create(Button, TweenInfo.new(0.1), {
-             BackgroundColor3 = WixtHub.Theme.Secondary,
-             Size = UDim2.new(1, 0, 0, 55)
-        }):Play()
+-- 🔘 CRIAR TOGGLE
+local function createToggle(name, defaultValue, callback)
+    local toggleFrame = Instance.new("Frame")
+    toggleFrame.Size = UDim2.new(1, 0, 0, 45)
+    toggleFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    toggleFrame.BorderSizePixel = 0
+    toggleFrame.Parent = contentFrame
+    
+    local toggleCorner = Instance.new("UICorner")
+    toggleCorner.CornerRadius = UDim.new(0, 8)
+    toggleCorner.Parent = toggleFrame
+    
+    local toggleLabel = Instance.new("TextLabel")
+    toggleLabel.Size = UDim2.new(1, -80, 1, 0)
+    toggleLabel.Position = UDim2.new(0, 10, 0, 0)
+    toggleLabel.BackgroundTransparency = 1
+    toggleLabel.Text = name
+    toggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggleLabel.TextSize = 14
+    toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    toggleLabel.Font = Enum.Font.Gotham
+    toggleLabel.Parent = toggleFrame
+    
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Size = UDim2.new(0, 60, 0, 25)
+    toggleButton.Position = UDim2.new(1, -70, 0.5, -12.5)
+    toggleButton.BackgroundColor3 = defaultValue and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(100, 100, 100)
+    toggleButton.Text = defaultValue and "ON" or "OFF"
+    toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggleButton.TextSize = 12
+    toggleButton.Font = Enum.Font.GothamBold
+    toggleButton.BorderSizePixel = 0
+    toggleButton.Parent = toggleFrame
+    
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim.new(0, 6)
+    buttonCorner.Parent = toggleButton
+    
+    local isToggled = defaultValue
+    
+    toggleButton.MouseButton1Click:Connect(function()
+        isToggled = not isToggled
+        toggleButton.BackgroundColor3 = isToggled and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(100, 100, 100)
+        toggleButton.Text = isToggled and "ON" or "OFF"
+        callback(isToggled)
     end)
-
-     Button.MouseButton1Up:Connect(function()
-         TweenService:Create(Button, TweenInfo.new(0.2), {
-              BackgroundColor3 = WixtHub.Theme.Primary,
-              Size = UDim2.new(1, 0, 0, 60)
-         }):Play()
-     end)
-
-    if callback then
-        Button.MouseButton1Click:Connect(callback)
-    end
-
-    return Button
+    
+    return toggleFrame
 end
 
-local function CreateToggle(parent, text, defaultValue, callback)
-    local ToggleFrame = Instance.new("Frame")
-    ToggleFrame.Size = UDim2.new(1, 0, 0, 70) -- Altura ajustada
-    ToggleFrame.BackgroundColor3 = WixtHub.Theme.Card
-    ToggleFrame.BorderSizePixel = 0
-    ToggleFrame.Parent = parent
-
-    local Corner = Instance.new("UICorner")
-    Corner.CornerRadius = UDim.new(0, 15)
-    Corner.Parent = ToggleFrame
-
-    local Stroke = Instance.new("UIStroke")
-    Stroke.Color = WixtHub.Theme.Border
-    Stroke.Thickness = 2
-    Stroke.Parent = ToggleFrame
-
-    local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(0.6, 0, 1, 0)
-    Label.Position = UDim2.new(0, 20, 0, 0)
-    Label.BackgroundTransparency = 1
-    Label.Text = text
-    Label.TextColor3 = WixtHub.Theme.Text
-    Label.TextSize = 16
-    Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.Font = Enum.Font.Gotham
-    Label.Parent = ToggleFrame
-
-    local ToggleButton = Instance.new("TextButton")
-    ToggleButton.Size = UDim2.new(0, 100, 0, 50) -- Tamanho ajustado
-    ToggleButton.Position = UDim2.new(1, -110, 0.5, -25)
-    ToggleButton.BackgroundColor3 = defaultValue and WixtHub.Theme.Success or WixtHub.Theme.Error
-    ToggleButton.Text = defaultValue and "ON" or "OFF"
-    ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    ToggleButton.TextSize = 16
-    ToggleButton.Font = Enum.Font.GothamBold
-    ToggleButton.BorderSizePixel = 0
-    ToggleButton.Parent = ToggleFrame
-
-    local ToggleCorner = Instance.new("UICorner")
-    ToggleCorner.CornerRadius = UDim.new(0, 25) -- Corner ajustado
-    ToggleCorner.Parent = ToggleButton
-
-    local isEnabled = defaultValue
-
-    ToggleButton.MouseButton1Click:Connect(function()
-        isEnabled = not isEnabled
-
-        TweenService:Create(ToggleButton, TweenInfo.new(0.3), {
-            BackgroundColor3 = isEnabled and WixtHub.Theme.Success or WixtHub.Theme.Error
-        }):Play()
-
-        ToggleButton.Text = isEnabled and "ON" or "OFF"
-
-        if callback then
-            callback(isEnabled)
-        end
-    end)
-
-    return ToggleFrame
-end
-
-local function CreateSlider(parent, text, min, max, defaultValue, callback)
-    local SliderFrame = Instance.new("Frame")
-    SliderFrame.Size = UDim2.new(1, 0, 0, 95) -- Altura ajustada
-    SliderFrame.BackgroundColor3 = WixtHub.Theme.Card
-    SliderFrame.BorderSizePixel = 0
-    SliderFrame.Parent = parent
-
-    local Corner = Instance.new("UICorner")
-    Corner.CornerRadius = UDim.new(0, 15)
-    Corner.Parent = SliderFrame
-
-    local Stroke = Instance.new("UIStroke")
-    Stroke.Color = WixtHub.Theme.Border
-    Stroke.Thickness = 2
-    Stroke.Parent = SliderFrame
-
-    local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(0.6, 0, 0, 40) -- Altura ajustada
-    Label.Position = UDim2.new(0, 20, 0, 10)
-    Label.BackgroundTransparency = 1
-    Label.Text = text
-    Label.TextColor3 = WixtHub.Theme.Text
-    Label.TextSize = 16
-    Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.Font = Enum.Font.Gotham
-    Label.Parent = SliderFrame
-
-    local ValueLabel = Instance.new("TextLabel")
-    ValueLabel.Size = UDim2.new(0.4, 0, 0, 40) -- Altura ajustada
-    ValueLabel.Position = UDim2.new(0.6, 0, 0, 10)
-    ValueLabel.BackgroundTransparency = 1
-    ValueLabel.Text = tostring(defaultValue)
-    ValueLabel.TextColor3 = WixtHub.Theme.Primary
-    ValueLabel.TextSize = 18
-    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
-    ValueLabel.Font = Enum.Font.GothamBold
-    ValueLabel.Parent = SliderFrame
-
-    local SliderBar = Instance.new("Frame")
-    SliderBar.Size = UDim2.new(1, -40, 0, 18) -- Largura ajustada
-    SliderBar.Position = UDim2.new(0, 20, 1, -35) -- Posição ajustada
-    SliderBar.BackgroundColor3 = WixtHub.Theme.Background
-    SliderBar.BorderSizePixel = 0
-    SliderBar.Parent = SliderFrame
-
-    local SliderBarCorner = Instance.new("UICorner")
-    SliderBarCorner.CornerRadius = UDim.new(0, 9)
-    SliderBarCorner.Parent = SliderBar
-
-    local SliderFill = Instance.new("Frame")
-    SliderFill.Size = UDim2.new((defaultValue - min) / (max - min), 0, 1, 0)
-    SliderFill.Position = UDim2.new(0, 0, 0, 0)
-    SliderFill.BackgroundColor3 = WixtHub.Theme.Primary
-    SliderFill.BorderSizePixel = 0
-    SliderFill.Parent = SliderBar
-
-    local SliderFillCorner = Instance.new("UICorner")
-    SliderFillCorner.CornerRadius = UDim.new(0, 9)
-    SliderFillCorner.Parent = SliderFill
-
-    local SliderButton = Instance.new("TextButton")
-    SliderButton.Size = UDim2.new(0, 30, 0, 30) -- Tamanho ajustado
-    SliderButton.Position = UDim2.new((defaultValue - min) / (max - min), -15, 0.5, -15) -- Posição ajustada
-    SliderButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    SliderButton.Text = ""
-    SliderButton.BorderSizePixel = 0
-    SliderButton.Parent = SliderBar
-
-    local SliderButtonCorner = Instance.new("UICorner")
-    SliderButtonCorner.CornerRadius = UDim.new(0, 15) -- Corner ajustado
-    SliderButtonCorner.Parent = SliderButton
-
-    local dragging = false
-
-    SliderButton.InputBegan:Connect(function(input)
+-- 📊 CRIAR SLIDER
+local function createSlider(name, min, max, default, callback)
+    local sliderFrame = Instance.new("Frame")
+    sliderFrame.Size = UDim2.new(1, 0, 0, 60)
+    sliderFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    sliderFrame.BorderSizePixel = 0
+    sliderFrame.Parent = contentFrame
+    
+    local sliderCorner = Instance.new("UICorner")
+    sliderCorner.CornerRadius = UDim.new(0, 8)
+    sliderCorner.Parent = sliderFrame
+    
+    local sliderLabel = Instance.new("TextLabel")
+    sliderLabel.Size = UDim2.new(1, -20, 0, 20)
+    sliderLabel.Position = UDim2.new(0, 10, 0, 5)
+    sliderLabel.BackgroundTransparency = 1
+    sliderLabel.Text = name .. ": " .. default
+    sliderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    sliderLabel.TextSize = 14
+    sliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+    sliderLabel.Font = Enum.Font.Gotham
+    sliderLabel.Parent = sliderFrame
+    
+    local sliderBackground = Instance.new("Frame")
+    sliderBackground.Size = UDim2.new(1, -20, 0, 15)
+    sliderBackground.Position = UDim2.new(0, 10, 0, 35)
+    sliderBackground.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+    sliderBackground.BorderSizePixel = 0
+    sliderBackground.Parent = sliderFrame
+    
+    local sliderBgCorner = Instance.new("UICorner")
+    sliderBgCorner.CornerRadius = UDim.new(0, 7)
+    sliderBgCorner.Parent = sliderBackground
+    
+    local sliderFill = Instance.new("Frame")
+    sliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+    sliderFill.Position = UDim2.new(0, 0, 0, 0)
+    sliderFill.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+    sliderFill.BorderSizePixel = 0
+    sliderFill.Parent = sliderBackground
+    
+    local sliderFillCorner = Instance.new("UICorner")
+    sliderFillCorner.CornerRadius = UDim.new(0, 7)
+    sliderFillCorner.Parent = sliderFill
+    
+    local currentValue = default
+    
+    sliderBackground.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-             dragging = true
-             TweenService:Create(SliderButton, TweenInfo.new(0.2), {
-                 BackgroundColor3 = WixtHub.Theme.Primary,
-                 Size = UDim2.new(0, 35, 0, 35)
-             }):Play()
-        end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-            TweenService:Create(SliderButton, TweenInfo.new(0.2), {
-                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                Size = UDim2.new(0, 30, 0, 30)
-            }):Play()
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local relativeX = math.clamp((Mouse.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
-            local value = math.floor(min + (max - min) * relativeX)
-
-            TweenService:Create(SliderFill, TweenInfo.new(0.1), {
-                Size = UDim2.new(relativeX, 0, 1, 0)
-            }):Play()
-
-            TweenService:Create(SliderButton, TweenInfo.new(0.1), {
-                Position = UDim2.new(relativeX, -15, 0.5, -15)
-            }):Play()
-
-
-            ValueLabel.Text = tostring(value)
-
-            if callback then
-                callback(value)
+            local function updateSlider()
+                local mousePos = UserInputService:GetMouseLocation().X
+                local framePos = sliderBackground.AbsolutePosition.X
+                local frameSize = sliderBackground.AbsoluteSize.X
+                local percentage = math.clamp((mousePos - framePos) / frameSize, 0, 1)
+                
+                currentValue = math.floor(min + (max - min) * percentage)
+                sliderFill.Size = UDim2.new(percentage, 0, 1, 0)
+                sliderLabel.Text = name .. ": " .. currentValue
+                callback(currentValue)
             end
-        end
-    end)
-
-    return SliderFrame
-end
-
-
--- 🔫 AIMBOT ULTIMATE (Adicionado TriggerBot e Silent Aim)
-local AimbotSettings = {
-    Enabled = false,
-    TeamCheck = true,
-    WallCheck = true,
-    TargetPart = "Head",
-    Smoothness = 0.12,
-    FOV = 180,
-    MaxDistance = 2500,
-    PredictMovement = true,
-    AutoShoot = false,
-    SilentAim = false,
-    TriggerBot = false, -- Novo
-}
-
-local function CreateUltimateAimbot()
-    -- FOV Circle
-    local FOVCircle = Drawing.new("Circle")
-    FOVCircle.Thickness = 3
-    FOVCircle.Color = WixtHub.Theme.Primary
-    FOVCircle.Filled = false
-    FOVCircle.Radius = AimbotSettings.FOV
-    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    FOVCircle.Visible = false
-
-    -- Target Indicator
-    local TargetIndicator = Drawing.new("Circle")
-    TargetIndicator.Thickness = 5
-    TargetIndicator.Color = WixtHub.Theme.Accent
-    TargetIndicator.Filled = false
-    TargetIndicator.Radius = 25
-    TargetIndicator.Visible = false
-
-    -- Crosshair
-    local CrosshairH = Drawing.new("Line")
-    CrosshairH.Thickness = 2
-    CrosshairH.Color = Color3.fromRGB(255, 255, 255)
-    CrosshairH.Visible = false
-
-    local CrosshairV = Drawing.new("Line")
-    CrosshairV.Thickness = 2
-    CrosshairV.Color = Color3.fromRGB(255, 255, 255)
-    CrosshairV.Visible = false
-
-    local function GetClosestPlayer()
-        local closestPlayer = nil
-        local closestDistance = math.huge
-        local centerScreen = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild(AimbotSettings.TargetPart) then
-                if AimbotSettings.TeamCheck and player.Team == LocalPlayer.Team then
-                    continue
-                end
-
-                local character = player.Character
-                local targetPart = character:FindFirstChild(AimbotSettings.TargetPart)
-                if not targetPart then continue end
-
-                local targetPosition = targetPart.Position
-
-                -- Predição avançada
-                if AimbotSettings.PredictMovement and character:FindFirstChild("HumanoidRootPart") and character.HumanoidRootPart:FindFirstChildOfClass("BodyVelocity") or character:FindFirstChild("HumanoidRootPart"):FindFirstChildOfClass("VectorForce") then
-                     local velocity = character.HumanoidRootPart.Velocity -- Use a velocidade real
-                     local distance = (LocalPlayer.Character.HumanoidRootPart.Position - targetPosition).Magnitude
-                     local timeToTarget = distance / 2500 -- Velocidade estimada do projétil
-                     targetPosition = targetPosition + (velocity * timeToTarget * 0.9)
-                 end
-
-                local screenPoint, onScreen = Camera:WorldToViewportPoint(targetPosition)
-
-                if onScreen then
-                    local distance2D = (Vector2.new(screenPoint.X, screenPoint.Y) - centerScreen).Magnitude
-                    local distance3D = (LocalPlayer.Character.HumanoidRootPart.Position - targetPosition).Magnitude
-
-                    if distance2D < AimbotSettings.FOV and distance3D < AimbotSettings.MaxDistance and distance2D < closestDistance then
-                        -- Wall Check avançado
-                        if AimbotSettings.WallCheck then
-                            local raycastParams = RaycastParams.new()
-                            raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-                            raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
-
-                            local raycastResult = Workspace:Raycast(Camera.CFrame.Position, (targetPosition - Camera.CFrame.Position).Unit * distance3D, raycastParams)
-
-                            if raycastResult and raycastResult.Instance:IsDescendantOf(character) then
-                                closestPlayer = player
-                                closestDistance = distance2D
-                            elseif not raycastResult then -- Se não houver obstáculo
-                                closestPlayer = player
-                                closestDistance = distance2D
-                            end
-                        else
-                            closestPlayer = player
-                            closestDistance = distance2D
-                        end
-                    end
-                end
-            end
-        end
-
-        return closestPlayer
-    end
-
-    local aimbotConnection
-    local isAiming = false
-    local currentTarget = nil
-
-    -- Input Detection
-    UserInputService.TouchStarted:Connect(function(touch, gameProcessed)
-        if not gameProcessed and AimbotSettings.Enabled then
-            isAiming = true
-        end
-    end)
-
-    UserInputService.TouchEnded:Connect(function(touch, gameProcessed)
-        isAiming = false
-        currentTarget = nil
-        TargetIndicator.Visible = false
-    end)
-
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if not gameProcessed and AimbotSettings.Enabled then
-            if input.UserInputType == Enum.UserInputType.MouseButton2 then
-                isAiming = true
-            end
-        end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input, gameProcessed)
-        if input.UserInputType == Enum.UserInputType.MouseButton2 then
-            isAiming = false
-            currentTarget = nil
-            TargetIndicator.Visible = false
-        end
-    end)
-
-    local function ToggleAimbot(enabled)
-        AimbotSettings.Enabled = enabled
-        FOVCircle.Visible = enabled
-        CrosshairH.Visible = enabled
-        CrosshairV.Visible = enabled
-
-        if enabled then
-            aimbotConnection = RunService.Heartbeat:Connect(function()
-                -- Update FOV Circle
-                FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-                FOVCircle.Radius = AimbotSettings.FOV
-
-                -- Update Crosshair
-                local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-                CrosshairH.From = Vector2.new(center.X - 10, center.Y)
-                CrosshairH.To = Vector2.new(center.X + 10, center.Y)
-                CrosshairV.From = Vector2.new(center.X, center.Y - 10)
-                CrosshairV.To = Vector2.new(center.X, center.Y + 10)
-
-
-                if isAiming or AimbotSettings.AutoShoot then
-                    local target = GetClosestPlayer()
-                    if target and target.Character and target.Character:FindFirstChild(AimbotSettings.TargetPart) then
-                        currentTarget = target
-                        local targetPart = target.Character[AimbotSettings.TargetPart]
-                        local targetPosition = targetPart.Position
-
-                        -- Predição
-                        if AimbotSettings.PredictMovement and target.Character:FindFirstChild("HumanoidRootPart") then
-                            local velocity = target.Character.HumanoidRootPart.Velocity
-                            local distance = (LocalPlayer.Character.HumanoidRootPart.Position - targetPosition).Magnitude
-                            local timeToTarget = distance / 2500
-                            targetPosition = targetPosition + (velocity * timeToTarget * 0.8)
-                        end
-
-
-                        -- Target Indicator
-                        local screenPoint, onScreen = Camera:WorldToViewportPoint(targetPosition)
-                        if onScreen then
-                            TargetIndicator.Position = Vector2.new(screenPoint.X, screenPoint.Y)
-                            TargetIndicator.Visible = true
-                        end
-
-                        -- Aimbot
-                        if not AimbotSettings.SilentAim then
-                            local cameraDirection = (targetPosition - Camera.CFrame.Position).Unit
-                            local newCFrame = CFrame.lookAt(Camera.CFrame.Position, Camera.CFrame.Position + cameraDirection)
-                            Camera.CFrame = Camera.CFrame:Lerp(newCFrame, AimbotSettings.Smoothness)
-                        end
-
-                        -- Auto Shoot
-                        if AimbotSettings.AutoShoot or AimbotSettings.TriggerBot then -- Dispara se auto shoot ou trigger bot (se no alcance)
-                             local distance = (LocalPlayer.Character.HumanoidRootPart.Position - targetPosition).Magnitude
-                             if AimbotSettings.AutoShoot or (AimbotSettings.TriggerBot and distance < 100) then // Alcance do trigger bot
-                                local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
-                                if tool and tool:FindFirstChild("RemoteEvents") then // Verifica se tem um remote de tiro (adaptar para cada jogo)
-                                     for _, v in pairs(tool.RemoteEvents:GetChildren()) do
-                                         if v:IsA("RemoteEvent") then // Dispara qualquer remoteevent no tool
-                                              v:FireServer(...)
-                                              break
-                                         end
-                                     end
-                                elseif tool and typeof(tool.PrimaryAction) == "function" then // Verifica se tem função de tiro no script local
-                                     tool.PrimaryAction()
-                                else // Dispara mouse1 click como fallback
-                                     mouse1click()
-                                end
-                             end
-                         end
-
-                    else
-                        TargetIndicator.Visible = false
-                    end
-                else
-                    TargetIndicator.Visible = false
+            
+            updateSlider()
+            
+            local connection
+            connection = UserInputService.InputEnded:Connect(function(endInput)
+                if endInput.UserInputType == Enum.UserInputType.MouseButton1 or endInput.UserInputType == Enum.UserInputType.Touch then
+                    connection:Disconnect()
                 end
             end)
-        else
-            if aimbotConnection then
-                aimbotConnection:Disconnect()
-            end
-            TargetIndicator.Visible = false
-            FOVCircle.Visible = false
-            CrosshairH.Visible = false
-            CrosshairV.Visible = false
+            
+            local moveConnection
+            moveConnection = UserInputService.InputChanged:Connect(function(changeInput)
+                if changeInput.UserInputType == Enum.UserInputType.MouseMovement or changeInput.UserInputType == Enum.UserInputType.Touch then
+                    updateSlider()
+                end
+            end)
+            
+            connection.Disconnected:Connect(function()
+                moveConnection:Disconnect()
+            end)
         end
-    end
-
-    return {
-        Toggle = ToggleAimbot,
-        Settings = AimbotSettings,
-    }
+    end)
+    
+    return sliderFrame
 end
 
--- 👁️ ESP ULTIMATE (Adicionado Skeletons e Tracers)
-local ESPSettings = {
-    Enabled = false,
-    Names = true,
-    Health = true,
-    Distance = true,
-    Boxes = true,
-    Skeletons = false, -- Novo
-    Tracers = false, -- Novo
-    TeamCheck = true,
-    MaxDistance = 2500
-}
-
-local function CreateUltimateESP()
-    local espObjects = {}
-
-    local function CreateESPObject(player)
-        local esp = {}
-
-        esp.nameLabel = Drawing.new("Text")
-        esp.nameLabel.Size = 18
-        esp.nameLabel.Color = Color3.fromRGB(255, 255, 255)
-        esp.nameLabel.Font = 2
-        esp.nameLabel.Outline = true
-        esp.nameLabel.Center = true
-        esp.nameLabel.Visible = false
-
-        esp.healthLabel = Drawing.new("Text")
-        esp.healthLabel.Size = 16
-        esp.healthLabel.Color = Color3.fromRGB(0, 255, 0)
-        esp.healthLabel.Font = 2
-        esp.healthLabel.Outline = true
-        esp.healthLabel.Center = true
-        esp.healthLabel.Visible = false
-
-        esp.distanceLabel = Drawing.new("Text")
-        esp.distanceLabel.Size = 14
-        esp.distanceLabel.Color = Color3.fromRGB(255, 255, 0)
-        esp.distanceLabel.Font = 2
-        esp.distanceLabel.Outline = true
-        esp.distanceLabel.Center = true
-        esp.distanceLabel.Visible = false
-
-        esp.box = Drawing.new("Square")
-        esp.box.Color = WixtHub.Theme.Primary
-        esp.box.Thickness = 2
-        esp.box.Filled = false
-        esp.box.Visible = false
-
-        esp.healthBar = Drawing.new("Square")
-        esp.healthBar.Color = Color3.fromRGB(0, 255, 0)
-        esp.healthBar.Thickness = 0
-        esp.healthBar.Filled = true
-        esp.healthBar.Visible = false
-
-        esp.tracer = Drawing.new("Line")
-        esp.tracer.Color = WixtHub.Theme.Accent
-        esp.tracer.Thickness = 2
-        esp.tracer.Visible = false
-
-        -- Skeletons
-        esp.skeleton = {}
-        local bones = {
-            Head = "Neck",
-            Neck = "Torso",
-            Torso = "HumanoidRootPart",
-
-            HumanoidRootPart = "LeftUpperLeg",
-            LeftUpperLeg = "LeftLowerLeg",
-            LeftLowerLeg = "LeftFoot",
-
-            HumanoidRootPart = "RightUpperLeg",
-            RightUpperLeg = "RightLowerLeg",
-            RightLowerLeg = "RightFoot",
-
-            Torso = "LeftUpperArm",
-            LeftUpperArm = "LeftLowerArm",
-            LeftLowerArm = "LeftHand",
-
-            Torso = "RightUpperArm",
-            RightUpperArm = "RightLowerArm",
-            RightLowerArm = "RightHand"
-        }
-
-        for p1, p2 in pairs(bones) do
-            esp.skeleton[p1 .. "-" .. p2] = Drawing.new("Line")
-            esp.skeleton[p1 .. "-" .. p2].Color = WixtHub.Theme.Secondary
-            esp.skeleton[p1 .. "-" .. p2].Thickness = 2
-            esp.skeleton[p1 .. "-" .. p2].Visible = false
-        end
-
-
-        return esp
-    end
-
-    local function UpdateESP()
-        for player, esp in pairs(espObjects) do
-            local isValid = player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid")
-
-            if isValid then
-                local character = player.Character
-                local rootPart = character.HumanoidRootPart
-                local humanoid = character.Humanoid
-
-                if ESPSettings.TeamCheck and player.Team == LocalPlayer.Team then
-                    -- Esconde tudo se for do time
-                    for _, d in pairs(esp) do if typeof(d) == "Drawing" then d.Visible = false end end
-                    continue
-                end
-
-                local distance = (LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
-                local screenPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
-
-                -- Verifica se está na tela E dentro da distância máxima E ESP habilitado
-                if onScreen and distance <= ESPSettings.MaxDistance and ESPSettings.Enabled then
-
-                    -- Nomes
-                    esp.nameLabel.Visible = ESPSettings.Names
-                    if ESPSettings.Names then
-                         esp.nameLabel.Position = Vector2.new(screenPos.X, screenPos.Y - 70)
-                         esp.nameLabel.Text = player.Name
-                    end
-
-
-                    -- Health
-                    esp.healthLabel.Visible = ESPSettings.Health
-                    if ESPSettings.Health then
-                        esp.healthLabel.Position = Vector2.new(screenPos.X, screenPos.Y - 50)
-                        esp.healthLabel.Text = math.floor(humanoid.Health) .. "/" .. math.floor(humanoid.MaxHealth)
-                        local healthPercent = humanoid.Health / humanoid.MaxHealth
-                        esp.healthLabel.Color = Color3.fromRGB(
-                            math.clamp(255 - healthPercent * 255, 0, 255),
-                            math.clamp(healthPercent * 255, 0, 255),
-                            0
-                        )
-                    end
-
-                    -- Distance
-                    esp.distanceLabel.Visible = ESPSettings.Distance
-                     if ESPSettings.Distance then
-                         esp.distanceLabel.Position = Vector2.new(screenPos.X, screenPos.Y + 50)
-                         esp.distanceLabel.Text = math.floor(distance) .. "m"
-                     end
-
-
-                    -- Boxes & Health Bar
-                    esp.box.Visible = ESPSettings.Boxes
-                    esp.healthBar.Visible = ESPSettings.Boxes and ESPSettings.Health
-
-                    if ESPSettings.Boxes and character:FindFirstChild("Head") then
-                        local headPos, headOnScreen = Camera:WorldToViewportPoint(character.Head.Position + Vector3.new(0, 0.5, 0))
-                        local legPos, legOnScreen = Camera:WorldToViewportPoint(character.HumanoidRootPart.Position - Vector3.new(0, 3, 0))
-
-                        if headOnScreen and legOnScreen then
-                            local boxHeight = math.abs(headPos.Y - legPos.Y)
-                            local boxWidth = boxHeight * 0.6
-
-                            esp.box.Size = Vector2.new(boxWidth, boxHeight)
-                            esp.box.Position = Vector2.new(screenPos.X - boxWidth/2, headPos.Y)
-
-                            -- Health Bar ao lado da box
-                            if humanoid and ESPSettings.Health then
-                                local healthPercent = humanoid.Health / humanoid.MaxHealth
-                                esp.healthBar.Size = Vector2.new(6, boxHeight * healthPercent)
-                                esp.healthBar.Position = Vector2.new(screenPos.X - boxWidth/2 - 10, headPos.Y + boxHeight - (boxHeight * healthPercent))
-                                esp.healthBar.Color = Color3.fromRGB(
-                                    math.clamp(255 - healthPercent * 255, 0, 255),
-                                    math.clamp(healthPercent * 255, 0, 255),
-                                    0
-                                )
-                            end
-                        else
-                            esp.box.Visible = false
-                            esp.healthBar.Visible = false
-                        end
-                    else
-                        esp.box.Visible = false
-                        esp.healthBar.Visible = false
-                    end
-
-                    -- Skeletons
-                    if ESPSettings.Skeletons then
-                        local parts = {
-                            Head = character:FindFirstChild("Head"),
-                            Torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso"),
-                            HumanoidRootPart = character:FindFirstChild("HumanoidRootPart"),
-                            
-                            LeftUpperLeg = character:FindFirstChild("LeftUpperLeg") or character:FindFirstChild("Left Leg"),
-                            LeftLowerLeg = character:FindFirstChild("LeftLowerLeg"),
-                            LeftFoot = character:FindFirstChild("LeftFoot"),
-                            
-                            RightUpperLeg = character:FindFirstChild("RightUpperLeg") or character:FindFirstChild("Right Leg"),
-                            RightLowerLeg = character:FindFirstChild("RightLowerLeg"),
-                            RightFoot = character:FindFirstChild("RightFoot"),
-                            
-                            LeftUpperArm = character:FindFirstChild("LeftUpperArm") or character:FindFirstChild("Left Arm"),
-                            LeftLowerArm = character:FindFirstChild("LeftLowerArm"),
-                            LeftHand = character:FindFirstChild("LeftHand"),
-                            
-                            RightUpperArm = character:FindFirstChild("RightUpperArm") or character:FindFirstChild("Right Arm"),
-                            RightLowerArm = character:FindFirstChild("RightLowerArm"),
-                            RightHand = character:FindFirstChild("RightHand")
-                        }
-
-                        local bones = {
-                            {"Head", "Torso"},
-                            {"Torso", "HumanoidRootPart"},
-                            {"HumanoidRootPart", "LeftUpperLeg"},
-                            {"LeftUpperLeg", "LeftLowerLeg"},
-                            {"LeftLowerLeg", "LeftFoot"},
-                            {"HumanoidRootPart", "RightUpperLeg"},
-                            {"RightUpperLeg", "RightLowerLeg"},
-                            {"RightLowerLeg", "RightFoot"},
-                            {"Torso", "LeftUpperArm"},
-                            {"LeftUpperArm", "LeftLowerArm"},
-                            {"LeftLowerArm", "LeftHand"},
-                            {"Torso", "RightUpperArm"},
-                            {"RightUpperArm", "RightLowerArm"},
-                            {"RightLowerArm", "RightHand"}
-                        }
-
-                        for _, bonePair in pairs(bones) do
-                            local p1Name, p2Name = unpack(bonePair)
-                            local p1 = parts[p1Name]
-                            local p2 = parts[p2Name]
-                            local boneName = p1Name .. "-" .. p2Name
-
-                            if p1 and p2 and esp.skeleton[boneName] then
-                                local p1Screen, p1OnScreen = Camera:WorldToViewportPoint(p1.Position)
-                                local p2Screen, p2OnScreen = Camera:WorldToViewportPoint(p2.Position)
-
-                                if p1OnScreen and p2OnScreen then
-                                    esp.skeleton[boneName].From = Vector2.new(p1Screen.X, p1Screen.Y)
-                                    esp.skeleton[boneName].To = Vector2.new(p2Screen.X, p2Screen.Y)
-                                    esp.skeleton[boneName].Visible = true
-                                else
-                                    esp.skeleton[boneName].Visible = false
-                                end
-                            elseif esp.skeleton[boneName] then
-                                esp.skeleton[boneName].Visible = false
-                            end
-                        end
-                    else
-                        for _, boneLine in pairs(esp.skeleton) do
-                            boneLine.Visible = false
-                        end
-                    end
-
-                    -- Tracers
-                    if ESPSettings.Tracers then
-                        esp.tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-                        esp.tracer.To = Vector2.new(screenPos.X, screenPos.Y)
-                        esp.tracer.Visible = true
-                    else
-                        esp.tracer.Visible = false
-                    end
-
-                else
-                    -- Esconde tudo se fora da tela/distância
-                    esp.nameLabel.Visible = false
-                    esp.healthLabel.Visible = false
-                    esp.distanceLabel.Visible = false
-                    esp.box.Visible = false
-                    esp.healthBar.Visible = false
-                    esp.tracer.Visible = false
-                    for _, boneLine in pairs(esp.skeleton) do
-                        boneLine.Visible = false
-                    end
-                end
-            else
-                -- Esconde tudo se personagem inválido
-                esp.nameLabel.Visible = false
-                esp.healthLabel.Visible = false
-                esp.distanceLabel.Visible = false
-                esp.box.Visible = false
-                esp.healthBar.Visible = false
-                esp.tracer.Visible = false
-                for _, boneLine in pairs(esp.skeleton) do
-                    boneLine.Visible = false
-                end
-            end
-        end
-    end
-
-    Players.PlayerAdded:Connect(function(player)
-        espObjects[player] = CreateESPObject(player)
+-- 🔲 CRIAR BOTÃO
+local function createButton(name, callback)
+    local buttonFrame = Instance.new("TextButton")
+    buttonFrame.Size = UDim2.new(1, 0, 0, 45)
+    buttonFrame.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    buttonFrame.Text = name
+    buttonFrame.TextColor3 = Color3.fromRGB(255, 255, 255)
+    buttonFrame.TextSize = 14
+    buttonFrame.Font = Enum.Font.GothamBold
+    buttonFrame.BorderSizePixel = 0
+    buttonFrame.Parent = contentFrame
+    
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim.new(0, 8)
+    buttonCorner.Parent = buttonFrame
+    
+    buttonFrame.MouseButton1Click:Connect(function()
+        buttonFrame.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+        wait(0.1)
+        buttonFrame.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+        callback()
     end)
+    
+    return buttonFrame
+end
 
-    Players.PlayerRemoving:Connect(function(player)
-        if espObjects[player] then
-            for _, object in pairs(espObjects[player]) do
-                if typeof(object) == "userdata" and object.Remove then
-                    object:Remove()
-                end
-            end
-            if espObjects[player].skeleton then
-                for _, boneLine in pairs(espObjects[player].skeleton) do
-                    if boneLine.Remove then
-                        boneLine:Remove()
-                    end
-                end
-            end
-            espObjects[player] = nil
-        end
-    end)
+-- 🎯 SISTEMA AIMBOT SIMPLES
+local aimbotEnabled = false
+local aimbotFOV = 100
+local aimbotSmoothing = 0.1
 
+local function getClosestPlayer()
+    local closestPlayer = nil
+    local closestDistance = math.huge
+    
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            espObjects[player] = CreateESPObject(player)
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+            local screenPos, onScreen = Camera:WorldToViewportPoint(player.Character.Head.Position)
+            if onScreen then
+                local distance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+                if distance < aimbotFOV and distance < closestDistance then
+                    closestDistance = distance
+                    closestPlayer = player
+                end
+            end
         end
     end
+    
+    return closestPlayer
+end
 
-    local espConnection
+local function aimAt(character)
+    if character and character:FindFirstChild("Head") then
+        local targetPos = Camera:WorldToScreenPoint(character.Head.Position)
+        local currentPos = Vector2.new(Mouse.X, Mouse.Y)
+        local targetPos2D = Vector2.new(targetPos.X, targetPos.Y)
+        local newPos = currentPos:Lerp(targetPos2D, aimbotSmoothing)
+        
+        mousemoverel(newPos.X - currentPos.X, newPos.Y - currentPos.Y)
+    end
+end
 
-    local function ToggleESP(enabled)
-        ESPSettings.Enabled = enabled
+-- 🎯 LOOP DO AIMBOT
+RunService.Heartbeat:Connect(function()
+    if aimbotEnabled then
+        local target = getClosestPlayer()
+        if target then
+            aimAt(target.Character)
+        end
+    end
+end)
 
-        if enabled then
-            espConnection = RunService.Heartbeat:Connect(UpdateESP)
-        else
-            if espConnection then
-                espConnection:Disconnect()
-                espConnection = nil
-            end
+-- 👁️ SISTEMA ESP SIMPLES
+local espEnabled = false
+local espObjects = {}
 
-            for _, esp in pairs(espObjects) do
+local function createESP(player)
+    local esp = {}
+    
+    -- Nome
+    esp.nameLabel = Drawing.new("Text")
+    esp.nameLabel.Size = 16
+    esp.nameLabel.Color = Color3.fromRGB(255, 255, 255)
+    esp.nameLabel.Center = true
+    esp.nameLabel.Outline = true
+    esp.nameLabel.OutlineColor = Color3.fromRGB(0, 0, 0)
+    
+    -- Box
+    esp.box = Drawing.new("Square")
+    esp.box.Color = Color3.fromRGB(255, 255, 255)
+    esp.box.Thickness = 2
+    esp.box.Filled = false
+    
+    return esp
+end
+
+local function updateESP()
+    for player, esp in pairs(espObjects) do
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Head") then
+            local rootPart = player.Character.HumanoidRootPart
+            local head = player.Character.Head
+            
+            local rootPos, rootOnScreen = Camera:WorldToViewportPoint(rootPart.Position)
+            local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+            
+            if rootOnScreen and headOnScreen then
+                -- Nome
+                esp.nameLabel.Position = Vector2.new(headPos.X, headPos.Y - 30)
+                esp.nameLabel.Text = player.Name
+                esp.nameLabel.Visible = true
+                
+                -- Box
+                local boxHeight = math.abs(headPos.Y - rootPos.Y) * 1.2
+                local boxWidth = boxHeight * 0.6
+                
+                esp.box.Size = Vector2.new(boxWidth, boxHeight)
+                esp.box.Position = Vector2.new(headPos.X - boxWidth/2, headPos.Y)
+                esp.box.Visible = true
+            else
                 esp.nameLabel.Visible = false
-                esp.healthLabel.Visible = false
-                esp.distanceLabel.Visible = false
                 esp.box.Visible = false
-                esp.healthBar.Visible = false
-                esp.tracer.Visible = false
-                for _, boneLine in pairs(esp.skeleton) do
-                    boneLine.Visible = false
-                end
             end
-        end
-    end
-
-    return {
-        Toggle = ToggleESP,
-        Settings = ESPSettings
-    }
-end
-
--- 🏃 MOVIMENTO ULTIMATE (Adicionado Noclip e Fly)
-local function CreateUltimateMovement()
-    local noclipConnection
-    local flyConnection
-    local bodyVelocity
-
-    local function SetWalkSpeed(speed)
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = speed
-        end
-    end
-
-    local function SetJumpPower(power)
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.JumpPower = power
-        end
-    end
-
-    local function ToggleNoclip(enabled)
-        if enabled then
-            noclipConnection = RunService.Stepped:Connect(function()
-                if LocalPlayer.Character then
-                    for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                            part.CanCollide = false
-                        end
-                    end
-                end
-            end)
         else
-            if noclipConnection then
-                noclipConnection:Disconnect()
-                noclipConnection = nil
-            end
-            if LocalPlayer.Character then
-                for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = true
-                    end
-                end
-            end
+            esp.nameLabel.Visible = false
+            esp.box.Visible = false
         end
-    end
-
-    local function ToggleFly(enabled)
-        if enabled then
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and not LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyVelocity") then
-                bodyVelocity = Instance.new("BodyVelocity")
-                bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-                bodyVelocity.Parent = LocalPlayer.Character.HumanoidRootPart
-            end
-
-            flyConnection = RunService.Heartbeat:Connect(function()
-                if bodyVelocity then
-                    local moveVector = Vector3.new(0, 0, 0)
-                    local moveSpeed = 50
-
-                    if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-                        moveVector = moveVector + Camera.CFrame.LookVector
-                    end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-                        moveVector = moveVector - Camera.CFrame.LookVector
-                    end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-                        moveVector = moveVector - Camera.CFrame.RightVector
-                    end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-                        moveVector = moveVector + Camera.CFrame.RightVector
-                    end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-                        moveVector = moveVector + Vector3.new(0, 1, 0)
-                    end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
-                        moveVector = moveVector - Vector3.new(0, 1, 0)
-                    end
-
-                    bodyVelocity.Velocity = moveVector.Unit * moveSpeed
-                end
-            end)
-        else
-            if flyConnection then
-                flyConnection:Disconnect()
-                flyConnection = nil
-            end
-            if bodyVelocity then
-                bodyVelocity:Destroy()
-                bodyVelocity = nil
-            end
-        end
-    end
-
-    return {
-        SetWalkSpeed = SetWalkSpeed,
-        SetJumpPower = SetJumpPower,
-        ToggleNoclip = ToggleNoclip,
-        ToggleFly = ToggleFly,
-    }
-end
-
--- 🚀 INICIALIZAÇÃO GERAL
-local interface = CreateUltimateInterface()
-local createTab = CreateTabSystem(interface)
-local aimbotSystem = CreateUltimateAimbot()
-local espSystem = CreateUltimateESP()
-local movementSystem = CreateUltimateMovement()
-
--- Ativar/Desativar Interface
-local isInterfaceVisible = false
-
-local function ToggleInterface(visible)
-    isInterfaceVisible = visible
-
-    if visible then
-        interface.BackgroundDim.Visible = true
-        interface.MainFrame.Visible = true
-
-        TweenService:Create(interface.MainFrame, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 380, 0, 650),
-            Position = UDim2.new(0.5, -190, 0.5, -325),
-            Rotation = 0
-        }):Play()
-
-        TweenService:Create(interface.BackgroundDim, TweenInfo.new(0.5), {
-            BackgroundTransparency = 0.6
-        }):Play()
-
-    else
-        TweenService:Create(interface.MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 0, 0, 0),
-            Position = UDim2.new(0.5, 0, 0.5, 0),
-            Rotation = -180
-        }):Play()
-
-        TweenService:Create(interface.BackgroundDim, TweenInfo.new(0.5), {
-            BackgroundTransparency = 1
-        }):Play()
-
-        wait(0.5)
-        interface.MainFrame.Visible = false
-        interface.BackgroundDim.Visible = false
-
-        aimbotSystem.Toggle(false)
-        espSystem.Toggle(false)
     end
 end
 
--- Toggle inicial
-local debugButton = Instance.new("TextButton")
-debugButton.Size = UDim2.new(0, 100, 0, 50)
-debugButton.Position = UDim2.new(0, 10, 0, 10)
-debugButton.Text = "Abrir Hub"
-debugButton.Parent = game.CoreGui
-debugButton.MouseButton1Click:Connect(function()
-    ToggleInterface(not isInterfaceVisible)
+-- 👁️ LOOP DO ESP
+RunService.Heartbeat:Connect(function()
+    if espEnabled then
+        updateESP()
+    end
 end)
 
-interface.CloseButton.MouseButton1Click:Connect(function()
-    ToggleInterface(false)
+-- 👥 GERENCIAR PLAYERS
+Players.PlayerAdded:Connect(function(player)
+    espObjects[player] = createESP(player)
 end)
 
--- 🎯 ABA AIMBOT
-local aimbotTab = createTab("Aimbot", "🎯")
-
-CreateToggle(aimbotTab, "🔥 Aimbot Ativado", false, function(enabled)
-    aimbotSystem.Toggle(enabled)
+Players.PlayerRemoving:Connect(function(player)
+    if espObjects[player] then
+        for _, object in pairs(espObjects[player]) do
+            if object.Remove then
+                object:Remove()
+            end
+        end
+        espObjects[player] = nil
+    end
 end)
 
-CreateToggle(aimbotTab, "👥 Team Check", true, function(enabled)
-    aimbotSystem.Settings.TeamCheck = enabled
+-- Criar ESP para players existentes
+for _, player in pairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        espObjects[player] = createESP(player)
+    end
+end
+
+-- 🏃 SISTEMA DE MOVIMENTO
+local originalSpeed = 16
+local originalJump = 50
+
+local function setSpeed(speed)
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = speed
+    end
+end
+
+local function setJump(jump)
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.JumpPower = jump
+    end
+end
+
+-- 🎨 CRIAÇÃO DA INTERFACE
+
+-- 🎯 SEÇÃO AIMBOT
+createSection("🎯 AIMBOT")
+
+createToggle("🔥 Aimbot Ativado", false, function(enabled)
+    aimbotEnabled = enabled
 end)
 
-CreateToggle(aimbotTab, "🧱 Wall Check", true, function(enabled)
-    aimbotSystem.Settings.WallCheck = enabled
+createSlider("🎯 FOV", 50, 500, 100, function(value)
+    aimbotFOV = value
 end)
 
-CreateToggle(aimbotTab, "🎯 Predição", true, function(enabled)
-    aimbotSystem.Settings.PredictMovement = enabled
+createSlider("⚡ Suavidade", 1, 100, 10, function(value)
+    aimbotSmoothing = value / 100
 end)
 
-CreateToggle(aimbotTab, "🔫 Auto Shoot", false, function(enabled)
-    aimbotSystem.Settings.AutoShoot = enabled
+-- 👁️ SEÇÃO ESP
+createSection("👁️ ESP")
+
+createToggle("🔥 ESP Ativado", false, function(enabled)
+    espEnabled = enabled
+    if not enabled then
+        for _, esp in pairs(espObjects) do
+            esp.nameLabel.Visible = false
+            esp.box.Visible = false
+        end
+    end
 end)
 
-CreateToggle(aimbotTab, "⚡ Trigger Bot", false, function(enabled)
-    aimbotSystem.Settings.TriggerBot = enabled
+-- 🏃 SEÇÃO MOVIMENTO
+createSection("🏃 MOVIMENTO")
+
+createSlider("🚀 Velocidade", 1, 500, 16, function(value)
+    setSpeed(value)
 end)
 
-CreateSlider(aimbotTab, "🎯 FOV", 30, 360, 180, function(value)
-    aimbotSystem.Settings.FOV = value
+createSlider("🦘 Altura Pulo", 1, 200, 50, function(value)
+    setJump(value)
 end)
 
-CreateSlider(aimbotTab, "⚡ Suavidade", 1, 100, 12, function(value)
-    aimbotSystem.Settings.Smoothness = value / 100
+createButton("🔄 Reset Movimento", function()
+    setSpeed(originalSpeed)
+    setJump(originalJump)
 end)
 
-CreateButton(aimbotTab, "🎯 Cabeça", function()
-    aimbotSystem.Settings.TargetPart = "Head"
-end)
+-- 👤 SEÇÃO JOGADOR
+createSection("👤 JOGADOR")
 
-CreateButton(aimbotTab, "🫀 Torso", function()
-    aimbotSystem.Settings.TargetPart = "Torso"
-end)
-
--- 👁️ ABA ESP
-local espTab = createTab("ESP", "👁️")
-
-CreateToggle(espTab, "🔥 ESP Ativado", false, function(enabled)
-    espSystem.Toggle(enabled)
-end)
-
-CreateToggle(espTab, "📝 Nomes", true, function(enabled)
-    espSystem.Settings.Names = enabled
-end)
-
-CreateToggle(espTab, "❤️ Vida", true, function(enabled)
-    espSystem.Settings.Health = enabled
-end)
-
-CreateToggle(espTab, "📏 Distância", true, function(enabled)
-    espSystem.Settings.Distance = enabled
-end)
-
-CreateToggle(espTab, "📦 Boxes", true, function(enabled)
-    espSystem.Settings.Boxes = enabled
-end)
-
-CreateToggle(espTab, "🦴 Skeletons", false, function(enabled)
-    espSystem.Settings.Skeletons = enabled
-end)
-
-CreateToggle(espTab, "🔗 Tracers", false, function(enabled)
-    espSystem.Settings.Tracers = enabled
-end)
-
-CreateToggle(espTab, "👥 Team Check", true, function(enabled)
-    espSystem.Settings.TeamCheck = enabled
-end)
-
-CreateSlider(espTab, "📏 Distância Máx", 500, 5000, 2500, function(value)
-    espSystem.Settings.MaxDistance = value
-end)
-
--- 🏃 ABA MOVIMENTO
-local moveTab = createTab("Move", "🏃")
-
-CreateSlider(moveTab, "🚀 Velocidade", 1, 1000, 16, function(value)
-    movementSystem.SetWalkSpeed(value)
-end)
-
-CreateSlider(moveTab, "🦘 Pulo", 1, 1000, 50, function(value)
-    movementSystem.SetJumpPower(value)
-end)
-
-CreateToggle(moveTab, "👻 Noclip", false, function(enabled)
-    movementSystem.ToggleNoclip(enabled)
-end)
-
-CreateToggle(moveTab, "✈️ Fly", false, function(enabled)
-    movementSystem.ToggleFly(enabled)
-end)
-
-CreateButton(moveTab, "⚡ Velocidade Extrema", function()
-    movementSystem.SetWalkSpeed(500)
-    movementSystem.SetJumpPower(500)
-end)
-
-CreateButton(moveTab, "🔄 Reset", function()
-    movementSystem.SetWalkSpeed(16)
-    movementSystem.SetJumpPower(50)
-    movementSystem.ToggleFly(false)
-    movementSystem.ToggleNoclip(false)
-end)
-
--- 👤 ABA JOGADOR
-local playerTab = createTab("Player", "👤")
-
-CreateButton(playerTab, "💖 Vida Infinita", function()
+createButton("💖 Vida Infinita", function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.MaxHealth = math.huge
         LocalPlayer.Character.Humanoid.Health = math.huge
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "💖 WixT Hub";
+            Text = "Vida infinita ativada!";
+            Duration = 3;
+        })
     end
 end)
 
-CreateButton(playerTab, "🔄 Reset Personagem", function()
+createButton("🔄 Reset Personagem", function()
     if LocalPlayer.Character then
         LocalPlayer.Character:BreakJoints()
     end
 end)
 
-CreateButton(playerTab, "🏠 Teleport Spawn", function()
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 50, 0)
-    end
-end)
+-- ⚙️ SEÇÃO CONFIGURAÇÕES
+createSection("⚙️ CONFIGURAÇÕES")
 
-CreateToggle(playerTab, "👻 Invisibilidade", false, function(enabled)
-    if LocalPlayer.Character then
-        for _, part in pairs(LocalPlayer.Character:GetChildren()) do
-            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                part.Transparency = enabled and 1 or 0
-            end
-            if part:IsA("Accessory") then
-                part.Handle.Transparency = enabled and 1 or 0
-            end
-            if part:IsA("Part") or part:IsA("MeshPart") then
-                if part.Name:match("Arm$") or part.Name:match("Leg$") or part.Name:match("Torso$") or part.Name == "Head" then
-                    part.Transparency = enabled and 1 or 0
-                end
-            end
-        end
-        if LocalPlayer.Character:FindFirstChild("Head") and LocalPlayer.Character.Head:FindFirstChild("face") then
-            LocalPlayer.Character.Head.face.Transparency = enabled and 1 or 0
-        end
-    end
-end)
-
--- 🌍 ABA MUNDO
-local worldTab = createTab("World", "🌍")
-
-CreateSlider(worldTab, "☀️ Brilho", 0, 20, 1, function(value)
-    Lighting.Brightness = value
-end)
-
-CreateSlider(worldTab, "🌅 Hora do Dia", 0, 24, 12, function(value)
-    Lighting.TimeOfDay = string.format("%02d:00:00", value)
-end)
-
-CreateToggle(worldTab, "✨ Remover Névoa", false, function(enabled)
-    if enabled then
-        Lighting.FogEnd = 1000000
-        Lighting.FogStart = 0
-    else
-        Lighting.FogEnd = 1000
-        Lighting.FogStart = 0
-    end
-end)
-
-CreateButton(worldTab, "🌙 Modo Noite", function()
-    Lighting.Brightness = 0
-    Lighting.TimeOfDay = "00:00:00"
-end)
-
-CreateButton(worldTab, "☀️ Modo Dia", function()
-    Lighting.Brightness = 2
-    Lighting.TimeOfDay = "12:00:00"
-end)
-
-CreateButton(worldTab, "🌈 Modo Colorido", function()
-    Lighting.Brightness = 5
-    Lighting.Ambient = Color3.fromRGB(200, 50, 255)
-    Lighting.ColorShift_Top = Color3.fromRGB(0, 255, 255)
-    Lighting.ColorShift_Bottom = Color3.fromRGB(255, 0, 255)
-end)
-
--- ⚙️ ABA CONFIGURAÇÕES
-local settingsTab = createTab("Settings", "⚙️")
-
-CreateButton(settingsTab, "🔄 Recarregar Hub", function()
-    interface.ScreenGui:Destroy()
-    aimbotSystem.Toggle(false)
-    espSystem.Toggle(false)
-    wait(0.5)
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/Yuzure-sudo/THEUS-HUB/main/Wirtz.lua"))()
-end)
-
-CreateButton(settingsTab, "💾 Salvar Configurações (WIP)", function()
-    game.StarterGui:SetCore("SendNotification", {
-        Title = "💾 WixT Hub";
-        Text = "Funcionalidade em desenvolvimento!";
-        Duration = 3;
-    })
-end)
-
-CreateButton(settingsTab, "📋 Copiar Discord", function()
+createButton("📋 Copiar Discord", function()
     setclipboard("https://discord.gg/wixt")
     game.StarterGui:SetCore("SendNotification", {
         Title = "📋 WixT Hub";
-        Text = "Discord copiado!";
+        Text = "Discord copiado para área de transferência!";
         Duration = 3;
     })
 end)
 
--- 🚀 INICIALIZAÇÃO E ANIMAÇÃO
-local isInterfaceVisible = true
-
-TweenService:Create(
-    interface.MainFrame,
-    TweenInfo.new(1, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-    {
-        Size = UDim2.new(0, 380, 0, 650),
-        Position = UDim2.new(0.5, -190, 0.5, -325),
-    }
-):Play()
-
-TweenService:Create(interface.BackgroundDim, TweenInfo.new(0.5), {
-    BackgroundTransparency = 0.6
-}):Play()
-
-aimbotSystem.Toggle(true)
-espSystem.Toggle(true)
-
--- 🎵 SOM DE CARREGAMENTO
-wait(1)
-local sound = Instance.new("Sound")
-sound.SoundId = "rbxassetid://131961136"
-sound.Volume = 0.5
-sound.Parent = SoundService
-sound:Play()
-
-sound.Ended:Connect(function()
-    sound:Destroy()
+createButton("🔄 Recarregar Hub", function()
+    screenGui:Destroy()
+    wait(1)
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Yuzure-sudo/THEUS-HUB/main/Wirtz.lua"))()
 end)
 
--- 🎉 NOTIFICAÇÃO DE CARREGAMENTO
+-- ❌ FECHAR HUB
+closeButton.MouseButton1Click:Connect(function()
+    -- Animação de saída
+    TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+        Size = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0)
+    }):Play()
+    
+    wait(0.5)
+    screenGui:Destroy()
+end)
+
+-- 🚀 ANIMAÇÃO DE ENTRADA
+mainFrame.Size = UDim2.new(0, 0, 0, 0)
+mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+
+TweenService:Create(mainFrame, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    Size = UDim2.new(0, 400, 0, 600),
+    Position = UDim2.new(0.5, -200, 0.5, -300)
+}):Play()
+
+-- 🎉 NOTIFICAÇÃO DE SUCESSO
 game.StarterGui:SetCore("SendNotification", {
     Title = "🔥 WixT Hub Ultimate";
-    Text = "Carregado com sucesso! Mobile Perfect Edition v2.0";
-    Duration = 8;
+    Text = "Carregado com sucesso! Mobile Perfect v3.0";
+    Duration = 5;
 })
 
-print("🔥 WixT Hub Ultimate - Mobile Perfect Edition v2.0 carregado com sucesso!")
-
--- Retorna os sistemas para controle externo se necessário
-return {
-    ControlInterface = function(visible) ToggleInterface(visible) end,
-    Aimbot = aimbotSystem,
-    ESP = espSystem,
-    Movement = movementSystem
-}
+print("🔥 WixT Hub Ultimate - Mobile Perfect v3.0 carregado com sucesso!")
