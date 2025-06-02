@@ -1,5 +1,5 @@
--- 🔥 WIXT HUB ULTIMATE - MOBILE PERFECT v3.0
--- 🚀 FEITO DO ZERO PARA FUNCIONAR 100%
+-- 🔥 WIXT HUB ULTIMATE - MOBILE PERFECT v4.0
+-- 🎨 INTERFACE SUPER BONITA E COMPACTA
 
 -- 🧹 LIMPEZA TOTAL
 for _, gui in pairs(game.CoreGui:GetChildren()) do
@@ -20,69 +20,89 @@ local Mouse = LocalPlayer:GetMouse()
 
 -- 🎨 INTERFACE PRINCIPAL
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "WixtHubUltimatev3"
+screenGui.Name = "WixtHubUltimatev4"
 screenGui.Parent = game.CoreGui
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- 🌟 FRAME PRINCIPAL
+-- 🌟 FRAME PRINCIPAL (MENOR E MAIS BONITO)
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 400, 0, 600)
-mainFrame.Position = UDim2.new(0.5, -200, 0.5, -300)
-mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+mainFrame.Size = UDim2.new(0, 320, 0, 450)
+mainFrame.Position = UDim2.new(0.5, -160, 0.5, -225)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = screenGui
 
+-- 🎨 GRADIENTE BONITO
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 45)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 25))
+}
+gradient.Rotation = 45
+gradient.Parent = mainFrame
+
 -- 🎨 CANTOS ARREDONDADOS
 local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 15)
+corner.CornerRadius = UDim.new(0, 20)
 corner.Parent = mainFrame
 
--- ✨ SOMBRA
-local shadow = Instance.new("Frame")
-shadow.Size = UDim2.new(1, 10, 1, 10)
-shadow.Position = UDim2.new(0, -5, 0, -5)
-shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-shadow.BackgroundTransparency = 0.5
-shadow.ZIndex = mainFrame.ZIndex - 1
-shadow.Parent = mainFrame
+-- ✨ BORDA BRILHANTE
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(100, 200, 255)
+stroke.Thickness = 2
+stroke.Transparency = 0.3
+stroke.Parent = mainFrame
 
-local shadowCorner = Instance.new("UICorner")
-shadowCorner.CornerRadius = UDim.new(0, 20)
-shadowCorner.Parent = shadow
-
--- 🎯 HEADER
+-- 🎯 HEADER COMPACTO
 local header = Instance.new("Frame")
-header.Size = UDim2.new(1, 0, 0, 60)
-header.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+header.Size = UDim2.new(1, 0, 0, 50)
+header.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+header.BackgroundTransparency = 0.2
 header.BorderSizePixel = 0
 header.Parent = mainFrame
 
 local headerCorner = Instance.new("UICorner")
-headerCorner.CornerRadius = UDim.new(0, 15)
+headerCorner.CornerRadius = UDim.new(0, 20)
 headerCorner.Parent = header
 
--- 🔥 TÍTULO
+-- 🔥 TÍTULO ESTILOSO
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -60, 1, 0)
-title.Position = UDim2.new(0, 10, 0, 0)
+title.Size = UDim2.new(1, -100, 1, 0)
+title.Position = UDim2.new(0, 15, 0, 0)
 title.BackgroundTransparency = 1
-title.Text = "🔥 WixT Hub Ultimate"
+title.Text = "🔥 WixT Hub"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 20
+title.TextSize = 18
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Font = Enum.Font.GothamBold
 title.Parent = header
 
+-- 📱 BOTÃO MINIMIZAR
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Size = UDim2.new(0, 30, 0, 30)
+minimizeButton.Position = UDim2.new(1, -70, 0, 10)
+minimizeButton.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+minimizeButton.Text = "−"
+minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeButton.TextSize = 16
+minimizeButton.Font = Enum.Font.GothamBold
+minimizeButton.BorderSizePixel = 0
+minimizeButton.Parent = header
+
+local minimizeCorner = Instance.new("UICorner")
+minimizeCorner.CornerRadius = UDim.new(0, 8)
+minimizeCorner.Parent = minimizeButton
+
 -- ❌ BOTÃO FECHAR
 local closeButton = Instance.new("TextButton")
-closeButton.Size = UDim2.new(0, 40, 0, 40)
-closeButton.Position = UDim2.new(1, -50, 0, 10)
-closeButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+closeButton.Size = UDim2.new(0, 30, 0, 30)
+closeButton.Position = UDim2.new(1, -35, 0, 10)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
 closeButton.Text = "✕"
 closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeButton.TextSize = 18
+closeButton.TextSize = 14
 closeButton.Font = Enum.Font.GothamBold
 closeButton.BorderSizePixel = 0
 closeButton.Parent = header
@@ -91,144 +111,182 @@ local closeCorner = Instance.new("UICorner")
 closeCorner.CornerRadius = UDim.new(0, 8)
 closeCorner.Parent = closeButton
 
--- 📂 CONTAINER DE CONTEÚDO
+-- 📂 SISTEMA DE ABAS
+local tabFrame = Instance.new("Frame")
+tabFrame.Size = UDim2.new(1, -20, 0, 40)
+tabFrame.Position = UDim2.new(0, 10, 0, 60)
+tabFrame.BackgroundTransparency = 1
+tabFrame.Parent = mainFrame
+
+local tabLayout = Instance.new("UIListLayout")
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tabLayout.Padding = UDim.new(0, 5)
+tabLayout.Parent = tabFrame
+
+-- 📋 CONTAINER DE CONTEÚDO
 local contentFrame = Instance.new("ScrollingFrame")
-contentFrame.Size = UDim2.new(1, -20, 1, -80)
-contentFrame.Position = UDim2.new(0, 10, 0, 70)
+contentFrame.Size = UDim2.new(1, -20, 1, -120)
+contentFrame.Position = UDim2.new(0, 10, 0, 110)
 contentFrame.BackgroundTransparency = 1
-contentFrame.ScrollBarThickness = 8
-contentFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
+contentFrame.ScrollBarThickness = 6
+contentFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 200, 255)
 contentFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 contentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 contentFrame.Parent = mainFrame
 
--- 📐 LAYOUT
 local layout = Instance.new("UIListLayout")
 layout.SortOrder = Enum.SortOrder.LayoutOrder
-layout.Padding = UDim.new(0, 10)
+layout.Padding = UDim.new(0, 8)
 layout.Parent = contentFrame
 
--- 🎨 FUNÇÕES DE CRIAÇÃO DE ELEMENTOS
+-- 🎨 VARIÁVEIS GLOBAIS
+local currentTab = "Aimbot"
+local isMinimized = false
+local tabs = {}
 
--- 📋 CRIAR SEÇÃO
-local function createSection(name)
-    local section = Instance.new("Frame")
-    section.Size = UDim2.new(1, 0, 0, 40)
-    section.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
-    section.BorderSizePixel = 0
-    section.Parent = contentFrame
+-- 🎨 FUNÇÃO CRIAR ABA
+local function createTab(name, icon)
+    local tabButton = Instance.new("TextButton")
+    tabButton.Size = UDim2.new(0, 70, 1, 0)
+    tabButton.BackgroundColor3 = name == currentTab and Color3.fromRGB(100, 200, 255) or Color3.fromRGB(60, 60, 80)
+    tabButton.Text = icon
+    tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    tabButton.TextSize = 16
+    tabButton.Font = Enum.Font.GothamBold
+    tabButton.BorderSizePixel = 0
+    tabButton.Parent = tabFrame
     
-    local sectionCorner = Instance.new("UICorner")
-    sectionCorner.CornerRadius = UDim.new(0, 8)
-    sectionCorner.Parent = section
+    local tabCorner = Instance.new("UICorner")
+    tabCorner.CornerRadius = UDim.new(0, 8)
+    tabCorner.Parent = tabButton
     
-    local sectionLabel = Instance.new("TextLabel")
-    sectionLabel.Size = UDim2.new(1, -20, 1, 0)
-    sectionLabel.Position = UDim2.new(0, 10, 0, 0)
-    sectionLabel.BackgroundTransparency = 1
-    sectionLabel.Text = name
-    sectionLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    sectionLabel.TextSize = 16
-    sectionLabel.TextXAlignment = Enum.TextXAlignment.Left
-    sectionLabel.Font = Enum.Font.GothamBold
-    sectionLabel.Parent = section
+    tabs[name] = {button = tabButton, elements = {}}
     
-    return section
+    tabButton.MouseButton1Click:Connect(function()
+        -- Atualizar visual das abas
+        for tabName, tabData in pairs(tabs) do
+            tabData.button.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+        end
+        tabButton.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
+        
+        -- Esconder todos os elementos
+        for _, child in pairs(contentFrame:GetChildren()) do
+            if child:IsA("Frame") or child:IsA("TextButton") then
+                child.Visible = false
+            end
+        end
+        
+        -- Mostrar elementos da aba atual
+        currentTab = name
+        for _, element in pairs(tabs[name].elements) do
+            element.Visible = true
+        end
+    end)
+    
+    return tabButton
 end
 
--- 🔘 CRIAR TOGGLE
-local function createToggle(name, defaultValue, callback)
+-- 🔘 CRIAR TOGGLE COMPACTO
+local function createToggle(name, defaultValue, callback, tab)
     local toggleFrame = Instance.new("Frame")
-    toggleFrame.Size = UDim2.new(1, 0, 0, 45)
-    toggleFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    toggleFrame.Size = UDim2.new(1, 0, 0, 35)
+    toggleFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
     toggleFrame.BorderSizePixel = 0
+    toggleFrame.Visible = tab == currentTab
     toggleFrame.Parent = contentFrame
     
     local toggleCorner = Instance.new("UICorner")
-    toggleCorner.CornerRadius = UDim.new(0, 8)
+    toggleCorner.CornerRadius = UDim.new(0, 10)
     toggleCorner.Parent = toggleFrame
     
     local toggleLabel = Instance.new("TextLabel")
-    toggleLabel.Size = UDim2.new(1, -80, 1, 0)
+    toggleLabel.Size = UDim2.new(1, -60, 1, 0)
     toggleLabel.Position = UDim2.new(0, 10, 0, 0)
     toggleLabel.BackgroundTransparency = 1
     toggleLabel.Text = name
     toggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggleLabel.TextSize = 14
+    toggleLabel.TextSize = 12
     toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
     toggleLabel.Font = Enum.Font.Gotham
     toggleLabel.Parent = toggleFrame
     
     local toggleButton = Instance.new("TextButton")
-    toggleButton.Size = UDim2.new(0, 60, 0, 25)
-    toggleButton.Position = UDim2.new(1, -70, 0.5, -12.5)
-    toggleButton.BackgroundColor3 = defaultValue and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(100, 100, 100)
+    toggleButton.Size = UDim2.new(0, 45, 0, 20)
+    toggleButton.Position = UDim2.new(1, -50, 0.5, -10)
+    toggleButton.BackgroundColor3 = defaultValue and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(100, 100, 120)
     toggleButton.Text = defaultValue and "ON" or "OFF"
     toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggleButton.TextSize = 12
+    toggleButton.TextSize = 10
     toggleButton.Font = Enum.Font.GothamBold
     toggleButton.BorderSizePixel = 0
     toggleButton.Parent = toggleFrame
     
     local buttonCorner = Instance.new("UICorner")
-    buttonCorner.CornerRadius = UDim.new(0, 6)
+    buttonCorner.CornerRadius = UDim.new(0, 10)
     buttonCorner.Parent = toggleButton
     
     local isToggled = defaultValue
     
     toggleButton.MouseButton1Click:Connect(function()
         isToggled = not isToggled
-        toggleButton.BackgroundColor3 = isToggled and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(100, 100, 100)
+        
+        TweenService:Create(toggleButton, TweenInfo.new(0.2), {
+            BackgroundColor3 = isToggled and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(100, 100, 120)
+        }):Play()
+        
         toggleButton.Text = isToggled and "ON" or "OFF"
         callback(isToggled)
     end)
     
+    table.insert(tabs[tab].elements, toggleFrame)
     return toggleFrame
 end
 
--- 📊 CRIAR SLIDER
-local function createSlider(name, min, max, default, callback)
+-- 📊 CRIAR SLIDER COMPACTO
+local function createSlider(name, min, max, default, callback, tab)
     local sliderFrame = Instance.new("Frame")
-    sliderFrame.Size = UDim2.new(1, 0, 0, 60)
-    sliderFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    sliderFrame.Size = UDim2.new(1, 0, 0, 45)
+    sliderFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
     sliderFrame.BorderSizePixel = 0
+    sliderFrame.Visible = tab == currentTab
     sliderFrame.Parent = contentFrame
     
     local sliderCorner = Instance.new("UICorner")
-    sliderCorner.CornerRadius = UDim.new(0, 8)
+    sliderCorner.CornerRadius = UDim.new(0, 10)
     sliderCorner.Parent = sliderFrame
     
     local sliderLabel = Instance.new("TextLabel")
-    sliderLabel.Size = UDim2.new(1, -20, 0, 20)
+    sliderLabel.Size = UDim2.new(1, -20, 0, 15)
     sliderLabel.Position = UDim2.new(0, 10, 0, 5)
     sliderLabel.BackgroundTransparency = 1
     sliderLabel.Text = name .. ": " .. default
     sliderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    sliderLabel.TextSize = 14
+    sliderLabel.TextSize = 12
     sliderLabel.TextXAlignment = Enum.TextXAlignment.Left
     sliderLabel.Font = Enum.Font.Gotham
     sliderLabel.Parent = sliderFrame
     
     local sliderBackground = Instance.new("Frame")
-    sliderBackground.Size = UDim2.new(1, -20, 0, 15)
-    sliderBackground.Position = UDim2.new(0, 10, 0, 35)
+    sliderBackground.Size = UDim2.new(1, -20, 0, 12)
+    sliderBackground.Position = UDim2.new(0, 10, 0, 25)
     sliderBackground.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
     sliderBackground.BorderSizePixel = 0
     sliderBackground.Parent = sliderFrame
     
     local sliderBgCorner = Instance.new("UICorner")
-    sliderBgCorner.CornerRadius = UDim.new(0, 7)
+    sliderBgCorner.CornerRadius = UDim.new(0, 6)
     sliderBgCorner.Parent = sliderBackground
     
     local sliderFill = Instance.new("Frame")
     sliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
     sliderFill.Position = UDim2.new(0, 0, 0, 0)
-    sliderFill.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+    sliderFill.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
     sliderFill.BorderSizePixel = 0
     sliderFill.Parent = sliderBackground
     
     local sliderFillCorner = Instance.new("UICorner")
-    sliderFillCorner.CornerRadius = UDim.new(0, 7)
+    sliderFillCorner.CornerRadius = UDim.new(0, 6)
     sliderFillCorner.Parent = sliderFill
     
     local currentValue = default
@@ -242,7 +300,11 @@ local function createSlider(name, min, max, default, callback)
                 local percentage = math.clamp((mousePos - framePos) / frameSize, 0, 1)
                 
                 currentValue = math.floor(min + (max - min) * percentage)
-                sliderFill.Size = UDim2.new(percentage, 0, 1, 0)
+                
+                TweenService:Create(sliderFill, TweenInfo.new(0.1), {
+                    Size = UDim2.new(percentage, 0, 1, 0)
+                }):Play()
+                
                 sliderLabel.Text = name .. ": " .. currentValue
                 callback(currentValue)
             end
@@ -269,36 +331,46 @@ local function createSlider(name, min, max, default, callback)
         end
     end)
     
+    table.insert(tabs[tab].elements, sliderFrame)
     return sliderFrame
 end
 
--- 🔲 CRIAR BOTÃO
-local function createButton(name, callback)
+-- 🔲 CRIAR BOTÃO COMPACTO
+local function createButton(name, callback, tab)
     local buttonFrame = Instance.new("TextButton")
-    buttonFrame.Size = UDim2.new(1, 0, 0, 45)
-    buttonFrame.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    buttonFrame.Size = UDim2.new(1, 0, 0, 35)
+    buttonFrame.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
     buttonFrame.Text = name
     buttonFrame.TextColor3 = Color3.fromRGB(255, 255, 255)
-    buttonFrame.TextSize = 14
+    buttonFrame.TextSize = 12
     buttonFrame.Font = Enum.Font.GothamBold
     buttonFrame.BorderSizePixel = 0
+    buttonFrame.Visible = tab == currentTab
     buttonFrame.Parent = contentFrame
     
     local buttonCorner = Instance.new("UICorner")
-    buttonCorner.CornerRadius = UDim.new(0, 8)
+    buttonCorner.CornerRadius = UDim.new(0, 10)
     buttonCorner.Parent = buttonFrame
     
     buttonFrame.MouseButton1Click:Connect(function()
-        buttonFrame.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+        TweenService:Create(buttonFrame, TweenInfo.new(0.1), {
+            BackgroundColor3 = Color3.fromRGB(80, 160, 200)
+        }):Play()
+        
         wait(0.1)
-        buttonFrame.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+        
+        TweenService:Create(buttonFrame, TweenInfo.new(0.1), {
+            BackgroundColor3 = Color3.fromRGB(100, 200, 255)
+        }):Play()
+        
         callback()
     end)
     
+    table.insert(tabs[tab].elements, buttonFrame)
     return buttonFrame
 end
 
--- 🎯 SISTEMA AIMBOT SIMPLES
+-- 🎯 SISTEMA AIMBOT
 local aimbotEnabled = false
 local aimbotFOV = 100
 local aimbotSmoothing = 0.1
@@ -334,7 +406,6 @@ local function aimAt(character)
     end
 end
 
--- 🎯 LOOP DO AIMBOT
 RunService.Heartbeat:Connect(function()
     if aimbotEnabled then
         local target = getClosestPlayer()
@@ -344,24 +415,22 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- 👁️ SISTEMA ESP SIMPLES
+-- 👁️ SISTEMA ESP
 local espEnabled = false
 local espObjects = {}
 
 local function createESP(player)
     local esp = {}
     
-    -- Nome
     esp.nameLabel = Drawing.new("Text")
-    esp.nameLabel.Size = 16
+    esp.nameLabel.Size = 14
     esp.nameLabel.Color = Color3.fromRGB(255, 255, 255)
     esp.nameLabel.Center = true
     esp.nameLabel.Outline = true
     esp.nameLabel.OutlineColor = Color3.fromRGB(0, 0, 0)
     
-    -- Box
     esp.box = Drawing.new("Square")
-    esp.box.Color = Color3.fromRGB(255, 255, 255)
+    esp.box.Color = Color3.fromRGB(100, 200, 255)
     esp.box.Thickness = 2
     esp.box.Filled = false
     
@@ -378,12 +447,10 @@ local function updateESP()
             local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
             
             if rootOnScreen and headOnScreen then
-                -- Nome
-                esp.nameLabel.Position = Vector2.new(headPos.X, headPos.Y - 30)
+                esp.nameLabel.Position = Vector2.new(headPos.X, headPos.Y - 25)
                 esp.nameLabel.Text = player.Name
                 esp.nameLabel.Visible = true
                 
-                -- Box
                 local boxHeight = math.abs(headPos.Y - rootPos.Y) * 1.2
                 local boxWidth = boxHeight * 0.6
                 
@@ -401,14 +468,12 @@ local function updateESP()
     end
 end
 
--- 👁️ LOOP DO ESP
 RunService.Heartbeat:Connect(function()
     if espEnabled then
         updateESP()
     end
 end)
 
--- 👥 GERENCIAR PLAYERS
 Players.PlayerAdded:Connect(function(player)
     espObjects[player] = createESP(player)
 end)
@@ -424,7 +489,6 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
--- Criar ESP para players existentes
 for _, player in pairs(Players:GetPlayers()) do
     if player ~= LocalPlayer then
         espObjects[player] = createESP(player)
@@ -432,9 +496,6 @@ for _, player in pairs(Players:GetPlayers()) do
 end
 
 -- 🏃 SISTEMA DE MOVIMENTO
-local originalSpeed = 16
-local originalJump = 50
-
 local function setSpeed(speed)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = speed
@@ -447,26 +508,26 @@ local function setJump(jump)
     end
 end
 
--- 🎨 CRIAÇÃO DA INTERFACE
+-- 🎨 CRIAÇÃO DAS ABAS
+createTab("Aimbot", "🎯")
+createTab("ESP", "👁️")
+createTab("Move", "🏃")
+createTab("Player", "👤")
 
--- 🎯 SEÇÃO AIMBOT
-createSection("🎯 AIMBOT")
-
+-- 🎯 ABA AIMBOT
 createToggle("🔥 Aimbot Ativado", false, function(enabled)
     aimbotEnabled = enabled
-end)
+end, "Aimbot")
 
-createSlider("🎯 FOV", 50, 500, 100, function(value)
+createSlider("🎯 FOV", 50, 300, 100, function(value)
     aimbotFOV = value
-end)
+end, "Aimbot")
 
-createSlider("⚡ Suavidade", 1, 100, 10, function(value)
+createSlider("⚡ Suavidade", 1, 50, 10, function(value)
     aimbotSmoothing = value / 100
-end)
+end, "Aimbot")
 
--- 👁️ SEÇÃO ESP
-createSection("👁️ ESP")
-
+-- 👁️ ABA ESP
 createToggle("🔥 ESP Ativado", false, function(enabled)
     espEnabled = enabled
     if not enabled then
@@ -475,27 +536,23 @@ createToggle("🔥 ESP Ativado", false, function(enabled)
             esp.box.Visible = false
         end
     end
-end)
+end, "ESP")
 
--- 🏃 SEÇÃO MOVIMENTO
-createSection("🏃 MOVIMENTO")
-
-createSlider("🚀 Velocidade", 1, 500, 16, function(value)
+-- 🏃 ABA MOVIMENTO
+createSlider("🚀 Velocidade", 1, 200, 16, function(value)
     setSpeed(value)
-end)
+end, "Move")
 
-createSlider("🦘 Altura Pulo", 1, 200, 50, function(value)
+createSlider("🦘 Altura Pulo", 1, 150, 50, function(value)
     setJump(value)
-end)
+end, "Move")
 
 createButton("🔄 Reset Movimento", function()
-    setSpeed(originalSpeed)
-    setJump(originalJump)
-end)
+    setSpeed(16)
+    setJump(50)
+end, "Move")
 
--- 👤 SEÇÃO JOGADOR
-createSection("👤 JOGADOR")
-
+-- 👤 ABA JOGADOR
 createButton("💖 Vida Infinita", function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.MaxHealth = math.huge
@@ -507,35 +564,48 @@ createButton("💖 Vida Infinita", function()
             Duration = 3;
         })
     end
-end)
+end, "Player")
 
 createButton("🔄 Reset Personagem", function()
     if LocalPlayer.Character then
         LocalPlayer.Character:BreakJoints()
     end
-end)
-
--- ⚙️ SEÇÃO CONFIGURAÇÕES
-createSection("⚙️ CONFIGURAÇÕES")
+end, "Player")
 
 createButton("📋 Copiar Discord", function()
     setclipboard("https://discord.gg/wixt")
     game.StarterGui:SetCore("SendNotification", {
         Title = "📋 WixT Hub";
-        Text = "Discord copiado para área de transferência!";
+        Text = "Discord copiado!";
         Duration = 3;
     })
-end)
+end, "Player")
 
-createButton("🔄 Recarregar Hub", function()
-    screenGui:Destroy()
-    wait(1)
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/Yuzure-sudo/THEUS-HUB/main/Wirtz.lua"))()
+-- 📱 SISTEMA DE MINIMIZAR
+minimizeButton.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    
+    if isMinimized then
+        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+            Size = UDim2.new(0, 320, 0, 50)
+        }):Play()
+        
+        tabFrame.Visible = false
+        contentFrame.Visible = false
+        minimizeButton.Text = "+"
+    else
+        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+            Size = UDim2.new(0, 320, 0, 450)
+        }):Play()
+        
+        tabFrame.Visible = true
+        contentFrame.Visible = true
+        minimizeButton.Text = "−"
+    end
 end)
 
 -- ❌ FECHAR HUB
 closeButton.MouseButton1Click:Connect(function()
-    -- Animação de saída
     TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
         Size = UDim2.new(0, 0, 0, 0),
         Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -545,20 +615,20 @@ closeButton.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
--- 🚀 ANIMAÇÃO DE ENTRADA
+-- 🚀 ANIMAÇÃO DE ENTRADA ÉPICA
 mainFrame.Size = UDim2.new(0, 0, 0, 0)
 mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 
 TweenService:Create(mainFrame, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-    Size = UDim2.new(0, 400, 0, 600),
-    Position = UDim2.new(0.5, -200, 0.5, -300)
+    Size = UDim2.new(0, 320, 0, 450),
+    Position = UDim2.new(0.5, -160, 0.5, -225)
 }):Play()
 
 -- 🎉 NOTIFICAÇÃO DE SUCESSO
 game.StarterGui:SetCore("SendNotification", {
     Title = "🔥 WixT Hub Ultimate";
-    Text = "Carregado com sucesso! Mobile Perfect v3.0";
+    Text = "Interface Mobile Perfect v4.0 carregada!";
     Duration = 5;
 })
 
-print("🔥 WixT Hub Ultimate - Mobile Perfect v3.0 carregado com sucesso!")
+print("🔥 WixT Hub Ultimate - Mobile Perfect v4.0 carregado com sucesso!")
