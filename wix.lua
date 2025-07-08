@@ -4055,6 +4055,14 @@ Main:AddToggle("Fast Attack ",true,function(value)
         StopTween(_G.AutoFarm)
         saveSettings()
     end)
+   ESP:AddToggle("ESP Players", false, function(state)
+    _G.ESPPlayers = state
+    if state then
+        EnableESP()
+    else
+        DisableESP()
+    end
+end)
     
     spawn(function()
         while wait() do
