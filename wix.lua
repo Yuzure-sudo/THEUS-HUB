@@ -3841,6 +3841,7 @@ local T = Library:AddTab("Teleport","4483345998")
 local S = Library:AddTab("Shop","4483345998")
 local D = Library:AddTab("Devil Fruit","4483345998")
 local Misc = Library:AddTab("Misc","4483345998")
+local ESP = Library:AddTab("ESP","4483345998")
 --- ThÃ´ng Tin
 NguyenTien:AddSeperator("Informação Developer")
 NguyenTien:AddLabel("Owner: Bacteria")
