@@ -4063,6 +4063,55 @@ Main:AddToggle("Fast Attack ",true,function(value)
         DisableESP()
     end
 end)
+
+local ESPConnections = {}
+
+function EnableESP()
+    DisableESP()
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player ~= game.Players.LocalPlayer then
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local espBox = Instance.new("BoxHandleAdornment")
+                espBox.Name = "ESPBox"
+                espBox.Adornee = player.Character.HumanoidRootPart
+                espBox.AlwaysOnTop = true
+                espBox.ZIndex = 10
+                espBox.Size = Vector3.new(3,6,3)
+                espBox.Color3 = Color3.fromRGB(0,255,0)
+                espBox.Transparency = 0.5
+                espBox.Parent = player.Character.HumanoidRootPart
+                ESPConnections[player] = espBox
+            end
+        end
+    end
+    -- Atualiza ESP para novos players
+    game.Players.PlayerAdded:Connect(function(player)
+        player.CharacterAdded:Connect(function(char)
+            wait(1)
+            if char:FindFirstChild("HumanoidRootPart") then
+                local espBox = Instance.new("BoxHandleAdornment")
+                espBox.Name = "ESPBox"
+                espBox.Adornee = char.HumanoidRootPart
+                espBox.AlwaysOnTop = true
+                espBox.ZIndex = 10
+                espBox.Size = Vector3.new(3,6,3)
+                espBox.Color3 = Color3.fromRGB(0,255,0)
+                espBox.Transparency = 0.5
+                espBox.Parent = char.HumanoidRootPart
+                ESPConnections[player] = espBox
+            end
+        end)
+    end)
+end
+
+function DisableESP()
+    for player, espBox in pairs(ESPConnections) do
+        if espBox and espBox.Parent then
+            espBox:Destroy()
+        end
+        ESPConnections[player] = nil
+    end
+end
     
     spawn(function()
         while wait() do
