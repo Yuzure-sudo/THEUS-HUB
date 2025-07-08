@@ -4064,53 +4064,45 @@ Main:AddToggle("Fast Attack ",true,function(value)
     end
 end)
 
-local ESPConnections = {}
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local Camera = workspace.CurrentCamera
+local drawings = {}
 
 function EnableESP()
     DisableESP()
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= game.Players.LocalPlayer then
-            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local espBox = Instance.new("BoxHandleAdornment")
-                espBox.Name = "ESPBox"
-                espBox.Adornee = player.Character.HumanoidRootPart
-                espBox.AlwaysOnTop = true
-                espBox.ZIndex = 10
-                espBox.Size = Vector3.new(3,6,3)
-                espBox.Color3 = Color3.fromRGB(0,255,0)
-                espBox.Transparency = 0.5
-                espBox.Parent = player.Character.HumanoidRootPart
-                ESPConnections[player] = espBox
+    RunService.RenderStepped:Connect(function()
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local pos, onScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
+                if onScreen then
+                    if not drawings[player] then
+                        drawings[player] = Drawing.new("Text")
+                        drawings[player].Color = Color3.new(0,1,0)
+                        drawings[player].Size = 16
+                        drawings[player].Center = true
+                        drawings[player].Outline = true
+                    end
+                    drawings[player].Position = Vector2.new(pos.X, pos.Y)
+                    drawings[player].Text = player.Name
+                    drawings[player].Visible = true
+                elseif drawings[player] then
+                    drawings[player].Visible = false
+                end
+            elseif drawings[player] then
+                drawings[player].Visible = false
             end
         end
-    end
-    -- Atualiza ESP para novos players
-    game.Players.PlayerAdded:Connect(function(player)
-        player.CharacterAdded:Connect(function(char)
-            wait(1)
-            if char:FindFirstChild("HumanoidRootPart") then
-                local espBox = Instance.new("BoxHandleAdornment")
-                espBox.Name = "ESPBox"
-                espBox.Adornee = char.HumanoidRootPart
-                espBox.AlwaysOnTop = true
-                espBox.ZIndex = 10
-                espBox.Size = Vector3.new(3,6,3)
-                espBox.Color3 = Color3.fromRGB(0,255,0)
-                espBox.Transparency = 0.5
-                espBox.Parent = char.HumanoidRootPart
-                ESPConnections[player] = espBox
-            end
-        end)
     end)
 end
 
 function DisableESP()
-    for player, espBox in pairs(ESPConnections) do
-        if espBox and espBox.Parent then
-            espBox:Destroy()
+    for _, drawing in pairs(drawings) do
+        if drawing then
+            drawing:Remove()
         end
-        ESPConnections[player] = nil
     end
+    drawings = {}
 end
     
     spawn(function()
