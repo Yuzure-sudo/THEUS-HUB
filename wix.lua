@@ -291,7 +291,7 @@ local function MakeDraggable(topbarobject, object)
 end
 
 local Update = {}
-local pfp = "https://www.roblox.com/headshot-thumbnail/image?userId=".. game.Players.LocalPlayer.UserId .."&width=420&height=420&format=png"
+local pfp = "https://i.imgur.com/OohSPTQ.png".. game.Players.LocalPlayer.UserId .."&width=420&height=420&format=png"
 
 function Update:Window(text,logo,keybind)
     local osfunc = {}
@@ -369,7 +369,7 @@ function Update:Window(text,logo,keybind)
     Ping.Position = UDim2.new(0.28, 0,0.074, 0)
     Ping.Size = UDim2.new(0, 225, 0, 25)
     Ping.Font = Enum.Font.GothamSemibold
-    Ping.Text = "Blox Fruit | discord.gg/Dg5nr8CrVV          [RightControl]"
+    Ping.Text = "Blox Fruit | discord.gg/embrevepicaso          [RightControl]"
     Ping.TextColor3 = Color3.fromRGB(255,255,255)
     Ping.TextSize = 14.000
     Ping.TextXAlignment = Enum.TextXAlignment.Left
@@ -393,7 +393,7 @@ function Update:Window(text,logo,keybind)
     UserText.TextColor3 = Color3.fromRGB(255, 255, 255)
     UserText.Size = UDim2.new(0, 80, 0, 25)
     UserText.Font = Enum.Font.GothamSemibold
-    UserText.Text = "APPLE HUB"
+    UserText.Text = "Bacteria Picasso"
     UserText.TextScaled = true
     UserText.TextSize = 17.000
     UserText.TextWrapped = true
