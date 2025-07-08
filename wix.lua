@@ -4068,20 +4068,23 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Camera = workspace.CurrentCamera
 local drawings = {}
+local ESPConnection
 
 function EnableESP()
-    DisableESP()
-    RunService.RenderStepped:Connect(function()
+    DisableESP() -- Garante que não duplica
+
+    ESPConnection = RunService.RenderStepped:Connect(function()
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 local pos, onScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
                 if onScreen then
                     if not drawings[player] then
-                        drawings[player] = Drawing.new("Text")
-                        drawings[player].Color = Color3.new(0,1,0)
-                        drawings[player].Size = 16
-                        drawings[player].Center = true
-                        drawings[player].Outline = true
+                        local text = Drawing.new("Text")
+                        text.Color = Color3.new(0,1,0)
+                        text.Size = 16
+                        text.Center = true
+                        text.Outline = true
+                        drawings[player] = text
                     end
                     drawings[player].Position = Vector2.new(pos.X, pos.Y)
                     drawings[player].Text = player.Name
@@ -4097,8 +4100,13 @@ function EnableESP()
 end
 
 function DisableESP()
+    if ESPConnection then
+        ESPConnection:Disconnect()
+        ESPConnection = nil
+    end
     for _, drawing in pairs(drawings) do
         if drawing then
+            drawing.Visible = false
             drawing:Remove()
         end
     end
