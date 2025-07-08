@@ -13943,71 +13943,7 @@ end)
     end)
 
 
-Misc:AddSeperator("ESP MENU")
-    
-    Misc:AddToggle("ESP Player",false,function(a)
-        ESPPlayer = a
-	UpdatePlayerChams()
-    end)
-    
-    Misc:AddToggle("ESP Chest",false,function(a)
-        ChestESP = a
-	UpdateChestChams() 
-    end)
-    
-    Misc:AddToggle("ESP Fruit",false,function(a)
-        DevilFruitESP = a
-        while DevilFruitESP do wait()
-            UpdateDevilChams() 
-        end
-    end)
-    
-    Misc:AddToggle("ESP Real Fruit",RealFruitESP,function(a)
-        RealFruitESP = a
-	UpdateRealFruitChams() 
-    end)
-    
-    Misc:AddToggle("ESP Flower",false,function(a)
-        FlowerESP = a
-	UpdateFlowerChams() 
-    end)
-    spawn(function()
-	    while wait(2) do
-		    if FlowerESP then
-			    UpdateFlowerChams() 
-		    end
-		    if DevilFruitESP then
-			    UpdateDevilChams() 
-		    end
-		    if ChestESP then
-			    UpdateChestChams() 
-		    end
-		    if ESPPlayer then
-			    UpdatePlayerChams()
-		    end
-		    if RealFruitESP then
-			    UpdateRealFruitChams()
-		    end
-	    end
-    end)
-Misc:AddToggle("ESP Island",IslandESP,function(value)
-        IslandESP = value
-        while IslandESP do wait()
-            UpdateIslandESP() 
-        end
-    end)
-    Misc:AddToggle("Esp Npc", false, function(nec)
-    NpcESP = nec
-end)
 
-Misc:AddToggle("Esp Sea Beast", false, function(nec)
-    SeaESP = nec
-end)
-
-
-Misc:AddToggle("Esp Mob", false, function(nec)
-    MobESP = nec
-end)
 
     Misc:AddSeperator("Abilities")
     
