@@ -4211,15 +4211,7 @@ end
    Main:AddToggle("Farm Nearest ",_G.AutoFarmNearest,function(value)
    _G.AutoFarmNearest = value
    StopTween(_G.AutoFarmNearest)
-   end)
-Main:AddToggle("Auto Farm Bounty", _G.AutoFarmBounty, function(value)
-    _G.AutoFarmBounty = value
-    if value then
-        StartAutoFarmBounty()
-    else
-        StopAutoFarmBounty()
-    end
-end)
+ end)
    
 spawn(function()
 	while wait() do
@@ -14062,67 +14054,4 @@ spawn(function()
             end
         end
     end)
-    
-    local bountyFarmConnection
-
-function StartAutoFarmBounty()
-    StopAutoFarmBounty()
-    bountyFarmConnection = game:GetService("RunService").Heartbeat:Connect(function()
-        if not _G.AutoFarmBounty then return end
-
-        local Players = game:GetService("Players")
-        local LocalPlayer = Players.LocalPlayer
-        local Character = LocalPlayer.Character
-        local HumanoidRootPart = Character and Character:FindFirstChild("HumanoidRootPart")
-
-        if not HumanoidRootPart then return end
-
-        -- Procura o player inimigo mais próximo
-        local closestPlayer, shortestDistance = nil, math.huge
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Team ~= LocalPlayer.Team and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local dist = (HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-                if dist < shortestDistance and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
-                    closestPlayer = player
-                    shortestDistance = dist
-                end
-            end
-        end
-
-        if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            -- Teleporta perto do player
-            HumanoidRootPart.CFrame = closestPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,5)
-
-            -- Troca de armas: fruta, soco, espada (ajuste os nomes conforme seu inventário)
-            local weapons = {"Melee", "Sword", "Blox Fruit"}
-            for _, weaponType in ipairs(weapons) do
-                for _, tool in ipairs(LocalPlayer.Backpack:GetChildren()) do
-                    if tool:IsA("Tool") and string.find(tool.Name, weaponType) then
-                        tool.Parent = Character
-                        wait(0.1)
-                        -- Ataca usando todas as skills (Z, X, C, V)
-                        for _, key in ipairs({"Z","X","C","V"}) do
-                            game:GetService("VirtualInputManager"):SendKeyEvent(true, key, false, game)
-                            wait(0.15)
-                            game:GetService("VirtualInputManager"):SendKeyEvent(false, key, false, game)
-                        end
-                        -- Ataque básico
-                        game:GetService("VirtualUser"):CaptureController()
-                        game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0))
-                        wait(0.2)
-                        game:GetService("VirtualUser"):Button1Up(Vector2.new(0,0))
-                    end
-                end
-            end
-        end
-    end)
-end
-
-function StopAutoFarmBounty()
-    if bountyFarmConnection then
-        bountyFarmConnection:Disconnect()
-        bountyFarmConnection = nil
-    end
-end
-    
     end)
