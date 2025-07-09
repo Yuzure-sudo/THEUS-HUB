@@ -14075,14 +14075,12 @@ function StartAutoFarmBounty()
         local LocalPlayer = Players.LocalPlayer
         local Character = LocalPlayer.Character
         local HumanoidRootPart = Character and Character:FindFirstChild("HumanoidRootPart")
-
         if not HumanoidRootPart then return end
 
-        -- Procura o player inimigo mais próximo que tenha bounty (se quiser)
+        -- Procura o player inimigo mais próximo (exceto você e do mesmo time)
         local closestPlayer, shortestDistance = nil, math.huge
         for _, player in ipairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Team ~= LocalPlayer.Team and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                -- Aqui você pode adicionar filtro para bounty, se quiser
                 local dist = (HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
                 if dist < shortestDistance and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
                     closestPlayer = player
@@ -14092,19 +14090,23 @@ function StartAutoFarmBounty()
         end
 
         if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            -- Teleporta perto do player
             HumanoidRootPart.CFrame = closestPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5)
 
+            -- Troca de armas: fruta, soco, espada (ajuste os nomes conforme seu inventário)
             local weapons = {"Melee", "Sword", "Blox Fruit"}
             for _, weaponType in ipairs(weapons) do
                 for _, tool in ipairs(LocalPlayer.Backpack:GetChildren()) do
                     if tool:IsA("Tool") and string.find(tool.Name, weaponType) then
                         tool.Parent = Character
                         wait(0.1)
+                        -- Ataca usando todas as skills (Z, X, C, V)
                         for _, key in ipairs({"Z", "X", "C", "V"}) do
                             game:GetService("VirtualInputManager"):SendKeyEvent(true, key, false, game)
                             wait(0.15)
                             game:GetService("VirtualInputManager"):SendKeyEvent(false, key, false, game)
                         end
+                        -- Ataque básico
                         game:GetService("VirtualUser"):CaptureController()
                         game:GetService("VirtualUser"):Button1Down(Vector2.new(0, 0))
                         wait(0.2)
