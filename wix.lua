@@ -4056,6 +4056,7 @@ end
 Main:AddDropdown("Selecionar Alvo Bounty", playerList, function(selected)
     _G.BountyTarget = selected
 end)
+
    
    Main:AddToggle("Auto Farm Bounty", _G.AutoFarmBounty, function(value)
     _G.AutoFarmBounty = value
