@@ -449,3 +449,48 @@ botaoHitbox.MouseButton1Click:Connect(function()
         end
     end
 end)
+
+-- Esp --
+
+local botaoEsp = Instance.new("TextButton", abasFrames["Configurações"])
+botaoEsp.Text = "Ativar ESP Inimigos"
+botaoEsp.Font = Enum.Font.GothamBold
+botaoEsp.TextSize = 17
+botaoEsp.Size = UDim2.new(1, -40, 0, 44)
+botaoEsp.Position = UDim2.new(0, 20, 0, 118)
+botaoEsp.BackgroundColor3 = Color3.fromRGB(60,120,120)
+botaoEsp.TextColor3 = Color3.fromRGB(255,255,255)
+botaoEsp.BackgroundTransparency = 0.09
+local espOn = false
+local espThread = nil
+botaoEsp.MouseButton1Click:Connect(function()
+    espOn = not espOn
+    botaoEsp.Text = espOn and "Parar ESP Inimigos" or "Ativar ESP Inimigos"
+    if espOn then
+        espThread = task.spawn(function()
+            while espOn do
+                for _,enemy in ipairs(workspace.__Main.__Enemies.Client:GetChildren()) do
+                    if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
+                        if not enemy:FindFirstChild("ESPBox") then
+                            local box = Instance.new("BoxHandleAdornment")
+                            box.Name = "ESPBox"
+                            box.Adornee = enemy.HumanoidRootPart
+                            box.Size = Vector3.new(5,7,5)
+                            box.Color3 = Color3.fromRGB(255,0,0)
+                            box.AlwaysOnTop = true
+                            box.ZIndex = 10
+                            box.Transparency = 0.5
+                            box.Parent = enemy
+                        end
+                    end
+                end
+                task.wait(2)
+            end
+        end)
+    else
+        for _,enemy in ipairs(workspace.__Main.__Enemies.Client:GetChildren()) do
+            if enemy:FindFirstChild("ESPBox") then enemy.ESPBox:Destroy() end
+        end
+        if espThread then task.cancel(espThread) espThread = nil end
+    end
+end)
