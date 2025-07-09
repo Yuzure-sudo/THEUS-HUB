@@ -1,42 +1,38 @@
+-- Los CocoFantos - Hub Premium Mobile
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
 local IMAGE_ID = "rbxassetid://119139554769198"
 
+-- Banidos
 local Banidos = {548245499,2318524722,3564923852}
-local jogador = game.Players.LocalPlayer
-local idUsuario = jogador.UserId
-for _, idBanido in ipairs(Banidos) do
-    if idUsuario == idBanido then
-        jogador:Kick("Você está banido de usar este script. wrdyz.94 no Discord para apelação.")
-        break
+for _, id in ipairs(Banidos) do
+    if LocalPlayer.UserId == id then
+        LocalPlayer:Kick("Você está banido de usar este script. wrdyz.94 no Discord para apelação.")
+        return
     end
 end
 
--- Quadrado minimizável e arrastável
-local miniGui = Instance.new("ScreenGui")
+-- Quadrado minimizável mobile
+local miniGui = Instance.new("ScreenGui", CoreGui)
 miniGui.Name = "MiniLosCocoFantos"
-miniGui.Parent = CoreGui
-miniGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+miniGui.ResetOnSpawn = false
+miniGui.IgnoreGuiInset = true
 
-local miniFrame = Instance.new("Frame")
-miniFrame.Parent = miniGui
-miniFrame.Size = UDim2.new(0, 64, 0, 64)
-miniFrame.Position = UDim2.new(0, 30, 0, 120)
-miniFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+local miniFrame = Instance.new("Frame", miniGui)
+miniFrame.Size = UDim2.new(0, 76, 0, 76)
+miniFrame.Position = UDim2.new(0, 20, 0, 120)
+miniFrame.BackgroundColor3 = Color3.fromRGB(25,25,40)
 miniFrame.BackgroundTransparency = 0.08
 miniFrame.Visible = false
 
 local miniCorner = Instance.new("UICorner", miniFrame)
-miniCorner.CornerRadius = UDim.new(0, 18)
+miniCorner.CornerRadius = UDim.new(0, 22)
 
-local miniStroke = Instance.new("UIStroke", miniFrame)
-miniStroke.Color = Color3.fromRGB(0, 132, 255)
-miniStroke.Thickness = 2
-miniStroke.Transparency = 0.14
-
-local miniImg = Instance.new("ImageButton")
-miniImg.Parent = miniFrame
+local miniImg = Instance.new("ImageButton", miniFrame)
 miniImg.Size = UDim2.new(1, -16, 1, -16)
 miniImg.Position = UDim2.new(0, 8, 0, 8)
 miniImg.Image = IMAGE_ID
@@ -44,7 +40,7 @@ miniImg.BackgroundTransparency = 1
 
 local dragging, dragInput, dragStart, startPos
 miniFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
         dragStart = input.Position
         startPos = miniFrame.Position
@@ -54,7 +50,7 @@ miniFrame.InputBegan:Connect(function(input)
     end
 end)
 miniFrame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
 end)
 UserInputService.InputChanged:Connect(function(input)
     if dragging and input == dragInput then
@@ -66,127 +62,45 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Interface principal
-local screenGui = Instance.new("ScreenGui")
+-- Interface principal mobile, responsiva
+local screenGui = Instance.new("ScreenGui", CoreGui)
 screenGui.Name = "Los_CocoFantos"
-screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-screenGui.Parent = CoreGui
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
 
-local mainFrame = Instance.new("Frame")
+local mainFrame = Instance.new("Frame", screenGui)
 mainFrame.Name = "MainFrame"
-mainFrame.Parent = screenGui
-mainFrame.Size = UDim2.new(0, 760, 0, 470)
-mainFrame.Position = UDim2.new(0.5, -380, 0.5, -235)
-mainFrame.BackgroundColor3 = Color3.fromRGB(14, 17, 28)
-mainFrame.BackgroundTransparency = 0.07
-mainFrame.Visible = false
+mainFrame.Size = UDim2.new(0, 400, 0, 610)
+mainFrame.Position = UDim2.new(0, 20, 0, 40)
+mainFrame.BackgroundColor3 = Color3.fromRGB(18, 20, 28)
+mainFrame.BackgroundTransparency = 0.04
+mainFrame.Visible = true
 
 local mainCorner = Instance.new("UICorner", mainFrame)
-mainCorner.CornerRadius = UDim.new(0, 22)
+mainCorner.CornerRadius = UDim.new(0, 28)
 
-local mainStroke = Instance.new("UIStroke", mainFrame)
-mainStroke.Color = Color3.fromRGB(0, 132, 255)
-mainStroke.Thickness = 2.2
-mainStroke.Transparency = 0.07
-
-local logo = Instance.new("ImageLabel")
-logo.Name = "Logo"
-logo.Parent = mainFrame
+local logo = Instance.new("ImageLabel", mainFrame)
 logo.BackgroundTransparency = 1
-logo.Position = UDim2.new(0, 32, 0, 22)
-logo.Size = UDim2.new(0, 60, 0, 60)
+logo.Position = UDim2.new(0, 18, 0, 18)
+logo.Size = UDim2.new(0, 52, 0, 52)
 logo.Image = IMAGE_ID
 
-local titulo = Instance.new("TextLabel")
-titulo.Name = "Titulo"
-titulo.Parent = mainFrame
+local titulo = Instance.new("TextLabel", mainFrame)
 titulo.Text = "Los CocoFantos"
 titulo.Font = Enum.Font.GothamBlack
-titulo.TextSize = 26
-titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
+titulo.TextSize = 24
+titulo.TextColor3 = Color3.fromRGB(255,255,255)
 titulo.BackgroundTransparency = 1
-titulo.Size = UDim2.new(1, -120, 0, 44)
-titulo.Position = UDim2.new(0, 110, 0, 32)
+titulo.Size = UDim2.new(1, -80, 0, 44)
+titulo.Position = UDim2.new(0, 78, 0, 22)
 titulo.TextXAlignment = Enum.TextXAlignment.Left
 
-local minimizar = Instance.new("ImageButton")
-minimizar.Name = "Minimizar"
-minimizar.Parent = mainFrame
-minimizar.Size = UDim2.new(0, 40, 0, 40)
-minimizar.Position = UDim2.new(1, -54, 0, 28)
+local minimizar = Instance.new("ImageButton", mainFrame)
+minimizar.Size = UDim2.new(0, 38, 0, 38)
+minimizar.Position = UDim2.new(1, -48, 0, 18)
 minimizar.BackgroundTransparency = 1
 minimizar.Image = IMAGE_ID
 minimizar.ImageColor3 = Color3.fromRGB(180, 180, 255)
-
-local painelAbas = Instance.new("Frame")
-painelAbas.Name = "PainelAbas"
-painelAbas.Parent = mainFrame
-painelAbas.Size = UDim2.new(0, 144, 1, -90)
-painelAbas.Position = UDim2.new(0, 0, 0, 100)
-painelAbas.BackgroundTransparency = 0.19
-painelAbas.BackgroundColor3 = Color3.fromRGB(21, 23, 35)
-
-local painelCorner = Instance.new("UICorner", painelAbas)
-painelCorner.CornerRadius = UDim.new(0, 16)
-
-local listaAbas = Instance.new("UIListLayout", painelAbas)
-listaAbas.SortOrder = Enum.SortOrder.LayoutOrder
-listaAbas.Padding = UDim.new(0, 16)
-
-local conteudoFrame = Instance.new("Frame")
-conteudoFrame.Name = "ConteudoFrame"
-conteudoFrame.Parent = mainFrame
-conteudoFrame.Position = UDim2.new(0, 160, 0, 100)
-conteudoFrame.Size = UDim2.new(1, -170, 1, -110)
-conteudoFrame.BackgroundTransparency = 1
-
-local function criarAba(nomeAba)
-    local abaFrame = Instance.new("Frame")
-    abaFrame.Name = nomeAba.."Aba"
-    abaFrame.Parent = conteudoFrame
-    abaFrame.Size = UDim2.new(1, 0, 1, 0)
-    abaFrame.BackgroundTransparency = 1
-    abaFrame.Visible = false
-
-    local abaBotao = Instance.new("ImageButton")
-    abaBotao.Name = nomeAba.."Botao"
-    abaBotao.Parent = painelAbas
-    abaBotao.Size = UDim2.new(1, -24, 0, 54)
-    abaBotao.BackgroundTransparency = 0.08
-    abaBotao.BackgroundColor3 = Color3.fromRGB(36, 36, 60)
-    abaBotao.Image = IMAGE_ID
-
-    local btnCorner = Instance.new("UICorner", abaBotao)
-    btnCorner.CornerRadius = UDim.new(0, 10)
-
-    local btnLabel = Instance.new("TextLabel")
-    btnLabel.Parent = abaBotao
-    btnLabel.Size = UDim2.new(1, 0, 1, 0)
-    btnLabel.BackgroundTransparency = 1
-    btnLabel.Text = nomeAba
-    btnLabel.Font = Enum.Font.GothamBold
-    btnLabel.TextSize = 18
-    btnLabel.TextColor3 = Color3.fromRGB(220, 220, 255)
-
-    abaBotao.MouseButton1Click:Connect(function()
-        for _, frame in pairs(conteudoFrame:GetChildren()) do
-            if frame:IsA("Frame") then
-                frame.Visible = false
-            end
-        end
-        abaFrame.Visible = true
-    end)
-    return abaFrame
-end
-
-local menuAba = criarAba("Menu")
-menuAba.Visible = true
-local autofarmAba = criarAba("AutoFarm")
-local teleportAba = criarAba("Teleporte")
-local petsAba = criarAba("Pets")
-local eventosAba = criarAba("Eventos")
-local configAba = criarAba("Configurações")
-local creditosAba = criarAba("Créditos")
 
 minimizar.MouseButton1Click:Connect(function()
     mainFrame.Visible = false
@@ -197,164 +111,244 @@ miniImg.MouseButton1Click:Connect(function()
     miniFrame.Visible = false
 end)
 
-mainFrame.Visible = true
-TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.07, Size = UDim2.new(0, 760, 0, 470)}):Play()
+-- Abas grandes, mobile
+local abas = {"Menu","AutoFarm","Teleporte","Pets","Eventos","Configurações","Créditos"}
+local abasFrames = {}
+local abasBotoes = {}
+local abasBar = Instance.new("Frame", mainFrame)
+abasBar.Position = UDim2.new(0,0,0,80)
+abasBar.Size = UDim2.new(1,0,0,54)
+abasBar.BackgroundTransparency = 1
+local abasLayout = Instance.new("UIListLayout", abasBar)
+abasLayout.FillDirection = Enum.FillDirection.Horizontal
+abasLayout.SortOrder = Enum.SortOrder.LayoutOrder
+abasLayout.Padding = UDim.new(0, 8)
+local conteudoFrame = Instance.new("Frame", mainFrame)
+conteudoFrame.Position = UDim2.new(0, 0, 0, 140)
+conteudoFrame.Size = UDim2.new(1, 0, 1, -140)
+conteudoFrame.BackgroundTransparency = 1
 
--- Menu principal
-local saudacao = Instance.new("TextLabel")
-saudacao.Parent = menuAba
-saudacao.Text = "Bem-vindo ao Los CocoFantos!"
+for i, nome in ipairs(abas) do
+    local botao = Instance.new("TextButton", abasBar)
+    botao.Text = nome
+    botao.Font = Enum.Font.GothamBold
+    botao.TextSize = 18
+    botao.Size = UDim2.new(0, 110, 1, 0)
+    botao.BackgroundColor3 = Color3.fromRGB(35,35,65)
+    botao.TextColor3 = Color3.fromRGB(220,220,255)
+    botao.AutoButtonColor = true
+    botao.BackgroundTransparency = 0.15
+    local corner = Instance.new("UICorner", botao)
+    corner.CornerRadius = UDim.new(0, 12)
+    abasBotoes[nome] = botao
+
+    local frame = Instance.new("Frame", conteudoFrame)
+    frame.Name = nome.."Aba"
+    frame.Size = UDim2.new(1,0,1,0)
+    frame.BackgroundTransparency = 1
+    frame.Visible = (i==1)
+    abasFrames[nome] = frame
+
+    botao.MouseButton1Click:Connect(function()
+        for _, f in pairs(abasFrames) do f.Visible = false end
+        frame.Visible = true
+    end)
+end
+
+-- Menu
+local saudacao = Instance.new("TextLabel", abasFrames["Menu"])
+saudacao.Text = "Bem-vindo ao Los CocoFantos!\nScript mobile-friendly, ultra premium."
 saudacao.Font = Enum.Font.GothamBlack
-saudacao.TextSize = 24
+saudacao.TextSize = 22
 saudacao.TextColor3 = Color3.fromRGB(200, 220, 255)
 saudacao.BackgroundTransparency = 1
-saudacao.Size = UDim2.new(1, 0, 0, 50)
-saudacao.Position = UDim2.new(0, 0, 0, 20)
+saudacao.Size = UDim2.new(1, 0, 0, 60)
+saudacao.Position = UDim2.new(0, 0, 0, 10)
 
 -- Créditos
-local creditos = Instance.new("TextLabel")
-creditos.Parent = creditosAba
-creditos.Text = "Criado exclusivamente para 3 gays."
+local creditos = Instance.new("TextLabel", abasFrames["Créditos"])
+creditos.Text = "Criado exclusivamente para 3 gays.\nScript mobile-friendly, by wrdyz.94"
 creditos.Font = Enum.Font.GothamBold
-creditos.TextSize = 20
+creditos.TextSize = 18
 creditos.TextColor3 = Color3.fromRGB(255, 80, 180)
 creditos.BackgroundTransparency = 1
-creditos.Size = UDim2.new(1, 0, 0, 40)
-creditos.Position = UDim2.new(0, 0, 0, 30)
+creditos.Size = UDim2.new(1, 0, 0, 60)
+creditos.Position = UDim2.new(0, 0, 0, 20)
 
--- ================== Funções de Vantagem ===================
+-- AutoFarm Boss
+local botaoBoss = Instance.new("TextButton", abasFrames["AutoFarm"])
+botaoBoss.Text = "AutoFarm Boss"
+botaoBoss.Font = Enum.Font.GothamBold
+botaoBoss.TextSize = 17
+botaoBoss.Size = UDim2.new(1, -40, 0, 44)
+botaoBoss.Position = UDim2.new(0, 20, 0, 10)
+botaoBoss.BackgroundColor3 = Color3.fromRGB(60,40,80)
+botaoBoss.TextColor3 = Color3.fromRGB(255,255,255)
+botaoBoss.BackgroundTransparency = 0.09
 
--- AutoFarm
-local botaoAutoFarm = Instance.new("TextButton")
-botaoAutoFarm.Parent = autofarmAba
-botaoAutoFarm.Text = "Ativar AutoFarm Global"
-botaoAutoFarm.Font = Enum.Font.GothamBold
-botaoAutoFarm.TextSize = 18
-botaoAutoFarm.TextColor3 = Color3.fromRGB(255,255,255)
-botaoAutoFarm.BackgroundColor3 = Color3.fromRGB(40,40,80)
-botaoAutoFarm.Size = UDim2.new(0, 260, 0, 40)
-botaoAutoFarm.Position = UDim2.new(0, 30, 0, 30)
-botaoAutoFarm.BackgroundTransparency = 0.1
-
-local farmando = false
-local threadFarm = nil
-
-botaoAutoFarm.MouseButton1Click:Connect(function()
-    farmando = not farmando
-    botaoAutoFarm.Text = farmando and "Desativar AutoFarm Global" or "Ativar AutoFarm Global"
-    if farmando then
-        threadFarm = task.spawn(function()
-            while farmando do
-                local player = game.Players.LocalPlayer
-                local char = player.Character or player.CharacterAdded:Wait()
-                local humanoidRootPart = char:FindFirstChild("HumanoidRootPart")
-                if humanoidRootPart then
-                    local closest, dist = nil, math.huge
-                    for _, enemy in ipairs(workspace.__Main.__Enemies.Client:GetChildren()) do
-                        if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
-                            local d = (enemy.HumanoidRootPart.Position - humanoidRootPart.Position).Magnitude
-                            if d < dist then
-                                closest = enemy
-                                dist = d
-                            end
-                        end
+local bossFarm = false
+local bossThread = nil
+botaoBoss.MouseButton1Click:Connect(function()
+    bossFarm = not bossFarm
+    botaoBoss.Text = bossFarm and "Parar AutoFarm Boss" or "AutoFarm Boss"
+    if bossFarm then
+        bossThread = task.spawn(function()
+            while bossFarm do
+                local boss = nil
+                for _,enemy in ipairs(workspace.__Main.__Enemies.Client:GetChildren()) do
+                    if enemy.Name:lower():find("boss") and enemy:FindFirstChild("HumanoidRootPart") then
+                        boss = enemy break
                     end
-                    if closest then
-                        humanoidRootPart.CFrame = closest.HumanoidRootPart.CFrame * CFrame.new(5,0,0)
-                        local args = {
-                            [1] = {
-                                [1] = {
-                                    ["Event"] = "PunchAttack",
-                                    ["Enemy"] = closest.Name
-                                },
-                                [2] = "\4"
-                            }
-                        }
-                        game:GetService("ReplicatedStorage"):WaitForChild("BridgeNet2"):WaitForChild("dataRemoteEvent"):FireServer(unpack(args))
+                end
+                if boss then
+                    local char = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
+                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        hrp.CFrame = boss.HumanoidRootPart.CFrame * CFrame.new(5,0,0)
+                        ReplicatedStorage.BridgeNet2.dataRemoteEvent:FireServer({{["Event"]="PunchAttack",["Enemy"]=boss.Name},"\4"})
                     end
                 end
                 task.wait(0.5)
             end
         end)
     else
-        if threadFarm then
-            task.cancel(threadFarm)
-            threadFarm = nil
+        if bossThread then task.cancel(bossThread) bossThread = nil end
+    end
+end)
+
+-- AutoFarm Mobs
+local botaoMob = Instance.new("TextButton", abasFrames["AutoFarm"])
+botaoMob.Text = "AutoFarm Mobs"
+botaoMob.Font = Enum.Font.GothamBold
+botaoMob.TextSize = 17
+botaoMob.Size = UDim2.new(1, -40, 0, 44)
+botaoMob.Position = UDim2.new(0, 20, 0, 64)
+botaoMob.BackgroundColor3 = Color3.fromRGB(60,40,80)
+botaoMob.TextColor3 = Color3.fromRGB(255,255,255)
+botaoMob.BackgroundTransparency = 0.09
+
+local mobFarm = false
+local mobThread = nil
+botaoMob.MouseButton1Click:Connect(function()
+    mobFarm = not mobFarm
+    botaoMob.Text = mobFarm and "Parar AutoFarm Mobs" or "AutoFarm Mobs"
+    if mobFarm then
+        mobThread = task.spawn(function()
+            while mobFarm do
+                local closest, dist = nil, math.huge
+                local char = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    for _, enemy in ipairs(workspace.__Main.__Enemies.Client:GetChildren()) do
+                        if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
+                            local d = (enemy.HumanoidRootPart.Position - hrp.Position).Magnitude
+                            if d < dist then closest = enemy dist = d end
+                        end
+                    end
+                    if closest then
+                        hrp.CFrame = closest.HumanoidRootPart.CFrame * CFrame.new(5,0,0)
+                        ReplicatedStorage.BridgeNet2.dataRemoteEvent:FireServer({{["Event"]="PunchAttack",["Enemy"]=closest.Name},"\4"})
+                    end
+                end
+                task.wait(0.5)
+            end
+        end)
+    else
+        if mobThread then task.cancel(mobThread) mobThread = nil end
+    end
+end)
+
+-- Kill Aura
+local botaoAura = Instance.new("TextButton", abasFrames["AutoFarm"])
+botaoAura.Text = "Ativar Kill Aura"
+botaoAura.Font = Enum.Font.GothamBold
+botaoAura.TextSize = 17
+botaoAura.Size = UDim2.new(1, -40, 0, 44)
+botaoAura.Position = UDim2.new(0, 20, 0, 118)
+botaoAura.BackgroundColor3 = Color3.fromRGB(80,40,90)
+botaoAura.TextColor3 = Color3.fromRGB(255,255,255)
+botaoAura.BackgroundTransparency = 0.09
+
+local auraOn = false
+local auraThread = nil
+botaoAura.MouseButton1Click:Connect(function()
+    auraOn = not auraOn
+    botaoAura.Text = auraOn and "Parar Kill Aura" or "Ativar Kill Aura"
+    if auraOn then
+        auraThread = task.spawn(function()
+            while auraOn do
+                local char = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                for _, enemy in ipairs(workspace.__Main.__Enemies.Client:GetChildren()) do
+                    if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
+                        if (enemy.HumanoidRootPart.Position - hrp.Position).Magnitude < 15 then
+                            ReplicatedStorage.BridgeNet2.dataRemoteEvent:FireServer({{["Event"]="PunchAttack",["Enemy"]=enemy.Name},"\4"})
+                        end
+                    end
+                end
+                task.wait(0.2)
+            end
+        end)
+    else
+        if auraThread then task.cancel(auraThread) auraThread = nil end
+    end
+end)
+
+
+-- Teleporte --
+
+local botaoTpBoss = Instance.new("TextButton", abasFrames["Teleporte"])
+botaoTpBoss.Text = "Teleportar para Boss"
+botaoTpBoss.Font = Enum.Font.GothamBold
+botaoTpBoss.TextSize = 17
+botaoTpBoss.Size = UDim2.new(1, -40, 0, 44)
+botaoTpBoss.Position = UDim2.new(0, 20, 0, 10)
+botaoTpBoss.BackgroundColor3 = Color3.fromRGB(40,80,80)
+botaoTpBoss.TextColor3 = Color3.fromRGB(255,255,255)
+botaoTpBoss.BackgroundTransparency = 0.09
+botaoTpBoss.MouseButton1Click:Connect(function()
+    for _,enemy in ipairs(workspace.__Main.__Enemies.Client:GetChildren()) do
+        if enemy.Name:lower():find("boss") and enemy:FindFirstChild("HumanoidRootPart") then
+            local char = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then hrp.CFrame = enemy.HumanoidRootPart.CFrame + Vector3.new(0,7,0) end
+            break
         end
     end
 end)
 
--- Teleporte
-local botaoAtualizar = Instance.new("TextButton")
-botaoAtualizar.Parent = teleportAba
-botaoAtualizar.Text = "Atualizar Destinos"
-botaoAtualizar.Font = Enum.Font.GothamBold
-botaoAtualizar.TextSize = 16
-botaoAtualizar.TextColor3 = Color3.fromRGB(255,255,255)
-botaoAtualizar.BackgroundColor3 = Color3.fromRGB(40,40,80)
-botaoAtualizar.Size = UDim2.new(0, 180, 0, 34)
-botaoAtualizar.Position = UDim2.new(0, 30, 0, 30)
-botaoAtualizar.BackgroundTransparency = 0.1
-
-local listaDestinos = Instance.new("Frame")
-listaDestinos.Parent = teleportAba
-listaDestinos.Position = UDim2.new(0, 30, 0, 80)
-listaDestinos.Size = UDim2.new(0, 250, 0, 230)
-listaDestinos.BackgroundTransparency = 1
-
-local layout = Instance.new("UIListLayout", listaDestinos)
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-layout.Padding = UDim.new(0, 8)
-
-local function atualizarDestinos()
-    for _,v in pairs(listaDestinos:GetChildren()) do
-        if v:IsA("TextButton") then v:Destroy() end
+local botaoSafe = Instance.new("TextButton", abasFrames["Teleporte"])
+botaoSafe.Text = "Teleportar para SafeZone"
+botaoSafe.Font = Enum.Font.GothamBold
+botaoSafe.TextSize = 17
+botaoSafe.Size = UDim2.new(1, -40, 0, 44)
+botaoSafe.Position = UDim2.new(0, 20, 0, 64)
+botaoSafe.BackgroundColor3 = Color3.fromRGB(40,80,80)
+botaoSafe.TextColor3 = Color3.fromRGB(255,255,255)
+botaoSafe.BackgroundTransparency = 0.09
+botaoSafe.MouseButton1Click:Connect(function()
+    local safe = workspace:FindFirstChild("__SafeZone") or workspace:FindFirstChild("SafeZone")
+    if safe and safe:IsA("BasePart") then
+        local char = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then hrp.CFrame = safe.CFrame + Vector3.new(0,5,0) end
     end
-    local destinos = {}
-    local spawnFolder = workspace:FindFirstChild("__Extra") and workspace.__Extra:FindFirstChild("__Spawns")
-    if spawnFolder then
-        for _, spawn in pairs(spawnFolder:GetChildren()) do
-            if spawn:IsA("BasePart") then
-                table.insert(destinos, spawn)
-            end
-        end
-    end
-    for _,dest in ipairs(destinos) do
-        local btn = Instance.new("TextButton")
-        btn.Parent = listaDestinos
-        btn.Text = dest.Name
-        btn.Font = Enum.Font.Gotham
-        btn.TextSize = 15
-        btn.Size = UDim2.new(1,0,0,32)
-        btn.BackgroundColor3 = Color3.fromRGB(30,30,80)
-        btn.TextColor3 = Color3.fromRGB(255,255,255)
-        btn.BackgroundTransparency = 0.15
-        btn.MouseButton1Click:Connect(function()
-            local char = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                hrp.CFrame = dest.CFrame + Vector3.new(0,5,0)
-            end
-        end)
-    end
-end
-botaoAtualizar.MouseButton1Click:Connect(atualizarDestinos)
-atualizarDestinos()
+end)
 
--- Pets
-local botaoMelhorPet = Instance.new("TextButton")
-botaoMelhorPet.Parent = petsAba
+
+-- Pets --
+
+local botaoMelhorPet = Instance.new("TextButton", abasFrames["Pets"])
 botaoMelhorPet.Text = "Equipar Melhor Pet"
 botaoMelhorPet.Font = Enum.Font.GothamBold
-botaoMelhorPet.TextSize = 18
+botaoMelhorPet.TextSize = 17
+botaoMelhorPet.Size = UDim2.new(1, -40, 0, 44)
+botaoMelhorPet.Position = UDim2.new(0, 20, 0, 10)
+botaoMelhorPet.BackgroundColor3 = Color3.fromRGB(80,60,40)
 botaoMelhorPet.TextColor3 = Color3.fromRGB(255,255,255)
-botaoMelhorPet.BackgroundColor3 = Color3.fromRGB(40,40,80)
-botaoMelhorPet.Size = UDim2.new(0, 220, 0, 40)
-botaoMelhorPet.Position = UDim2.new(0, 30, 0, 30)
-botaoMelhorPet.BackgroundTransparency = 0.1
-
+botaoMelhorPet.BackgroundTransparency = 0.09
 botaoMelhorPet.MouseButton1Click:Connect(function()
-    local petsFolder = workspace.__Main.__Pets:FindFirstChild(tostring(game.Players.LocalPlayer.UserId))
+    local petsFolder = workspace.__Main.__Pets:FindFirstChild(tostring(Players.LocalPlayer.UserId))
     if petsFolder then
         local melhor, maior = nil, -math.huge
         for _,pet in ipairs(petsFolder:GetChildren()) do
@@ -365,78 +359,93 @@ botaoMelhorPet.MouseButton1Click:Connect(function()
             end
         end
         if melhor then
-            game:GetService("ReplicatedStorage"):WaitForChild("BridgeNet2"):WaitForChild("dataRemoteEvent"):FireServer({
-                [1] = {
-                    [1] = {
-                        ["Event"] = "EquipPet",
-                        ["Pet"] = melhor.Name
-                    },
-                    [2] = "\4"
-                }
-            })
+            ReplicatedStorage.BridgeNet2.dataRemoteEvent:FireServer({{["Event"]="EquipPet",["Pet"]=melhor.Name},"\4"})
         end
     end
 end)
 
--- Eventos
-local botaoEvento = Instance.new("TextButton")
-botaoEvento.Parent = eventosAba
-botaoEvento.Text = "AutoFarm Eventos (Mounts, Raid, Dungeon)"
-botaoEvento.Font = Enum.Font.GothamBold
-botaoEvento.TextSize = 18
-botaoEvento.TextColor3 = Color3.fromRGB(255,255,255)
-botaoEvento.BackgroundColor3 = Color3.fromRGB(40,40,80)
-botaoEvento.Size = UDim2.new(0, 320, 0, 40)
-botaoEvento.Position = UDim2.new(0, 30, 0, 30)
-botaoEvento.BackgroundTransparency = 0.1
 
-local farmandoEvento = false
-local threadEvento = nil
 
-botaoEvento.MouseButton1Click:Connect(function()
-    farmandoEvento = not farmandoEvento
-    botaoEvento.Text = farmandoEvento and "Parar AutoFarm Eventos" or "AutoFarm Eventos (Mounts, Raid, Dungeon)"
-    if farmandoEvento then
-        threadEvento = task.spawn(function()
-            while farmandoEvento do
-                local mounts = workspace:FindFirstChild("__Extra") and workspace.__Extra:FindFirstChild("__Appear")
-                if mounts and #mounts:GetChildren() > 0 then
-                    local mount = mounts:GetChildren()[1]
-                    local part = mount.PrimaryPart or mount:FindFirstChild("HumanoidRootPart")
-                    if part then
-                        local char = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
+-- Eventos --
+
+local botaoDungeon = Instance.new("TextButton", abasFrames["Eventos"])
+botaoDungeon.Text = "Auto Dungeon"
+botaoDungeon.Font = Enum.Font.GothamBold
+botaoDungeon.TextSize = 17
+botaoDungeon.Size = UDim2.new(1, -40, 0, 44)
+botaoDungeon.Position = UDim2.new(0, 20, 0, 10)
+botaoDungeon.BackgroundColor3 = Color3.fromRGB(80,80,40)
+botaoDungeon.TextColor3 = Color3.fromRGB(255,255,255)
+botaoDungeon.BackgroundTransparency = 0.09
+local autoDungeon = false
+local dungeonThread = nil
+botaoDungeon.MouseButton1Click:Connect(function()
+    autoDungeon = not autoDungeon
+    botaoDungeon.Text = autoDungeon and "Parar Auto Dungeon" or "Auto Dungeon"
+    if autoDungeon then
+        dungeonThread = task.spawn(function()
+            while autoDungeon do
+                -- Exemplo: Teleporta para o primeiro dungeon encontrado
+                local dungeons = workspace:FindFirstChild("__Dungeons")
+                if dungeons and #dungeons:GetChildren() > 0 then
+                    local dung = dungeons:GetChildren()[1]
+                    if dung:IsA("BasePart") then
+                        local char = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
                         local hrp = char:FindFirstChild("HumanoidRootPart")
-                        if hrp then
-                            hrp.CFrame = part.CFrame
-                        end
+                        if hrp then hrp.CFrame = dung.CFrame + Vector3.new(0,5,0) end
                     end
                 end
                 task.wait(2)
             end
         end)
     else
-        if threadEvento then
-            task.cancel(threadEvento)
-            threadEvento = nil
-        end
+        if dungeonThread then task.cancel(dungeonThread) dungeonThread = nil end
     end
 end)
 
--- Configurações
-local botaoReset = Instance.new("TextButton")
-botaoReset.Parent = configAba
-botaoReset.Text = "Resetar Personagem"
-botaoReset.Font = Enum.Font.GothamBold
-botaoReset.TextSize = 18
-botaoReset.TextColor3 = Color3.fromRGB(255,255,255)
-botaoReset.BackgroundColor3 = Color3.fromRGB(40,40,80)
-botaoReset.Size = UDim2.new(0, 220, 0, 40)
-botaoReset.Position = UDim2.new(0, 30, 0, 30)
-botaoReset.BackgroundTransparency = 0.1
 
-botaoReset.MouseButton1Click:Connect(function()
-    local char = game.Players.LocalPlayer.Character
-    if char then
-        char:BreakJoints()
+-- Configuracoes --
+
+-- Anti-AFK
+local antiAfk = Instance.new("TextButton", abasFrames["Configurações"])
+antiAfk.Text = "Ativar Anti-AFK"
+antiAfk.Font = Enum.Font.GothamBold
+antiAfk.TextSize = 17
+antiAfk.Size = UDim2.new(1, -40, 0, 44)
+antiAfk.Position = UDim2.new(0, 20, 0, 10)
+antiAfk.BackgroundColor3 = Color3.fromRGB(80,80,80)
+antiAfk.TextColor3 = Color3.fromRGB(255,255,255)
+antiAfk.BackgroundTransparency = 0.09
+local antiAfkOn = false
+local afkConn = nil
+antiAfk.MouseButton1Click:Connect(function()
+    antiAfkOn = not antiAfkOn
+    antiAfk.Text = antiAfkOn and "Parar Anti-AFK" or "Ativar Anti-AFK"
+    if antiAfkOn then
+        afkConn = LocalPlayer.Idled:Connect(function()
+            VirtualUser:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+            task.wait(1)
+            VirtualUser:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+        end)
+    else
+        if afkConn then afkConn:Disconnect() afkConn = nil end
+    end
+end)
+
+-- Hitbox Expander
+local botaoHitbox = Instance.new("TextButton", abasFrames["Configurações"])
+botaoHitbox.Text = "Expandir Hitbox Inimigos"
+botaoHitbox.Font = Enum.Font.GothamBold
+botaoHitbox.TextSize = 17
+botaoHitbox.Size = UDim2.new(1, -40, 0, 44)
+botaoHitbox.Position = UDim2.new(0, 20, 0, 64)
+botaoHitbox.BackgroundColor3 = Color3.fromRGB(120,80,80)
+botaoHitbox.TextColor3 = Color3.fromRGB(255,255,255)
+botaoHitbox.BackgroundTransparency = 0.09
+botaoHitbox.MouseButton1Click:Connect(function()
+    for _,enemy in ipairs(workspace.__Main.__Enemies.Client:GetChildren()) do
+        if enemy:IsA("Model") and enemy:FindFirstChild("Hitbox") then
+            enemy.Hitbox.Size = Vector3.new(35,35,35)
+        end
     end
 end)
