@@ -14076,292 +14076,46 @@ spawn(function()
         end
     end)
     
--- Variáveis globais para o farm de bounty
 local bountyFarmConnection
-local selectedPlayer
-local bountyGui
 
--- Função para criar a interface de seleção de jogadores
-function OpenBountyPlayerSelector()
-    if bountyGui then
-        bountyGui:Destroy()
-    end
-    
-    -- Criar a interface
-    bountyGui = Instance.new("ScreenGui")
-    bountyGui.Name = "BountySelector"
-    bountyGui.Parent = game.CoreGui
-    
-    local mainFrame = Instance.new("Frame")
-    mainFrame.Name = "MainFrame"
-    mainFrame.Size = UDim2.new(0, 300, 0, 350)
-    mainFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    mainFrame.BorderSizePixel = 0
-    mainFrame.Parent = bountyGui
-    
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 10)
-    UICorner.Parent = mainFrame
-    
-    local UIStroke = Instance.new("UIStroke")
-    UIStroke.Color = Color3.fromRGB(0, 0, 255)
-    UIStroke.Thickness = 2
-    UIStroke.Parent = mainFrame
-    
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Name = "Title"
-    titleLabel.Text = "Bounty Hunter"
-    titleLabel.Size = UDim2.new(1, 0, 0, 40)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.TextSize = 20
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.Parent = mainFrame
-    
-    local closeButton = Instance.new("TextButton")
-    closeButton.Name = "CloseButton"
-    closeButton.Text = "X"
-    closeButton.Size = UDim2.new(0, 30, 0, 30)
-    closeButton.Position = UDim2.new(1, -35, 0, 5)
-    closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeButton.Font = Enum.Font.GothamBold
-    closeButton.TextSize = 16
-    closeButton.Parent = mainFrame
-    
-    local UICorner2 = Instance.new("UICorner")
-    UICorner2.CornerRadius = UDim.new(0, 5)
-    UICorner2.Parent = closeButton
-    
-    local scrollFrame = Instance.new("ScrollingFrame")
-    scrollFrame.Name = "PlayerList"
-    scrollFrame.Size = UDim2.new(1, -20, 1, -50)
-    scrollFrame.Position = UDim2.new(0, 10, 0, 40)
-    scrollFrame.BackgroundTransparency = 1
-    scrollFrame.BorderSizePixel = 0
-    scrollFrame.ScrollBarThickness = 4
-    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-    scrollFrame.Parent = mainFrame
-    
-    local UIListLayout = Instance.new("UIListLayout")
-    UIListLayout.Padding = UDim.new(0, 5)
-    UIListLayout.Parent = scrollFrame
-    
-    -- Função para atualizar a lista de jogadores
-    local function UpdatePlayerList()
-        -- Limpar lista atual
-        for _, child in pairs(scrollFrame:GetChildren()) do
-            if child:IsA("Frame") then
-                child:Destroy()
-            end
-        end
-        
-        -- Adicionar jogadores à lista
-        local playerCount = 0
-        for _, player in pairs(game.Players:GetPlayers()) do
-            if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                playerCount = playerCount + 1
-                
-                -- Criar botão para o jogador
-                local playerFrame = Instance.new("Frame")
-                playerFrame.Name = player.Name.."_Frame"
-                playerFrame.Size = UDim2.new(1, -10, 0, 50)
-                playerFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-                playerFrame.Parent = scrollFrame
-                
-                local UICorner3 = Instance.new("UICorner")
-                UICorner3.CornerRadius = UDim.new(0, 5)
-                UICorner3.Parent = playerFrame
-                
-                local playerName = Instance.new("TextLabel")
-                playerName.Name = "PlayerName"
-                playerName.Text = player.Name
-                playerName.Size = UDim2.new(0.6, 0, 1, 0)
-                playerName.Position = UDim2.new(0, 10, 0, 0)
-                playerName.BackgroundTransparency = 1
-                playerName.TextColor3 = Color3.fromRGB(255, 255, 255)
-                playerName.TextSize = 14
-                playerName.Font = Enum.Font.GothamSemibold
-                playerName.TextXAlignment = Enum.TextXAlignment.Left
-                playerName.Parent = playerFrame
-                
-                -- Tentar obter o bounty (pode variar dependendo do jogo)
-                local bountyValue = "Unknown"
-                if player:FindFirstChild("leaderstats") then
-                    local bountyLabel = player.leaderstats:FindFirstChild("Bounty") or player.leaderstats:FindFirstChild("Wanted")
-                    if bountyLabel then
-                        bountyValue = bountyLabel.Value
-                    end
-                end
-                
-                local bountyLabel = Instance.new("TextLabel")
-                bountyLabel.Name = "BountyLabel"
-                bountyLabel.Text = "Bounty: "..tostring(bountyValue)
-                bountyLabel.Size = UDim2.new(0.4, -60, 0.5, 0)
-                bountyLabel.Position = UDim2.new(0.6, 0, 0, 5)
-                bountyLabel.BackgroundTransparency = 1
-                bountyLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
-                bountyLabel.TextSize = 12
-                bountyLabel.Font = Enum.Font.GothamSemibold
-                bountyLabel.Parent = playerFrame
-                
-                local selectButton = Instance.new("TextButton")
-                selectButton.Name = "SelectButton"
-                selectButton.Text = "Select"
-                selectButton.Size = UDim2.new(0, 60, 0, 25)
-                selectButton.Position = UDim2.new(1, -70, 0.5, 0)
-                selectButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-                selectButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-                selectButton.Font = Enum.Font.GothamSemibold
-                selectButton.TextSize = 12
-                selectButton.Parent = playerFrame
-                
-                local UICorner4 = Instance.new("UICorner")
-                UICorner4.CornerRadius = UDim.new(0, 5)
-                UICorner4.Parent = selectButton
-                
-                -- Evento para selecionar o jogador
-                selectButton.MouseButton1Click:Connect(function()
-                    selectedPlayer = player
-                    StartBountyFarm(player)
-                    CloseBountyPlayerSelector()
-                    Notif.New("Hunting "..player.Name, 3)
-                end)
-            end
-        end
-        
-        -- Atualizar tamanho do canvas
-        scrollFrame.CanvasSize = UDim2.new(0, 0, 0, playerCount * 55)
-    end
-    
-    -- Atualizar lista inicialmente
-    UpdatePlayerList()
-    
-    -- Atualizar lista a cada 5 segundos
-    local updateConnection = game:GetService("RunService").Heartbeat:Connect(function()
-        wait(5)
-        if bountyGui and bountyGui.Parent then
-            UpdatePlayerList()
-        else
-            updateConnection:Disconnect()
-        end
-    end)
-    
-    -- Fechar ao clicar no X
-    closeButton.MouseButton1Click:Connect(function()
-        CloseBountyPlayerSelector()
-        if _G.AutoFarmBounty then
-            _G.AutoFarmBounty = false
-        end
-    end)
-    
-    -- Tornar a janela arrastável
-    local dragging
-    local dragInput
-    local dragStart
-    local startPos
-    
-    local function update(input)
-        local delta = input.Position - dragStart
-        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-    
-    titleLabel.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = mainFrame.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-    
-    titleLabel.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-    
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            update(input)
-        end
-    end)
-end
-
-function CloseBountyPlayerSelector()
-    if bountyGui then
-        bountyGui:Destroy()
-        bountyGui = nil
-    end
-end
-
-function StartBountyFarm(target)
-    StopBountyFarm()
-    
-    if not target or not target.Character or not _G.AutoFarmBounty then
-        return
-    end
-    
+function StartAutoFarmBounty()
+    StopAutoFarmBounty()
     bountyFarmConnection = game:GetService("RunService").Heartbeat:Connect(function()
-        if not _G.AutoFarmBounty then
-            StopBountyFarm()
-            return
-        end
-        
-        local player = target
-        if not player or not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or not player.Character:FindFirstChild("Humanoid") or player.Character.Humanoid.Health <= 0 then
-            Notif.New("Target lost. Select a new player.", 3)
-            StopBountyFarm()
-            if _G.AutoFarmBounty then
-                OpenBountyPlayerSelector()
-            end
-            return
-        end
-        
-        local LocalPlayer = game.Players.LocalPlayer
+        if not _G.AutoFarmBounty or not _G.BountyTarget then return end
+
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
         local Character = LocalPlayer.Character
         local HumanoidRootPart = Character and Character:FindFirstChild("HumanoidRootPart")
-        
-        if not HumanoidRootPart then return end
-        
-        -- Teleportar para o alvo
-        HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5)
-        
-        -- Usar todas as armas e habilidades
-        local weapons = {"Melee", "Sword", "Blox Fruit", "Gun"}
-        for _, weaponType in ipairs(weapons) do
-            for _, tool in ipairs(LocalPlayer.Backpack:GetChildren()) do
-                if tool:IsA("Tool") and string.find(tool.Name:lower(), weaponType:lower()) then
-                    tool.Parent = Character
-                    wait(0.1)
-                    -- Usar habilidades
-                    for _, key in ipairs({"Z", "X", "C", "V", "F"}) do
-                        game:GetService("VirtualInputManager"):SendKeyEvent(true, key, false, game)
-                        wait(0.1)
-                        game:GetService("VirtualInputManager"):SendKeyEvent(false, key, false, game)
-                    end
-                    -- Ataque básico
-                    game:GetService("VirtualUser"):CaptureController()
-                    game:GetService("VirtualUser"):Button1Down(Vector2.new(0, 0))
-                    wait(0.1)
-                    game:GetService("VirtualUser"):Button1Up(Vector2.new(0, 0))
-                end
+        local target = Players:FindFirstChild(_G.BountyTarget)
+        if not HumanoidRootPart or not target or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then return end
+
+        -- Teleporta para o player alvo
+        HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5)
+
+        -- Ataca igual ao farm level (adapte para usar suas funções de ataque)
+        -- Exemplo genérico:
+        for _,tool in ipairs(LocalPlayer.Backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                tool.Parent = Character
+                wait(0.1)
+                -- Use sua função de ataque aqui, exemplo:
+                -- AttackWithTool(tool)
+                -- Ou, se não tiver, tente:
+                game:GetService("VirtualUser"):CaptureController()
+                game:GetService("VirtualUser"):Button1Down(Vector2.new(0, 0))
+                wait(0.2)
+                game:GetService("VirtualUser"):Button1Up(Vector2.new(0, 0))
             end
         end
     end)
 end
 
-function StopBountyFarm()
+function StopAutoFarmBounty()
     if bountyFarmConnection then
         bountyFarmConnection:Disconnect()
         bountyFarmConnection = nil
     end
-    selectedPlayer = nil
 end
+
     end)
