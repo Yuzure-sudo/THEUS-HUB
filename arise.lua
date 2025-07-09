@@ -181,6 +181,69 @@ for i, nome in ipairs(abas) do
     end)
 end
 
+-- AutoFarm
+local autoFarmAtivo = false
+local safeMode = true
+local autoFarmThread = nil
+
+local autoFarmBotao = Instance.new("TextButton", abasFrames["AutoFarm"])
+autoFarmBotao.Text = "Ativar AutoFarm"
+autoFarmBotao.Font = Enum.Font.GothamBold
+autoFarmBotao.TextSize = 17
+autoFarmBotao.Size = UDim2.new(1, -40, 0, 44)
+autoFarmBotao.Position = UDim2.new(0, 20, 0, 10)
+autoFarmBotao.BackgroundColor3 = Color3.fromRGB(100,100,60)
+autoFarmBotao.TextColor3 = Color3.fromRGB(255,255,255)
+autoFarmBotao.BackgroundTransparency = 0.09
+
+local modoBotao = Instance.new("TextButton", abasFrames["AutoFarm"])
+modoBotao.Text = "Modo: Safe"
+modoBotao.Font = Enum.Font.Gotham
+modoBotao.TextSize = 15
+modoBotao.Size = UDim2.new(1, -40, 0, 38)
+modoBotao.Position = UDim2.new(0, 20, 0, 64)
+modoBotao.BackgroundColor3 = Color3.fromRGB(60,100,100)
+modoBotao.TextColor3 = Color3.fromRGB(255,255,255)
+modoBotao.BackgroundTransparency = 0.1
+
+modoBotao.MouseButton1Click:Connect(function()
+    safeMode = not safeMode
+    modoBotao.Text = safeMode and "Modo: Safe" or "Modo: Kamikaze"
+    Notificar("Modo de farm: " .. (safeMode and "Safe" or "Kamikaze"), 2)
+end)
+
+autoFarmBotao.MouseButton1Click:Connect(function()
+    autoFarmAtivo = not autoFarmAtivo
+    autoFarmBotao.Text = autoFarmAtivo and "Parar AutoFarm" or "Ativar AutoFarm"
+    if autoFarmAtivo then
+        autoFarmThread = task.spawn(function()
+            while autoFarmAtivo do
+                local inimigos = workspace:FindFirstChild("__Main") and workspace.__Main:FindFirstChild("__Enemies") and workspace.__Main.__Enemies:FindFirstChild("Client")
+                if inimigos then
+                    for _, inimigo in ipairs(inimigos:GetChildren()) do
+                        if inimigo:IsA("Model") and inimigo:FindFirstChild("HumanoidRootPart") then
+                            if safeMode and string.find(inimigo.Name:lower(), "boss") then
+                                continue
+                            end
+                            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                            if hrp then
+                                hrp.CFrame = inimigo.HumanoidRootPart.CFrame + Vector3.new(0,3,0)
+                                break
+                            end
+                        end
+                    end
+                end
+                task.wait(1)
+            end
+        end)
+    else
+        if autoFarmThread then
+            task.cancel(autoFarmThread)
+            autoFarmThread = nil
+        end
+    end
+end)
+
 -- Menu
 local saudacao = Instance.new("TextLabel", abasFrames["Menu"])
 saudacao.Text = "Bem-vindo ao Los CocoFantos!\nScript mobile-friendly, ultra premium."
