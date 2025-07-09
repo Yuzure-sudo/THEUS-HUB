@@ -12,7 +12,7 @@ local userId = player.UserId
 -- Check if the player's userId is in the BlacklistedPlayers table
 for _, blacklistedId in ipairs(BlacklistedPlayers) do
     if userId == blacklistedId then
-        player:Kick("You are blacklisted from using this script. wrdyz.94 On discord for appeal.")
+        player:Kick("Criado por Theus Cucabeludo, Divilgue e seu ip sera divulgado.")
         break
     end
 end
@@ -44,8 +44,8 @@ _G.Interface = true
 
     
 Fluent:Notify({
-    Title = "Loading interface...",
-    Content = "Interface is loading, please wait.",
+    Title = "Carregando interface...",
+    Content = " interface Carregando. Aguarde gay.",
     Duration = 5 -- Set to nil to make the notification not disappear
 })
 
@@ -2920,7 +2920,7 @@ end
 
 Fluent:Notify({
     Title = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name.." | "..Version,
-    Content = "The script has been loaded.",
+    Content ="Script Foi bem carregado",
     Duration = 8
 })
 
@@ -2929,7 +2929,7 @@ Fluent:Notify({
 else
     Fluent:Notify({
         Title = "Interface",
-        Content = "This script is already running.",
+        Content = "O Script esta funcionando.",
         Duration = 3
     })
 end
