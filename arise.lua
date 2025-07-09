@@ -2932,4 +2932,76 @@ else
         Content = "O Script esta funcionando.",
         Duration = 3
     })
+  
+  -- Botão flutuante para minimizar/restaurar o hub
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+
+-- Troque "R2lxHub" pelo nome da sua ScreenGui principal, se for diferente
+local mainGui = CoreGui:FindFirstChild("R2lxHub") or CoreGui:FindFirstChild("THUNDERZHUB")
+if not mainGui then
+    for _, gui in ipairs(CoreGui:GetChildren()) do
+        if gui:IsA("ScreenGui") and gui:FindFirstChild("Main") then
+            mainGui = gui
+            break
+        end
+    end
+end
+
+local minimizeButton = Instance.new("ImageButton")
+minimizeButton.Name = "MinimizeButton"
+minimizeButton.Size = UDim2.new(0, 38, 0, 38)
+minimizeButton.Position = UDim2.new(0, 10, 0, 100)
+minimizeButton.BackgroundColor3 = Color3.fromRGB(0, 132, 255)
+minimizeButton.BackgroundTransparency = 0.2
+minimizeButton.Image = "rbxassetid://15435099885" -- Ícone (pode trocar)
+minimizeButton.Parent = CoreGui
+minimizeButton.ZIndex = 9999
+
+local corner = Instance.new("UICorner", minimizeButton)
+corner.CornerRadius = UDim.new(0, 12)
+
+local stroke = Instance.new("UIStroke", minimizeButton)
+stroke.Color = Color3.fromRGB(0, 0, 255)
+stroke.Thickness = 2
+
+-- Drag funcionalidade
+local dragging, dragInput, dragStart, startPos
+minimizeButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = minimizeButton.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+minimizeButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        local delta = input.Position - dragStart
+        minimizeButton.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- Alternar visibilidade do hub ao clicar no botão
+local minimized = false
+minimizeButton.MouseButton1Click:Connect(function()
+    if mainGui then
+        minimized = not minimized
+        mainGui.Enabled = not minimized
+    end
+end)
+
+  
 end
