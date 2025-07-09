@@ -129,6 +129,50 @@ contentFrame.Position = UDim2.new(0, 0, 0, 54)
 contentFrame.Size = UDim2.new(1, 0, 1, -54)
 contentFrame.BackgroundTransparency = 1
 
+local menuTab = Instance.new("Frame")
+menuTab.Name = "MenuTab"
+menuTab.Parent = Main
+menuTab.Size = UDim2.new(1, 0, 1, 0)
+menuTab.BackgroundTransparency = 1
+menuTab.Visible = true
+
+local tabPanel = Instance.new("Frame")
+tabPanel.Name = "TabPanel"
+tabPanel.Parent = Main
+tabPanel.Size = UDim2.new(0, 110, 1, 0)
+tabPanel.Position = UDim2.new(0, 0, 0, 0)
+tabPanel.BackgroundTransparency = 0.3
+tabPanel.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+
+local tabCorner = Instance.new("UICorner", tabPanel)
+tabCorner.CornerRadius = UDim.new(0, 12)
+
+local menuButton = Instance.new("ImageButton")
+menuButton.Name = "MenuButton"
+menuButton.Parent = tabPanel
+menuButton.Size = UDim2.new(0, 80, 0, 40)
+menuButton.Position = UDim2.new(0, 15, 0, 30)
+menuButton.BackgroundTransparency = 0.1
+menuButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+menuButton.Image = "rbxassetid://119139554769198"
+
+local menuBtnCorner = Instance.new("UICorner", menuButton)
+menuBtnCorner.CornerRadius = UDim.new(0, 8)
+
+local menuBtnLabel = Instance.new("TextLabel")
+menuBtnLabel.Parent = menuButton
+menuBtnLabel.Size = UDim2.new(1, 0, 1, 0)
+menuBtnLabel.BackgroundTransparency = 1
+menuBtnLabel.Text = "Menu"
+menuBtnLabel.Font = Enum.Font.GothamBold
+menuBtnLabel.TextSize = 16
+menuBtnLabel.TextColor3 = Color3.fromRGB(220, 220, 255)
+
+menuButton.MouseButton1Click:Connect(function()
+    menuTab.Visible = true
+end)
+
+
 -- Exemplo de botão usando a imagem padrão:
 local exampleButton = Instance.new("ImageButton")
 exampleButton.Name = "ExampleButton"
