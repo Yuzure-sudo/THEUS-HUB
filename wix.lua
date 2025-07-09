@@ -4046,6 +4046,17 @@ Main:AddToggle("Fast Attack ",true,function(value)
     end)      
 
    Main:AddSeperator("Farm Level,...")
+   local playerList = {}
+for _,plr in ipairs(game.Players:GetPlayers()) do
+    if plr ~= game.Players.LocalPlayer then
+        table.insert(playerList, plr.Name)
+    end
+end
+
+Main:AddDropdown("Selecionar Alvo Bounty", playerList, function(selected)
+    _G.BountyTarget = selected
+end)
+   
    Main:AddToggle("Auto Farm Bounty", _G.AutoFarmBounty, function(value)
     _G.AutoFarmBounty = value
     if value then
@@ -14352,5 +14363,4 @@ function StopBountyFarm()
     end
     selectedPlayer = nil
 end
-
     end)
