@@ -115,7 +115,7 @@ function Notif.New(text, timee)
     uicorner_2.Parent = text_button
 
     local image_button = Instance.new("ImageButton")
-    image_button.Image = "rbxassetid://3926305904"
+    image_button.Image = "rbxassetid://15525577762"
     image_button.ImageColor3 = Color3.new(0.784314, 0.784314, 0.784314)
     image_button.ImageRectOffset = Vector2.new(924, 724)
     image_button.ImageRectSize = Vector2.new(36, 36)
@@ -188,7 +188,7 @@ ImageButton1.BorderSizePixel = 0
 ImageButton1.Position = UDim2.new(0.120833337, 0, 0.0952890813, 0)
 ImageButton1.Size = UDim2.new(0, 50, 0, 50)
 ImageButton1.Draggable = true
-ImageButton1.Image = "rbxassetid://15435099885"
+ImageButton1.Image = "rbxassetid://15525577762"
 ImageButton1.MouseButton1Down:connect(function()
 game:GetService("VirtualInputManager"):SendKeyEvent(true,305,false,game)
 game:GetService("VirtualInputManager"):SendKeyEvent(false,305,false,game)
@@ -288,7 +288,7 @@ local function MakeDraggable(topbarobject, object)
 end
 
 local Update = {}
-local pfp = "https://i.imgur.com/OohSPTQ.png".. game.Players.LocalPlayer.UserId .."&width=420&height=420&format=png"
+local pfp = "rbxassetid://15525577762".. game.Players.LocalPlayer.UserId .."&width=420&height=420&format=png"
 
 function Update:Window(text,logo,keybind)
     local osfunc = {}
@@ -390,7 +390,7 @@ function Update:Window(text,logo,keybind)
     UserText.TextColor3 = Color3.fromRGB(255, 255, 255)
     UserText.Size = UDim2.new(0, 80, 0, 25)
     UserText.Font = Enum.Font.GothamSemibold
-    UserText.Text = "Bacteria Picasso"
+    UserText.Text = "Theus Pica De Cavalo"
     UserText.TextScaled = true
     UserText.TextSize = 17.000
     UserText.TextWrapped = true
