@@ -14093,19 +14093,29 @@ function StartAutoFarmBounty()
         -- Teleporta para o player alvo
         HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5)
 
-        -- Ataca igual ao farm level (adapte para usar suas funções de ataque)
-        -- Exemplo genérico:
-        for _,tool in ipairs(LocalPlayer.Backpack:GetChildren()) do
-            if tool:IsA("Tool") then
-                tool.Parent = Character
-                wait(0.1)
-                -- Use sua função de ataque aqui, exemplo:
-                -- AttackWithTool(tool)
-                -- Ou, se não tiver, tente:
-                game:GetService("VirtualUser"):CaptureController()
-                game:GetService("VirtualUser"):Button1Down(Vector2.new(0, 0))
-                wait(0.2)
-                game:GetService("VirtualUser"):Button1Up(Vector2.new(0, 0))
+        -- Ataca igual ao farm de level: troca de armas e skills
+        local weapons = {"Melee", "Sword", "Blox Fruit"}
+        for _, weaponType in ipairs(weapons) do
+            for _, tool in ipairs(LocalPlayer.Backpack:GetChildren()) do
+                if tool:IsA("Tool") and string.find(tool.Name, weaponType) then
+                    tool.Parent = Character
+                    wait(0.1)
+                    -- Usar skills (Z, X, C, V, F)
+                    for _, key in ipairs({"Z", "X", "C", "V", "F"}) do
+                        pcall(function()
+                            game:GetService("VirtualInputManager"):SendKeyEvent(true, key, false, game)
+                            wait(0.1)
+                            game:GetService("VirtualInputManager"):SendKeyEvent(false, key, false, game)
+                        end)
+                    end
+                    -- Ataque básico igual ao farm de level
+                    pcall(function()
+                        game:GetService("VirtualUser"):CaptureController()
+                        game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0))
+                        wait(0.2)
+                        game:GetService("VirtualUser"):Button1Up(Vector2.new(0,0))
+                    end)
+                end
             end
         end
     end)
