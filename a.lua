@@ -171,30 +171,41 @@ if _G.FastAttack then
             RegisterAttack:FireServer(Settings.ClickDelay or 0)
             RegisterHit:FireServer(BasePart, OthersEnemies)
         end
+function FastAttack:AttackNearest()
+    local OthersEnemies = {}
+    ProcessEnemies(OthersEnemies, Enemies)
+    ProcessEnemies(OthersEnemies, Characters)
 
-        function FastAttack:AttackNearest()
-            local OthersEnemies = {}
-            local Part1 = ProcessEnemies(OthersEnemies, Enemies)
-            local Part2 = ProcessEnemies(OthersEnemies, Characters)
+    local character = Player.Character
+    if not character then return end
+    local equippedWeapon = character:FindFirstChildOfClass("Tool")
 
-            local character = Player.Character
-            if not character then return end
-            local equippedWeapon = character:FindFirstChildOfClass("Tool")
-
-            if equippedWeapon and equippedWeapon:FindFirstChild("LeftClickRemote") then
-                for _, enemyData in ipairs(OthersEnemies) do
-                    local enemy = enemyData[1]
-                    local direction = (enemy.HumanoidRootPart.Position - character:GetPivot().Position).Unit
-                    pcall(function()
-                        equippedWeapon.LeftClickRemote:FireServer(direction, 1)
-                    end)
-                end
-            elseif #OthersEnemies > 0 then
-                self:Attack(Part1 or Part2, OthersEnemies)
-            else
-                task.wait(0)
+    -- Encontra o inimigo mais próximo
+    local nearestEnemy, minDist = nil, math.huge
+    for _, data in ipairs(OthersEnemies) do
+        local enemy = data[1]
+        if enemy:FindFirstChild("HumanoidRootPart") then
+            local dist = (enemy.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
+            if dist < minDist then
+                nearestEnemy = enemy
+                minDist = dist
             end
         end
+    end
+
+    if nearestEnemy and equippedWeapon and equippedWeapon:FindFirstChild("LeftClickRemote") then
+        local direction = (nearestEnemy.HumanoidRootPart.Position - character:GetPivot().Position).Unit
+        pcall(function()
+            equippedWeapon.LeftClickRemote:FireServer(direction, 1)
+        end)
+    elseif nearestEnemy then
+        self:Attack(nearestEnemy.HumanoidRootPart, { { nearestEnemy, nearestEnemy:FindFirstChild("Head") } })
+    else
+        task.wait(0)
+    end
+end
+
+        
 
         function FastAttack:BladeHits()
             local Equipped = IsAlive(Player.Character) and Player.Character:FindFirstChildOfClass("Tool")
