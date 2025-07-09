@@ -4046,13 +4046,13 @@ Main:AddToggle("Fast Attack ",true,function(value)
     end)      
 
    Main:AddSeperator("Farm Level,...")
-   
    Main:AddToggle("Auto Farm Bounty", _G.AutoFarmBounty, function(value)
     _G.AutoFarmBounty = value
     if value then
-        StartAutoFarmBounty()
+        OpenBountyPlayerSelector()
     else
-        StopAutoFarmBounty()
+        CloseBountyPlayerSelector()
+        StopBountyFarm()
     end
 end)
 
