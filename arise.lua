@@ -191,6 +191,64 @@ creditos.BackgroundTransparency = 1
 creditos.Size = UDim2.new(1, 0, 0, 40)
 creditos.Position = UDim2.new(0, 0, 0, 20)
 
--- Aqui você pode adicionar as funções de AutoFarm, Teleporte, Pets, Eventos, Configurações, etc, dentro das respectivas abas criadas acima.
--- Sempre use nomes, títulos e textos em português.
+-- Botão para ativar/desativar AutoFarm Global
+local botaoAutoFarm = Instance.new("TextButton")
+botaoAutoFarm.Parent = autofarmAba
+botaoAutoFarm.Text = "Ativar AutoFarm Global"
+botaoAutoFarm.Font = Enum.Font.GothamBold
+botaoAutoFarm.TextSize = 18
+botaoAutoFarm.TextColor3 = Color3.fromRGB(255,255,255)
+botaoAutoFarm.BackgroundColor3 = Color3.fromRGB(40,40,80)
+botaoAutoFarm.Size = UDim2.new(0, 260, 0, 40)
+botaoAutoFarm.Position = UDim2.new(0, 30, 0, 30)
+botaoAutoFarm.BackgroundTransparency = 0.1
+
+local farmando = false
+local threadFarm = nil
+
+botaoAutoFarm.MouseButton1Click:Connect(function()
+    farmando = not farmando
+    botaoAutoFarm.Text = farmando and "Desativar AutoFarm Global" or "Ativar AutoFarm Global"
+    if farmando then
+        threadFarm = task.spawn(function()
+            while farmando do
+                local player = game.Players.LocalPlayer
+                local char = player.Character or player.CharacterAdded:Wait()
+                local humanoidRootPart = char:FindFirstChild("HumanoidRootPart")
+                if humanoidRootPart then
+                    local closest, dist = nil, math.huge
+                    for _, enemy in ipairs(workspace.__Main.__Enemies.Client:GetChildren()) do
+                        if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
+                            local d = (enemy.HumanoidRootPart.Position - humanoidRootPart.Position).Magnitude
+                            if d < dist then
+                                closest = enemy
+                                dist = d
+                            end
+                        end
+                    end
+                    if closest then
+                        humanoidRootPart.CFrame = closest.HumanoidRootPart.CFrame * CFrame.new(5,0,0)
+                        local args = {
+                            [1] = {
+                                [1] = {
+                                    ["Event"] = "PunchAttack",
+                                    ["Enemy"] = closest.Name
+                                },
+                                [2] = "\4"
+                            }
+                        }
+                        game:GetService("ReplicatedStorage"):WaitForChild("BridgeNet2"):WaitForChild("dataRemoteEvent"):FireServer(unpack(args))
+                    end
+                end
+                task.wait(0.5)
+            end
+        end)
+    else
+        if threadFarm then
+            task.cancel(threadFarm)
+            threadFarm = nil
+        end
+    end
+end)
+
 
