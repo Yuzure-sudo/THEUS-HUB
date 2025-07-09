@@ -1,21 +1,30 @@
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-
 local IMAGE_ID = "rbxassetid://119139554769198"
 
+local JogadoresBanidos = {548245499,2318524722,3564923852}
+local jogador = game.Players.LocalPlayer
+local idUsuario = jogador.UserId
+for _, idBanido in ipairs(JogadoresBanidos) do
+    if idUsuario == idBanido then
+        jogador:Kick("Você está banido de usar este script. wrdyz.94 no Discord para apelação.")
+        break
+    end
+end
+
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "Theus_i_os_amigos"
+screenGui.Name = "Três_Moskitero"
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = CoreGui
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
 mainFrame.Parent = screenGui
-mainFrame.Size = UDim2.new(0, 600, 0, 360)
-mainFrame.Position = UDim2.new(0.5, -300, 0.5, -180)
+mainFrame.Size = UDim2.new(0, 700, 0, 420)
+mainFrame.Position = UDim2.new(0.5, -350, 0.5, -210)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-mainFrame.BackgroundTransparency = 0.18
+mainFrame.BackgroundTransparency = 0.13
 
 local mainCorner = Instance.new("UICorner", mainFrame)
 mainCorner.CornerRadius = UDim.new(0, 16)
@@ -33,117 +42,155 @@ logo.Position = UDim2.new(0, 20, 0, 20)
 logo.Size = UDim2.new(0, 50, 0, 50)
 logo.Image = IMAGE_ID
 
-local title = Instance.new("TextLabel")
-title.Name = "Title"
-title.Parent = mainFrame
-title.Text = "Theus i os amigos"
-title.Font = Enum.Font.GothamBold
-title.TextSize = 22
-title.TextColor3 = Color3.fromRGB(200, 220, 255)
-title.BackgroundTransparency = 1
-title.Size = UDim2.new(1, -100, 0, 38)
-title.Position = UDim2.new(0, 80, 0, 20)
-title.TextXAlignment = Enum.TextXAlignment.Left
+local titulo = Instance.new("TextLabel")
+titulo.Name = "Titulo"
+titulo.Parent = mainFrame
+titulo.Text = "Três Moskitero"
+titulo.Font = Enum.Font.GothamBold
+titulo.TextSize = 22
+titulo.TextColor3 = Color3.fromRGB(200, 220, 255)
+titulo.BackgroundTransparency = 1
+titulo.Size = UDim2.new(1, -100, 0, 38)
+titulo.Position = UDim2.new(0, 80, 0, 20)
+titulo.TextXAlignment = Enum.TextXAlignment.Left
 
-local minimize = Instance.new("ImageButton")
-minimize.Name = "Minimize"
-minimize.Parent = mainFrame
-minimize.Size = UDim2.new(0, 34, 0, 34)
-minimize.Position = UDim2.new(1, -44, 0, 16)
-minimize.BackgroundTransparency = 1
-minimize.Image = IMAGE_ID
-minimize.ImageColor3 = Color3.fromRGB(180, 180, 255)
+local minimizar = Instance.new("ImageButton")
+minimizar.Name = "Minimizar"
+minimizar.Parent = mainFrame
+minimizar.Size = UDim2.new(0, 34, 0, 34)
+minimizar.Position = UDim2.new(1, -44, 0, 16)
+minimizar.BackgroundTransparency = 1
+minimizar.Image = IMAGE_ID
+minimizar.ImageColor3 = Color3.fromRGB(180, 180, 255)
 
-local tabPanel = Instance.new("Frame")
-tabPanel.Name = "TabPanel"
-tabPanel.Parent = mainFrame
-tabPanel.Size = UDim2.new(0, 110, 1, -70)
-tabPanel.Position = UDim2.new(0, 0, 0, 70)
-tabPanel.BackgroundTransparency = 0.22
-tabPanel.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+local painelAbas = Instance.new("Frame")
+painelAbas.Name = "PainelAbas"
+painelAbas.Parent = mainFrame
+painelAbas.Size = UDim2.new(0, 130, 1, -70)
+painelAbas.Position = UDim2.new(0, 0, 0, 70)
+painelAbas.BackgroundTransparency = 0.22
+painelAbas.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
 
-local tabCorner = Instance.new("UICorner", tabPanel)
-tabCorner.CornerRadius = UDim.new(0, 12)
+local painelCorner = Instance.new("UICorner", painelAbas)
+painelCorner.CornerRadius = UDim.new(0, 12)
 
-local tabList = Instance.new("UIListLayout", tabPanel)
-tabList.SortOrder = Enum.SortOrder.LayoutOrder
-tabList.Padding = UDim.new(0, 12)
+local listaAbas = Instance.new("UIListLayout", painelAbas)
+listaAbas.SortOrder = Enum.SortOrder.LayoutOrder
+listaAbas.Padding = UDim.new(0, 12)
 
-local contentFrame = Instance.new("Frame")
-contentFrame.Name = "ContentFrame"
-contentFrame.Parent = mainFrame
-contentFrame.Position = UDim2.new(0, 120, 0, 70)
-contentFrame.Size = UDim2.new(1, -130, 1, -80)
-contentFrame.BackgroundTransparency = 1
+local conteudoFrame = Instance.new("Frame")
+conteudoFrame.Name = "ConteudoFrame"
+conteudoFrame.Parent = mainFrame
+conteudoFrame.Position = UDim2.new(0, 140, 0, 70)
+conteudoFrame.Size = UDim2.new(1, -150, 1, -80)
+conteudoFrame.BackgroundTransparency = 1
 
-local menuTab = Instance.new("Frame")
-menuTab.Name = "MenuTab"
-menuTab.Parent = contentFrame
-menuTab.Size = UDim2.new(1, 0, 1, 0)
-menuTab.BackgroundTransparency = 1
-menuTab.Visible = true
+local function criarAba(nomeAba)
+    local abaFrame = Instance.new("Frame")
+    abaFrame.Name = nomeAba.."Aba"
+    abaFrame.Parent = conteudoFrame
+    abaFrame.Size = UDim2.new(1, 0, 1, 0)
+    abaFrame.BackgroundTransparency = 1
+    abaFrame.Visible = false
 
-local menuButton = Instance.new("ImageButton")
-menuButton.Name = "MenuButton"
-menuButton.Parent = tabPanel
-menuButton.Size = UDim2.new(1, -20, 0, 44)
-menuButton.BackgroundTransparency = 0.1
-menuButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-menuButton.Image = IMAGE_ID
+    local abaBotao = Instance.new("ImageButton")
+    abaBotao.Name = nomeAba.."Botao"
+    abaBotao.Parent = painelAbas
+    abaBotao.Size = UDim2.new(1, -20, 0, 44)
+    abaBotao.BackgroundTransparency = 0.1
+    abaBotao.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    abaBotao.Image = IMAGE_ID
 
-local menuBtnCorner = Instance.new("UICorner", menuButton)
-menuBtnCorner.CornerRadius = UDim.new(0, 8)
+    local btnCorner = Instance.new("UICorner", abaBotao)
+    btnCorner.CornerRadius = UDim.new(0, 8)
 
-local menuBtnLabel = Instance.new("TextLabel")
-menuBtnLabel.Parent = menuButton
-menuBtnLabel.Size = UDim2.new(1, 0, 1, 0)
-menuBtnLabel.BackgroundTransparency = 1
-menuBtnLabel.Text = "Menu"
-menuBtnLabel.Font = Enum.Font.GothamBold
-menuBtnLabel.TextSize = 16
-menuBtnLabel.TextColor3 = Color3.fromRGB(220, 220, 255)
+    local btnLabel = Instance.new("TextLabel")
+    btnLabel.Parent = abaBotao
+    btnLabel.Size = UDim2.new(1, 0, 1, 0)
+    btnLabel.BackgroundTransparency = 1
+    btnLabel.Text = nomeAba
+    btnLabel.Font = Enum.Font.GothamBold
+    btnLabel.TextSize = 16
+    btnLabel.TextColor3 = Color3.fromRGB(220, 220, 255)
 
-menuButton.MouseButton1Click:Connect(function()
-    for _, frame in pairs(contentFrame:GetChildren()) do
-        if frame:IsA("Frame") then
-            frame.Visible = false
+    abaBotao.MouseButton1Click:Connect(function()
+        for _, frame in pairs(conteudoFrame:GetChildren()) do
+            if frame:IsA("Frame") then
+                frame.Visible = false
+            end
         end
-    end
-    menuTab.Visible = true
-end)
+        abaFrame.Visible = true
+    end)
+    return abaFrame
+end
 
-local dragging, dragInput, dragStart, startPos
-title.InputBegan:Connect(function(input)
+local menuAba = criarAba("Menu")
+menuAba.Visible = true
+local autofarmAba = criarAba("AutoFarm")
+local teleportAba = criarAba("Teleporte")
+local petsAba = criarAba("Pets")
+local eventosAba = criarAba("Eventos")
+local configAba = criarAba("Configurações")
+local creditosAba = criarAba("Créditos")
+
+local arrastando, arrastarInput, inicioArraste, posInicio
+titulo.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = mainFrame.Position
+        arrastando = true
+        inicioArraste = input.Position
+        posInicio = mainFrame.Position
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
+                arrastando = false
             end
         end)
     end
 end)
-title.InputChanged:Connect(function(input)
+titulo.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
+        arrastarInput = input
     end
 end)
 UserInputService.InputChanged:Connect(function(input)
-    if dragging and input == dragInput then
-        local delta = input.Position - dragStart
+    if arrastando and input == arrastarInput then
+        local delta = input.Position - inicioArraste
         mainFrame.Position = UDim2.new(
-            startPos.X.Scale, startPos.X.Offset + delta.X,
-            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            posInicio.X.Scale, posInicio.X.Offset + delta.X,
+            posInicio.Y.Scale, posInicio.Y.Offset + delta.Y
         )
     end
 end)
 
-local minimized = false
-minimize.MouseButton1Click:Connect(function()
-    minimized = not minimized
+local minimizado = false
+minimizar.MouseButton1Click:Connect(function()
+    minimizado = not minimizado
     TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {
-        Size = minimized and UDim2.new(0, 120, 0, 54) or UDim2.new(0, 600, 0, 360)
+        Size = minimizado and UDim2.new(0, 120, 0, 54) or UDim2.new(0, 700, 0, 420)
     }):Play()
 end)
+
+-- Menu principal
+local saudacao = Instance.new("TextLabel")
+saudacao.Parent = menuAba
+saudacao.Text = "Bem-vindo ao Três Moskitero!"
+saudacao.Font = Enum.Font.GothamBold
+saudacao.TextSize = 20
+saudacao.TextColor3 = Color3.fromRGB(200, 220, 255)
+saudacao.BackgroundTransparency = 1
+saudacao.Size = UDim2.new(1, 0, 0, 40)
+saudacao.Position = UDim2.new(0, 0, 0, 10)
+
+-- Créditos
+local creditos = Instance.new("TextLabel")
+creditos.Parent = creditosAba
+creditos.Text = "Criado exclusivamente para 3 gays."
+creditos.Font = Enum.Font.GothamBold
+creditos.TextSize = 18
+creditos.TextColor3 = Color3.fromRGB(255, 80, 180)
+creditos.BackgroundTransparency = 1
+creditos.Size = UDim2.new(1, 0, 0, 40)
+creditos.Position = UDim2.new(0, 0, 0, 20)
+
+-- Aqui você pode adicionar as funções de AutoFarm, Teleporte, Pets, Eventos, Configurações, etc, dentro das respectivas abas criadas acima.
+-- Sempre use nomes, títulos e textos em português.
+
