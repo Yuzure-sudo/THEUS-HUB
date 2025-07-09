@@ -1,6 +1,3 @@
----[Notify Má»›i LÃ m:))]
--- KHÔNG LÊN CHỈNH SỬA UI. ĐỂ KHÔNG SẼ BỊ LỖI
--- DO NOT EDIT UI. IT WILL BRING ERROR
 local Notif = {}
 
 local CoreGUI = game:GetService("CoreGui")
@@ -14043,7 +14040,76 @@ end)
 				v:Destroy()
 			end
 		end
-	end)
+    end)
+
+
+Main:AddToggle("Auto Farm Bounty", false, function(state)
+    _G.AutoFarmBounty = state
+    if state then
+        StartAutoFarmBounty()
+    end
+end)
+local bountyFarmConnection
+
+function StartAutoFarmBounty()
+    if bountyFarmConnection then
+        bountyFarmConnection:Disconnect()
+    end
+
+    bountyFarmConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        if not _G.AutoFarmBounty then
+            if bountyFarmConnection then
+                bountyFarmConnection:Disconnect()
+                bountyFarmConnection = nil
+            end
+            return
+        end
+
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        local Character = LocalPlayer.Character
+        local HumanoidRootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+
+        -- Procura o player inimigo mais próximo
+        local closestPlayer, shortestDistance = nil, math.huge
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Team ~= LocalPlayer.Team then
+                local dist = (HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                if dist < shortestDistance and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+                    closestPlayer = player
+                    shortestDistance = dist
+                end
+            end
+        end
+
+        if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            -- Teleporta perto do player
+            HumanoidRootPart.CFrame = closestPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,5)
+            
+            -- Troca de armas: fruta, soco, espada (ajuste os nomes conforme seu inventário)
+            local weapons = {"Melee", "Sword", "Blox Fruit"}
+            for _, weaponType in ipairs(weapons) do
+                for _, tool in ipairs(LocalPlayer.Backpack:GetChildren()) do
+                    if tool:IsA("Tool") and string.find(tool.Name, weaponType) then
+                        tool.Parent = Character
+                        wait(0.1)
+                        -- Ataca usando todas as skills (Z, X, C, V)
+                        for _, key in ipairs({"Z","X","C","V"}) do
+                            game:GetService("VirtualInputManager"):SendKeyEvent(true, key, false, game)
+                            wait(0.15)
+                            game:GetService("VirtualInputManager"):SendKeyEvent(false, key, false, game)
+                        end
+                        -- Ataque básico
+                        game:GetService("VirtualUser"):CaptureController()
+                        game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0))
+                        wait(0.2)
+                        game:GetService("VirtualUser"):Button1Up(Vector2.new(0,0))
+                    end
+                end
+            end
+        end
+    end)
+end
 
 _G.Remove_Effect = true
 
