@@ -1,3 +1,4 @@
+-- Serviços
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
@@ -19,7 +20,6 @@ frame.Active = true
 frame.Draggable = true
 frame.Parent = gui
 
--- Cantos arredondados do frame
 local frameCorner = Instance.new("UICorner")
 frameCorner.CornerRadius = UDim.new(0, 12)
 frameCorner.Parent = frame
@@ -27,14 +27,13 @@ frameCorner.Parent = frame
 -- Título
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 36)
-title.Text = "⚙️  AOTR AUTO FARM GUI"
+title.Text = "⚙️ AOTR AUTO FARM GUI"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
 title.Font = Enum.Font.GothamBold
 title.TextSize = 18
 title.Parent = frame
 
--- Cantos arredondados do título
 local titleCorner = Instance.new("UICorner")
 titleCorner.CornerRadius = UDim.new(0, 12)
 titleCorner.Parent = title
@@ -49,19 +48,14 @@ scroll.BackgroundTransparency = 1
 scroll.ScrollBarThickness = 4
 scroll.Parent = frame
 
--- Layout automático dos botões
 local layout = Instance.new("UIListLayout", scroll)
 layout.Padding = UDim.new(0, 8)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 
-
-
--- === TOGGLES ===
-addToggle("ESP Titan", false, function() end)
-
+-- Função para criar toggles
 local toggles = {}
 
-function addToggle(name, default, callback)
+local function addToggle(name, default, callback)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(1, 0, 0, 36)
     button.Text = name .. (default and " [ON]" or " [OFF]")
@@ -83,26 +77,11 @@ function addToggle(name, default, callback)
     return button
 end
 
+-- ESP Titan Toggle
+addToggle("ESP Titan", false, function() end)
 
-
---LOoops -+
-task.spawn(function()
-    while true do
-        task.wait(0.5)
-        if toggles["ESP Titan"]() then
-            for _, titan in pairs(workspace:GetChildren()) do
-                if titan:FindFirstChild("Nape") then
-                    createESP(titan)
-                end
-            end
-        end
-    end
-end)
-
-
-
--- Esp nape Implementacao --
-function createESP(target)
+-- Função para criar ESP na Nape
+local function createESP(target)
     local nape = target:FindFirstChild("Nape")
     if nape and not nape:FindFirstChild("ESPBox") then
         local box = Instance.new("BillboardGui", nape)
@@ -118,3 +97,22 @@ function createESP(target)
         frame.BorderSizePixel = 0
     end
 end
+
+-- Loop para aplicar ESP nos titãs
+task.spawn(function()
+    while true do
+        task.wait(0.5)
+        if toggles["ESP Titan"] and toggles["ESP Titan"]() then
+            for _, obj in pairs(workspace:GetChildren()) do
+                if obj:FindFirstChild("Nape") then
+                    createESP(obj)
+                end
+            end
+        end
+    end
+end)
+
+-- Atualizar CanvasSize do scroll automaticamente
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+end)
