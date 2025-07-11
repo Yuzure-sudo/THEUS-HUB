@@ -54,6 +54,11 @@ local layout = Instance.new("UIListLayout", scroll)
 layout.Padding = UDim.new(0, 8)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 
+
+
+-- === TOGGLES ===
+addToggle("ESP Titan", false, function() end)
+
 local toggles = {}
 
 function addToggle(name, default, callback)
@@ -77,11 +82,6 @@ function addToggle(name, default, callback)
     toggles[name] = function() return state end
     return button
 end
-
-
--- === TOGGLES ===
-addToggle("ESP Titan", false, function() end)
-
 
 
 
