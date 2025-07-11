@@ -52,10 +52,12 @@ local layout = Instance.new("UIListLayout", scroll)
 layout.Padding = UDim.new(0, 8)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- Função para criar toggles
-local toggles = {}
+--Togles--
+addToggle("ESP Titan", false, function() end)
 
-local function addToggle(name, default, callback)
+-- Função para criar toggleslocal toggles = {}
+
+function addToggle(name, default, callback)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(1, 0, 0, 36)
     button.Text = name .. (default and " [ON]" or " [OFF]")
@@ -78,7 +80,6 @@ local function addToggle(name, default, callback)
 end
 
 -- ESP Titan Toggle
-addToggle("ESP Titan", false, function() end)
 
 -- Função para criar ESP na Nape
 local function createESP(target)
