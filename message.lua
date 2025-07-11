@@ -54,6 +54,31 @@ local layout = Instance.new("UIListLayout", scroll)
 layout.Padding = UDim.new(0, 8)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 
+local toggles = {}
+
+function addToggle(name, default, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, 0, 0, 36)
+    button.Text = name .. (default and " [ON]" or " [OFF]")
+    button.BackgroundColor3 = default and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(150, 50, 50)
+    button.TextColor3 = Color3.new(1, 1, 1)
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 14
+    button.Parent = scroll
+
+    local state = default
+    button.MouseButton1Click:Connect(function()
+        state = not state
+        button.Text = name .. (state and " [ON]" or " [OFF]")
+        button.BackgroundColor3 = state and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(150, 50, 50)
+        callback(state)
+    end)
+
+    toggles[name] = function() return state end
+    return button
+end
+
+
 -- === TOGGLES ===
 addToggle("ESP Titan", false, function() end)
 
@@ -61,9 +86,20 @@ addToggle("ESP Titan", false, function() end)
 
 
 --LOoops -+
-if toggles["ESP Titan"]() then
-    createESP(titan)
-end
+task.spawn(function()
+    while true do
+        task.wait(0.5)
+        if toggles["ESP Titan"]() then
+            for _, titan in pairs(workspace:GetChildren()) do
+                if titan:FindFirstChild("Nape") then
+                    createESP(titan)
+                end
+            end
+        end
+    end
+end)
+
+
 
 -- Esp nape Implementacao --
 function createESP(target)
