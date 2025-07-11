@@ -1,8 +1,9 @@
--- Serviços
+-- Configurações iniciais
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
--- Criar ScreenGui
+-- Criação da GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "AOTR_GUI"
 gui.ResetOnSpawn = false
@@ -38,9 +39,8 @@ local titleCorner = Instance.new("UICorner")
 titleCorner.CornerRadius = UDim.new(0, 12)
 titleCorner.Parent = title
 
--- Área de conteúdo com scroll (para os toggles)
+-- Área de conteúdo
 local scroll = Instance.new("ScrollingFrame")
-scroll.Name = "Conteudo"
 scroll.Size = UDim2.new(1, -20, 1, -50)
 scroll.Position = UDim2.new(0, 10, 0, 46)
 scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -52,11 +52,12 @@ local layout = Instance.new("UIListLayout", scroll)
 layout.Padding = UDim.new(0, 8)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 
---Togles--
-addToggle("ESP Titan", false, function() end)
+-- Variáveis globais
+local titanESP = {}
+local toggles = {}
+local running = false
 
--- Função para criar toggleslocal toggles = {}
-
+-- Função para criar toggles
 function addToggle(name, default, callback)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(1, 0, 0, 36)
@@ -79,41 +80,143 @@ function addToggle(name, default, callback)
     return button
 end
 
--- ESP Titan Toggle
-
--- Função para criar ESP na Nape
+-- Função para criar ESP na nuca do titã
 local function createESP(target)
+    if not target then return end
     local nape = target:FindFirstChild("Nape")
-    if nape and not nape:FindFirstChild("ESPBox") then
-        local box = Instance.new("BillboardGui", nape)
+    if nape and not titanESP[nape] then
+        local box = Instance.new("BillboardGui")
         box.Name = "ESPBox"
         box.AlwaysOnTop = true
-        box.Size = UDim2.new(8, 0, 8, 0) -- Hitbox grande
+        box.Size = UDim2.new(8, 0, 8, 0)
         box.Adornee = nape
-
-        local frame = Instance.new("Frame", box)
+        box.Parent = nape
+        
+        local frame = Instance.new("Frame")
         frame.Size = UDim2.new(1, 0, 1, 0)
-        frame.BackgroundColor3 = Color3.new(1, 1, 1) -- Branco
-        frame.BackgroundTransparency = 0.3
+        frame.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        frame.BackgroundTransparency = 0.7
         frame.BorderSizePixel = 0
+        frame.Parent = box
+        
+        local outline = Instance.new("UIStroke")
+        outline.Thickness = 2
+        outline.Color = Color3.new(1, 1, 1)
+        outline.Parent = frame
+        
+        titanESP[nape] = box
     end
 end
 
--- Loop para aplicar ESP nos titãs
-task.spawn(function()
-    while true do
-        task.wait(0.5)
-        if toggles["ESP Titan"] and toggles["ESP Titan"]() then
-            for _, obj in pairs(workspace:GetChildren()) do
-                if obj:FindFirstChild("Nape") then
-                    createESP(obj)
+-- Função para remover ESP
+local function clearESP()
+    for part, esp in pairs(titanESP) do
+        if esp then
+            esp:Destroy()
+        end
+    end
+    titanESP = {}
+end
+
+-- Sistema de ESP para titãs
+local function titanESPHandler()
+    while running and toggles["ESP Titan"]() do
+        for _, obj in ipairs(workspace:GetChildren()) do
+            if obj.Name:find("Titan") and obj:FindFirstChild("HumanoidRootPart") then
+                createESP(obj)
+            end
+        end
+        task.wait(2)
+    end
+end
+
+-- Auto Attack Titan
+local function autoAttack()
+    while running and toggles["Auto Attack"]() do
+        local closestTitan, minDistance = nil, math.huge
+        local character = LocalPlayer.Character
+        local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+        
+        if rootPart then
+            for _, titan in ipairs(workspace:GetChildren()) do
+                if titan.Name:find("Titan") and titan:FindFirstChild("HumanoidRootPart") then
+                    local distance = (rootPart.Position - titan.HumanoidRootPart.Position).Magnitude
+                    if distance < minDistance then
+                        closestTitan = titan
+                        minDistance = distance
+                    end
                 end
             end
+            
+            if closestTitan and minDistance < 100 then
+                -- Simulação de ataque (ajuste para o sistema de combate do jogo)
+                game:GetService("ReplicatedStorage").CombatEvents.TitanHit:FireServer(closestTitan, "Nape")
+            end
+        end
+        task.wait(0.5)
+    end
+end
+
+-- Auto Loot
+local function autoLoot()
+    while running and toggles["Auto Loot"]() do
+        local character = LocalPlayer.Character
+        local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+        
+        if rootPart then
+            for _, item in ipairs(workspace:GetChildren()) do
+                if item.Name:find("Loot") and item:FindFirstChild("MainPart") then
+                    local distance = (rootPart.Position - item.MainPart.Position).Magnitude
+                    if distance < 30 then
+                        -- Simulação de coleta
+                        firetouchinterest(rootPart, item.MainPart, 0)
+                        firetouchinterest(rootPart, item.MainPart, 1)
+                    end
+                end
+            end
+        end
+        task.wait(1)
+    end
+end
+
+-- Adicionar toggles
+addToggle("ESP Titan", false, function(state)
+    if not state then
+        clearESP()
+    end
+end)
+
+addToggle("Auto Attack", false, function(state)
+    if state and not running then
+        running = true
+        autoAttack()
+    end
+end)
+
+addToggle("Auto Loot", false, function(state)
+    if state and not running then
+        running = true
+        autoLoot()
+    end
+end)
+
+-- Atualizar tamanho do canvas
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+end)
+
+-- Iniciar loop principal
+task.spawn(function()
+    while task.wait(1) do
+        if toggles["ESP Titan"] and toggles["ESP Titan"]() then
+            titanESPHandler()
         end
     end
 end)
 
--- Atualizar CanvasSize do scroll automaticamente
-layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+-- Fechar GUI com tecla (opcional)
+LocalPlayer:GetMouse().KeyDown:Connect(function(key)
+    if key == "p" then
+        gui.Enabled = not gui.Enabled
+    end
 end)
