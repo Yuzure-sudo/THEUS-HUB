@@ -1,449 +1,551 @@
--- Astershun Hub Professional - Volleyball Legends (Rayfield UI)
+--[[
+    Astershun Hitbox v3.0
+    Desenvolvido por: Astershun (Dev Oficial)
+    Sistema avançado de hitbox expansível com detecção real de colisões
+]]
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
-local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local CurrentGame = game.PlaceId
 
--- Estado global isolado
-local state = getgenv().AstershunHubState or {}
-if not state then state = {} end
-getgenv().AstershunHubState = state
+-- Configurações avançadas
+local Settings = {
+    HitboxEnabled = false,
+    HeadSize = 6,
+    Transparency = 0.5,
+    HitboxColor = Color3.fromRGB(255, 50, 50),
+    TeamCheck = true,
+    FriendsCheck = true,
+    ESPEnabled = true,
+    ESPColorEnemy = Color3.fromRGB(255, 50, 50),
+    ESPColorAlly = Color3.fromRGB(50, 255, 100),
+    ESPColorNeutral = Color3.fromRGB(200, 200, 200),
+    TargetPlayers = true,
+    TargetNPCs = true,
+    AutoDetectGame = true,
+    Affected = {},
+    FriendList = {},
+    ESPFolders = {},
+    OriginalSizes = {}
+}
 
--- Inicialização das variáveis padrão
-state.HitboxActive = false
-state.HitboxLoop = false
-state.OriginalBallProps = nil
+-- Informações sobre o desenvolvedor
+local DeveloperInfo = {
+    Name = "Astershun",
+    Experience = "Novo com programação",
+    Message = "Fiz este Hub com muito esforço, dando o meu melhor!",
+    FuturePlans = "Em breve: Mais scripts e suporte para vários jogos"
+}
 
-state.AutoPlayActive = false
-state.AutoBlockActive = false
-state.AutoSetActive = false
-state.AutoSpikeActive = false
-state.PowerServeActive = false
+-- Detecção automática de jogos populares
+local GamePresets = {
+    [2753915549] = {HeadSize = 8, HitboxColor = Color3.fromRGB(255, 150, 50)}, -- Blox Fruits
+    [292439477] = {HeadSize = 7, HitboxColor = Color3.fromRGB(50, 150, 255)}, -- Phantom Forces
+    [142823291] = {HeadSize = 10, Transparency = 0.3}, -- MM2
+    [2788229376] = {HeadSize = 9, ESPColorEnemy = Color3.fromRGB(255, 0, 0)}, -- Da Hood
+    [5602055394] = {HeadSize = 12, Transparency = 0.4} -- Anime Dimensions
+}
 
-state.FlyJumpActive = false
-state.FlyJumpConnection = nil
-state.FlyJumpBV = nil
-
-state.WalkSpeed = 16
-state.JumpPower = 50
-
-state.Connections = state.Connections or {}
-
--- Funções utilitárias --
-
-local function FindBall()
-    return Workspace:FindFirstChild("Ball")
+-- Aplicar preset se detectado
+if Settings.AutoDetectGame and GamePresets[CurrentGame] then
+    local preset = GamePresets[CurrentGame]
+    for setting, value in pairs(preset) do
+        Settings[setting] = value
+    end
 end
 
-local function SaveBallProps(ball)
-    if not ball then return end
-    if state.OriginalBallProps == nil then
-        state.OriginalBallProps = {
-            Size = ball.Size,
-            Transparency = ball.Transparency,
-            Color = ball.Color,
-            Material = ball.Material,
-            CanCollide = ball.CanCollide,
+-- Sistema de amigos
+local function updateFriendList()
+    Settings.FriendList = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            if player:IsFriendsWith(LocalPlayer.UserId) then
+                table.insert(Settings.FriendList, player.Name)
+            end
+        end
+    end
+end
+
+-- Verificar se é alvo válido
+local function isValidTarget(player, character)
+    if not character then return false end
+    
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid or humanoid.Health <= 0 then return false end
+    
+    -- Não aplicar no próprio jogador
+    if player == LocalPlayer then return false end
+    
+    -- Verificar time
+    if Settings.TeamCheck then
+        if player.Team and LocalPlayer.Team then
+            if player.Team == LocalPlayer.Team then
+                return false
+            end
+        end
+    end
+    
+    -- Verificar amigos
+    if Settings.FriendsCheck then
+        for _, friendName in ipairs(Settings.FriendList) do
+            if player.Name == friendName then
+                return false
+            end
+        end
+    end
+    
+    return true
+end
+
+-- Função CRUCIAL: Expandir hitbox REALMENTE funcional
+local function expandHitbox(character)
+    if Settings.Affected[character] then return end
+    
+    local head = character:FindFirstChild("Head")
+    if head then
+        -- Salvar o tamanho original para restauração
+        Settings.OriginalSizes[character] = head.Size
+        
+        -- Expandir a hitbox REAL (não apenas visual)
+        head.Size = Vector3.new(Settings.HeadSize, Settings.HeadSize, Settings.HeadSize)
+        
+        -- Criar parte visual para representar a hitbox expandida
+        local hitboxVisual = Instance.new("Part")
+        hitboxVisual.Name = "AstershunHitboxVisual"
+        hitboxVisual.Shape = Enum.PartType.Ball
+        hitboxVisual.Size = Vector3.new(Settings.HeadSize, Settings.HeadSize, Settings.HeadSize)
+        hitboxVisual.Transparency = Settings.Transparency
+        hitboxVisual.Color = Settings.HitboxColor
+        hitboxVisual.Material = Enum.Material.Neon
+        hitboxVisual.CanCollide = false
+        hitboxVisual.Anchored = false
+        hitboxVisual.Massless = true
+        
+        local weld = Instance.new("Weld")
+        weld.Part0 = head
+        weld.Part1 = hitboxVisual
+        weld.C0 = CFrame.new(0, 0.2, 0)
+        
+        hitboxVisual.Parent = character
+        weld.Parent = hitboxVisual
+        
+        Settings.Affected[character] = {
+            Visual = hitboxVisual,
+            Weld = weld,
+            OriginalSize = Settings.OriginalSizes[character]
         }
     end
 end
 
-local function ResetBall(ball)
-    if not ball or not state.OriginalBallProps then return end
-    pcall(function()
-        ball.Size = state.OriginalBallProps.Size
-        ball.Transparency = state.OriginalBallProps.Transparency
-        ball.Color = state.OriginalBallProps.Color
-        ball.Material = state.OriginalBallProps.Material
-        ball.CanCollide = state.OriginalBallProps.CanCollide
-    end)
-end
-
-local function ApplyHitbox(ball)
-    if not ball or state.HitboxActive then return end
-    SaveBallProps(ball)
-    pcall(function()
-        ball.Size = Vector3.new(12, 12, 12)
-        ball.Transparency = 0.4
-        ball.Color = Color3.fromRGB(255, 0, 80)
-        ball.Material = Enum.Material.Neon
-        ball.CanCollide = true
-    end)
-    state.HitboxActive = true
-end
-
-local function RemoveHitbox()
-    local ball = FindBall()
-    if ball and state.HitboxActive then
-        ResetBall(ball)
-        state.HitboxActive = false
-        state.OriginalBallProps = nil
+-- Restaurar hitbox original
+local function restoreHitbox(character)
+    if Settings.Affected[character] then
+        local head = character:FindFirstChild("Head")
+        if head and Settings.OriginalSizes[character] then
+            head.Size = Settings.OriginalSizes[character]
+        end
+        
+        if Settings.Affected[character].Visual then
+            Settings.Affected[character].Visual:Destroy()
+        end
+        
+        Settings.Affected[character] = nil
     end
 end
 
-local function EnableHitboxLoop(enable)
-    state.HitboxLoop = enable
-    if enable then
-        if state.Connections.HitboxLoop then return end
-        state.Connections.HitboxLoop = RunService.Heartbeat:Connect(function()
-            local ball = FindBall()
-            if ball then
-                if not state.HitboxActive then
-                    ApplyHitbox(ball)
+-- Sistema ESP
+local function createESP(character, player)
+    if not character:FindFirstChild("HumanoidRootPart") then return end
+    if Settings.ESPFolders[character] then return end
+    
+    local espFolder = Instance.new("Folder")
+    espFolder.Name = "AstershunESP"
+    espFolder.Parent = character
+    
+    -- Caixa do ESP
+    local espBox = Instance.new("BoxHandleAdornment")
+    espBox.Name = "ESPBox"
+    espBox.Adornee = character.HumanoidRootPart
+    espBox.AlwaysOnTop = true
+    espBox.ZIndex = 5
+    espBox.Size = character.HumanoidRootPart.Size + Vector3.new(0.5, 1.5, 0.5)
+    espBox.Transparency = 0.7
+    espBox.Color3 = Settings.ESPColorNeutral
+    espBox.Parent = espFolder
+    
+    -- Nome do jogador
+    local espName = Instance.new("TextLabel")
+    espName.Name = "ESPName"
+    espName.Text = player and player.Name or "NPC"
+    espName.TextColor3 = Settings.ESPColorNeutral
+    espName.TextStrokeTransparency = 0
+    espName.TextSize = 14
+    espName.Font = Enum.Font.GothamBold
+    espName.BackgroundTransparency = 1
+    espName.Visible = false
+    espName.Parent = espFolder
+    
+    -- Barra de saúde
+    local healthBar = Instance.new("Frame")
+    healthBar.Name = "HealthBar"
+    healthBar.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+    healthBar.BorderSizePixel = 0
+    healthBar.Size = UDim2.new(0, 50, 0, 3)
+    healthBar.Visible = false
+    healthBar.Parent = espFolder
+    
+    local healthFill = Instance.new("Frame")
+    healthFill.Name = "HealthFill"
+    healthFill.BackgroundColor3 = Color3.new(0, 1, 0)
+    healthFill.BorderSizePixel = 0
+    healthFill.Size = UDim2.new(1, 0, 1, 0)
+    healthFill.Parent = healthBar
+    
+    Settings.ESPFolders[character] = espFolder
+end
+
+-- Atualizar ESP
+local function updateESP()
+    for character, espFolder in pairs(Settings.ESPFolders) do
+        if character.Parent and character:FindFirstChild("HumanoidRootPart") then
+            local espBox = espFolder:FindFirstChild("ESPBox")
+            local espName = espFolder:FindFirstChild("ESPName")
+            local healthBar = espFolder:FindFirstChild("HealthBar")
+            local healthFill = healthBar and healthBar:FindFirstChild("HealthFill")
+            
+            -- Atualizar cor baseado na relação
+            local player = Players:GetPlayerFromCharacter(character)
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            
+            if player then
+                if isValidTarget(player, character) then
+                    espBox.Color3 = Settings.ESPColorEnemy
+                    espName.TextColor3 = Settings.ESPColorEnemy
+                else
+                    espBox.Color3 = Settings.ESPColorAlly
+                    espName.TextColor3 = Settings.ESPColorAlly
                 end
             else
-                RemoveHitbox()
+                espBox.Color3 = Settings.ESPColorNeutral
+                espName.TextColor3 = Settings.ESPColorNeutral
             end
-        end)
-    else
-        if state.Connections.HitboxLoop then
-            state.Connections.HitboxLoop:Disconnect()
-            state.Connections.HitboxLoop = nil
-        end
-        RemoveHitbox()
-    end
-end
-
--- Power Serve ativado via tecla Z
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.Z and state.PowerServeActive then
-        local success, err = pcall(function()
-            local ServeRemote = Workspace:FindFirstChild("ReplicatedStorage") and game:GetService("ReplicatedStorage"):FindFirstChild("Packages")
-            -- Ajuste remoto real do saque (exemplo, deve ajustar conforme jogo real)
-            local Knit = game:GetService("ReplicatedStorage"):FindFirstChild("Packages")
-            if Knit then
-                local GameService = Knit:FindFirstChild("knit") and Knit.knit.Services and Knit.knit.Services.GameService
-                if GameService and GameService.RF and GameService.RF.Serve then
-                    GameService.RF.Serve:InvokeServer(Vector3.new(0, 0, 0), math.huge)
-                end
-            end
-        end)
-        if not success then print("[Astershun Hub] Poderoso saque falhou: "..tostring(err)) end
-    end
-end)
-
--- Funções Auto Play baseadas em distância e altura da bola
-local function AutoPlay()
-    if not state.AutoPlayActive then return end
-    local ball = FindBall()
-    local char = LocalPlayer.Character
-    if not ball or not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-    if not humanoid then return end
-
-    local hrpPos = char.HumanoidRootPart.Position
-    local ballPos = ball.Position
-    local dist = (hrpPos - ballPos).Magnitude
-    local targetPos = Vector3.new(ballPos.X, hrpPos.Y, ballPos.Z)
-
-    if dist > 3 then
-        humanoid:MoveTo(targetPos)
-    else
-        humanoid:MoveTo(hrpPos)
-    end
-
-    if ballPos.Y > hrpPos.Y + 8 and dist < 12 then
-        humanoid.Jump = true
-    end
-end
-
--- Auto Block simples
-local function AutoBlock()
-    if not state.AutoBlockActive then return end
-    local ball = FindBall()
-    local char = LocalPlayer.Character
-    if not ball or not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-
-    local hrp = char.HumanoidRootPart.Position
-    local ballPos = ball.Position
-    local dist = (hrp - ballPos).Magnitude
-
-    if dist < 10 and ballPos.Y > hrp.Y + 5 then
-        humanoid:MoveTo(Vector3.new(ballPos.X, hrp.Y, ballPos.Z))
-        if dist < 5 then
-            humanoid.Jump = true
-        end
-    end
-end
-
--- Auto Set simples
-local function AutoSet()
-    if not state.AutoSetActive then return end
-    local ball = FindBall()
-    local char = LocalPlayer.Character
-    if not ball or not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-    local hrp = char.HumanoidRootPart.Position
-    local ballPos = ball.Position
-    local dist = (hrp - ballPos).Magnitude
-    if dist > 3 and dist < 10 and ballPos.Y < hrp.Y + 7 then
-        humanoid:MoveTo(Vector3.new(ballPos.X, hrp.Y, ballPos.Z))
-        if dist < 5 then
-            humanoid.Jump = true
-        end
-    end
-end
-
--- Auto Spike simples
-local function AutoSpike()
-    if not state.AutoSpikeActive then return end
-    local ball = FindBall()
-    local char = LocalPlayer.Character
-    if not ball or not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-    local hrp = char.HumanoidRootPart.Position
-    local ballPos = ball.Position
-    local dist = (hrp - ballPos).Magnitude
-
-    if ballPos.Y > hrp.Y + 10 and dist < 15 then
-        humanoid:MoveTo(Vector3.new(ballPos.X, hrp.Y, ballPos.Z))
-        humanoid.Jump = true
-    end
-end
-
--- Fly Jump ativado/desativado
-local function EnableFlyJump(enable)
-    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not humanoid or not hrp then return end
-
-    if state.FlyJumpConnection then
-        state.FlyJumpConnection:Disconnect()
-        state.FlyJumpConnection = nil
-    end
-    if state.FlyJumpBV then
-        state.FlyJumpBV:Destroy()
-        state.FlyJumpBV = nil
-    end
-
-    if enable then
-        state.FlyJumpConnection = humanoid.StateChanged:Connect(function(_, newState)
-            if newState == Enum.HumanoidStateType.Freefall then
-                if not state.FlyJumpBV then
-                    local bv = Instance.new("BodyVelocity")
-                    bv.Name = "AstershunFlyBV"
-                    bv.MaxForce = Vector3.new(0, math.huge, 0)
-                    bv.Velocity = Vector3.new(0, -15, 0)
-                    bv.Parent = hrp
-                    state.FlyJumpBV = bv
+            
+            -- Atualizar posição do nome e barra de saúde
+            local rootPos = character.HumanoidRootPart.Position
+            local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(rootPos + Vector3.new(0, 3, 0))
+            
+            if onScreen then
+                espName.Visible = true
+                espName.Position = UDim2.new(0, screenPos.X, 0, screenPos.Y)
+                
+                if healthBar then
+                    healthBar.Visible = true
+                    healthBar.Position = UDim2.new(0, screenPos.X - 25, 0, screenPos.Y + 15)
+                    
+                    -- Atualizar barra de saúde
+                    if humanoid then
+                        local healthPercent = humanoid.Health / humanoid.MaxHealth
+                        healthFill.Size = UDim2.new(healthPercent, 0, 1, 0)
+                        healthFill.BackgroundColor3 = Color3.new(1 - healthPercent, healthPercent, 0)
+                    end
                 end
             else
-                if state.FlyJumpBV then
-                    state.FlyJumpBV:Destroy()
-                    state.FlyJumpBV = nil
+                espName.Visible = false
+                if healthBar then healthBar.Visible = false end
+            end
+        else
+            espFolder:Destroy()
+            Settings.ESPFolders[character] = nil
+        end
+    end
+end
+
+-- Atualizar hitboxes
+local function updateHitboxes()
+    for character, data in pairs(Settings.Affected) do
+        if character.Parent and character:FindFirstChild("Head") then
+            local head = character.Head
+            head.Size = Vector3.new(Settings.HeadSize, Settings.HeadSize, Settings.HeadSize)
+            
+            if data.Visual then
+                data.Visual.Size = Vector3.new(Settings.HeadSize, Settings.HeadSize, Settings.HeadSize)
+                data.Visual.Transparency = Settings.Transparency
+                data.Visual.Color = Settings.HitboxColor
+            end
+        else
+            restoreHitbox(character)
+        end
+    end
+end
+
+-- Monitorar personagens
+local function monitorCharacters()
+    -- Players
+    if Settings.TargetPlayers then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                local character = player.Character
+                if character then
+                    if isValidTarget(player, character) then
+                        expandHitbox(character)
+                    end
+                    if Settings.ESPEnabled then
+                        createESP(character, player)
+                    end
                 end
             end
-        end)
-    end
-
-    state.FlyJumpActive = enable
-end
-
--- SuperJump temporário
-local function SuperJump()
-    local char = LocalPlayer.Character
-    if not char then
-        Rayfield:Notify({Title="Erro",Content="Personagem não encontrado",Duration=2})
-        return
-    end
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-    if not humanoid then
-        Rayfield:Notify({Title="Erro",Content="Humanoide não encontrado",Duration=2})
-        return
-    end
-    if humanoid.FloorMaterial == Enum.Material.Air then
-        Rayfield:Notify({Title="Aviso",Content="Você deve estar no chão para usar Super Pulo!",Duration=2})
-        return
-    end
-
-    local originalJumpPower = humanoid.JumpPower
-    humanoid.UseJumpPower = true
-    humanoid.JumpPower = 160
-    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-    Rayfield:Notify({Title="Super Pulo",Content="Pulo ativado!",Duration=2})
-    task.delay(1, function()
-        if humanoid and humanoid.Parent then
-            humanoid.JumpPower = originalJumpPower
         end
-    end)
+    end
+    
+    -- NPCs
+    if Settings.TargetNPCs then
+        for _, npc in ipairs(workspace:GetChildren()) do
+            if npc:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(npc) then
+                if isValidTarget(nil, npc) then
+                    expandHitbox(npc)
+                end
+                if Settings.ESPEnabled then
+                    createESP(npc)
+                end
+            end
+        end
+    end
 end
 
--- UI Setup Rayfield --
-
+-- Interface Rayfield
 local Window = Rayfield:CreateWindow({
-    Name = "Astershun Hub",
-    LoadingTitle = "Carregando Hub...",
-    LoadingSubtitle = "Volleyball Legends | by Astershun",
+    Name = "Astershun Hitbox",
+    LoadingTitle = "Carregando sistema profissional...",
+    LoadingSubtitle = "Desenvolvido por Astershun (Dev Oficial)",
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = "AstershunHub",
-        FileName = "Config",
+        FolderName = "AstershunHitboxSystem",
+        FileName = "ProConfig"
     },
-    Discord = { Enabled = false },
+    Discord = {
+        Enabled = true,
+        Invite = "discord.gg/astershun", -- Link personalizado para você
+        RememberJoins = true
+    },
     KeySystem = false,
 })
 
-local MainTab = Window:CreateTab("🔥 Hacks", nil)
+local MainTab = Window:CreateTab("Controles", 4483362458)
+local VisualTab = Window:CreateTab("Visual", 9753762467)
+local ESPTab = Window:CreateTab("ESP", 1234567890)
+local GameTab = Window:CreateTab("Configurações", 9876543210)
+local InfoTab = Window:CreateTab("Informações", 1122334455)
 
-MainTab:CreateButton({
-    Name = "Ativar Hitbox Ampliada",
-    Callback = function()
-        local ball = FindBall()
-        if ball then
-            ApplyHitbox(ball)
-            Rayfield:Notify({Title="Hitbox",Content="Hitbox ampliada aplicada!",Duration=2})
+-- Controles principais
+MainTab:CreateToggle({
+    Name = "Ativar Hitbox Expansível",
+    CurrentValue = false,
+    Flag = "HitboxToggle",
+    Callback = function(value)
+        Settings.HitboxEnabled = value
+        if not value then
+            for char in pairs(Settings.Affected) do
+                restoreHitbox(char)
+            end
         else
-            Rayfield:Notify({Title="Erro",Content="Bola não encontrada!",Duration=2})
-        end
-    end,
-})
-
-MainTab:CreateButton({
-    Name = "Resetar Hitbox",
-    Callback = function()
-        local ball = FindBall()
-        if ball and state.HitboxActive then
-            ResetBall(ball)
-            state.HitboxActive = false
-            state.OriginalBallProps = nil
-            Rayfield:Notify({Title="Hitbox",Content="Hitbox resetada para padrão.",Duration=2})
-        else
-            Rayfield:Notify({Title="Aviso",Content="Nada a resetar.",Duration=2})
+            monitorCharacters()
         end
     end,
 })
 
 MainTab:CreateToggle({
-    Name = "Manter Hitbox Ativa (Loop)",
-    CurrentValue = false,
-    Flag = "HitboxLoopToggle",
-    Callback = function(Value)
-        EnableHitboxLoop(Value)
-        Rayfield:Notify({Title="Hitbox Loop",Content=Value and "Ativado" or "Desativado",Duration=2})
+    Name = "Ativar Sistema de ESP",
+    CurrentValue = true,
+    Flag = "ESPToggle",
+    Callback = function(value)
+        Settings.ESPEnabled = value
+        if not value then
+            for _, folder in pairs(Settings.ESPFolders) do
+                folder:Destroy()
+            end
+            Settings.ESPFolders = {}
+        else
+            monitorCharacters()
+        end
     end,
 })
 
-MainTab:CreateToggle({
-    Name = "Auto Play",
-    CurrentValue = false,
-    Flag = "AutoPlayToggle",
-    Callback = function(Value)
-        state.AutoPlayActive = Value
-        Rayfield:Notify({Title="Auto Play",Content=Value and "Ativado" or "Desativado",Duration=2})
+-- Configurações visuais
+VisualTab:CreateSlider({
+    Name = "Tamanho da Hitbox",
+    Range = {1, 15},
+    Increment = 0.5,
+    Suffix = "Estudos",
+    CurrentValue = Settings.HeadSize,
+    Flag = "HeadSize",
+    Callback = function(value)
+        Settings.HeadSize = value
+        updateHitboxes()
     end,
 })
 
-MainTab:CreateToggle({
-    Name = "Auto Block",
-    CurrentValue = false,
-    Flag = "AutoBlockToggle",
-    Callback = function(Value)
-        state.AutoBlockActive = Value
-        Rayfield:Notify({Title="Auto Block",Content=Value and "Ativado" or "Desativado",Duration=2})
+VisualTab:CreateSlider({
+    Name = "Transparência",
+    Range = {0, 1},
+    Increment = 0.05,
+    Suffix = "%",
+    CurrentValue = Settings.Transparency,
+    Flag = "Transparency",
+    Callback = function(value)
+        Settings.Transparency = value
+        updateHitboxes()
     end,
 })
 
-MainTab:CreateToggle({
-    Name = "Auto Set",
-    CurrentValue = false,
-    Flag = "AutoSetToggle",
-    Callback = function(Value)
-        state.AutoSetActive = Value
-        Rayfield:Notify({Title="Auto Set",Content=Value and "Ativado" or "Desativado",Duration=2})
+VisualTab:CreateColorPicker({
+    Name = "Cor da Hitbox",
+    Color = Settings.HitboxColor,
+    Flag = "HitboxColor",
+    Callback = function(value)
+        Settings.HitboxColor = value
+        updateHitboxes()
+    end
+})
+
+-- Configurações ESP
+ESPTab:CreateColorPicker({
+    Name = "Cor para Inimigos",
+    Color = Settings.ESPColorEnemy,
+    Flag = "ESPColorEnemy",
+    Callback = function(value)
+        Settings.ESPColorEnemy = value
+    end
+})
+
+ESPTab:CreateColorPicker({
+    Name = "Cor para Aliados",
+    Color = Settings.ESPColorAlly,
+    Flag = "ESPColorAlly",
+    Callback = function(value)
+        Settings.ESPColorAlly = value
+    end
+})
+
+ESPTab:CreateColorPicker({
+    Name = "Cor para Neutros",
+    Color = Settings.ESPColorNeutral,
+    Flag = "ESPColorNeutral",
+    Callback = function(value)
+        Settings.ESPColorNeutral = value
+    end
+})
+
+-- Configurações de equipe
+GameTab:CreateToggle({
+    Name = "Verificar Equipe",
+    CurrentValue = true,
+    Flag = "TeamCheck",
+    Callback = function(value)
+        Settings.TeamCheck = value
+        monitorCharacters()
     end,
 })
 
-MainTab:CreateToggle({
-    Name = "Auto Spike",
-    CurrentValue = false,
-    Flag = "AutoSpikeToggle",
-    Callback = function(Value)
-        state.AutoSpikeActive = Value
-        Rayfield:Notify({Title="Auto Spike",Content=Value and "Ativado" or "Desativado",Duration=2})
+GameTab:CreateToggle({
+    Name = "Ignorar Amigos",
+    CurrentValue = true,
+    Flag = "FriendsCheck",
+    Callback = function(value)
+        Settings.FriendsCheck = value
+        updateFriendList()
+        monitorCharacters()
     end,
 })
 
-MainTab:CreateToggle({
-    Name = "Power Serve (Pressione Z)",
-    CurrentValue = false,
-    Flag = "PowerServeToggle",
-    Callback = function(Value)
-        state.PowerServeActive = Value
-        Rayfield:Notify({Title="Power Serve",Content=Value and "Ativado" or "Desativado",Duration=2})
+GameTab:CreateToggle({
+    Name = "Detecção Automática de Jogo",
+    CurrentValue = true,
+    Flag = "AutoDetectGame",
+    Callback = function(value)
+        Settings.AutoDetectGame = value
     end,
 })
 
-MainTab:CreateButton({
-    Name = "Super Jump",
-    Callback = SuperJump,
-})
-
-MainTab:CreateToggle({
-    Name = "Fly Jump (Queda lenta)",
-    CurrentValue = false,
-    Flag = "FlyJumpToggle",
-    Callback = function(Value)
-        EnableFlyJump(Value)
-        Rayfield:Notify({Title="Fly Jump",Content=Value and "Ativado" or "Desativado",Duration=2})
+GameTab:CreateToggle({
+    Name = "Aplicar em Players",
+    CurrentValue = true,
+    Flag = "TargetPlayers",
+    Callback = function(value)
+        Settings.TargetPlayers = value
+        monitorCharacters()
     end,
 })
 
--- Aba Info
-
-local InfoTab = Window:CreateTab("ℹ️ Info", nil)
-
-InfoTab:CreateParagraph({
-    Title = "Astershun Hub",
-    Content = "Script profissional para Volleyball Legends.\n" ..
-              "Inclui funções: Hitbox, Auto Play, Auto Block, Auto Set, Auto Spike, Power Serve, Super Jump e Fly Jump.\n" ..
-              "Use com moderação para evitar punições."
+GameTab:CreateToggle({
+    Name = "Aplicar em NPCs",
+    CurrentValue = true,
+    Flag = "TargetNPCs",
+    Callback = function(value)
+        Settings.TargetNPCs = value
+        monitorCharacters()
+    end,
 })
+
+-- Tab de Informações
+InfoTab:CreateLabel(DeveloperInfo.Message)
+InfoTab:CreateLabel("Experiência: " .. DeveloperInfo.Experience)
+InfoTab:CreateLabel("Planos Futuros: " .. DeveloperInfo.FuturePlans)
+
+InfoTab:CreateParagraph("Sobre o Sistema", [[
+O Astershun Hitbox é um sistema avançado que modifica REALMENTE as hitboxes dos personagens, não apenas visualmente.
+
+Quando você ativa o sistema:
+1. A hitbox da cabeça é expandida FISICAMENTE
+2. Uma representação visual transparente é criada
+3. Seus tiros e ataques acertarão a hitbox expandida
+]])
 
 InfoTab:CreateButton({
-    Name = "Fechar Hub",
+    Name = "Mostrar Créditos",
     Callback = function()
-        if state.Connections.HitboxLoop then
-            state.Connections.HitboxLoop:Disconnect()
-            state.Connections.HitboxLoop = nil
-        end
-        if state.FlyJumpConnection then
-            state.FlyJumpConnection:Disconnect()
-            state.FlyJumpConnection = nil
-        end
-        if state.FlyJumpBV then
-            state.FlyJumpBV:Destroy()
-            state.FlyJumpBV = nil
-        end
-        RemoveHitbox()
-        Rayfield:Destroy()
+        Rayfield:Notify({
+            Title = "Créditos",
+            Content = "Astershun Hitbox v3.0\nDesenvolvido por: Astershun\nDev Oficial",
+            Duration = 10,
+            Image = 4483362458,
+            Actions = {
+                Ignore = {
+                    Name = "Fechar",
+                    Callback = function()
+                    end
+                },
+            },
+        })
     end,
 })
 
--- Loop principal para funções persistentes
-
-state.Connections.MainLoop = RunService.RenderStepped:Connect(function()
-    local success, err = pcall(function()
-        if state.AutoPlayActive then
-            AutoPlay()
+-- Atualizações em tempo real
+RunService.Heartbeat:Connect(function()
+    updateFriendList()
+    
+    if Settings.HitboxEnabled then
+        for char in pairs(Settings.Affected) do
+            if not char.Parent then
+                restoreHitbox(char)
+            end
         end
-        if state.AutoBlockActive then
-            AutoBlock()
-        end
-        if state.AutoSetActive then
-            AutoSet()
-        end
-        if state.AutoSpikeActive then
-            AutoSpike()
-        end
-    end)
-    if not success then
-        warn("[Astershun Hub] Erro: "..tostring(err))
+        monitorCharacters()
+    end
+    
+    if Settings.ESPEnabled then
+        updateESP()
     end
 end)
+
+-- Inicialização
+updateFriendList()
+Rayfield:Notify({
+    Title = "Astershun Hitbox",
+    Content = "Sistema ativado com sucesso!\nCriado por: Astershun",
+    Duration = 8,
+    Image = 4483362458,
+})
+
+print("Astershun Hitbox by Astershun carregado!")
