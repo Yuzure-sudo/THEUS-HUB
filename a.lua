@@ -1,7 +1,8 @@
 -- ASTERSHUN HUB v2.0
 -- Desenvolvido por: Astershun (Dev Oficial)
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- Carregar Kavo UI
+local Kavo = loadstring(game:HttpGet("https://pastebin.com/raw/vff1bQ9F"))()
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
@@ -248,256 +249,147 @@ local function clearESP()
     ESPFolders = {}
 end
 
--- Interface Rayfield com design personalizado
+-- Criar notificação personalizada
+local function Notify(title, content, duration)
+    game.StarterGui:SetCore("SendNotification", {
+        Title = title,
+        Text = content,
+        Duration = duration or 5
+    })
+end
+
+-- Interface Kavo UI
 local function createUI()
-    -- Tela de carregamento personalizada
-    Rayfield:SetConfigurationSaving({
-        Enabled = true,
-        FolderName = "AstershunHub",
-        FileName = "Config"
-    })
-    
-    Rayfield:SetWatermark("Astershun Hub v2.0 | Desenvolvido por Astershun")
-    
-    -- Janela principal
-    local Window = Rayfield:CreateWindow({
-        Name = "Astershun Hub",
-        LoadingTitle = "Carregando Astershun Hub...",
-        LoadingSubtitle = "Desenvolvido por Astershun com muito esforço",
-        ConfigurationSaving = {
-            Enabled = true,
-            FolderName = "AstershunHub",
-            FileName = "Config"
-        },
-        Discord = {
-            Enabled = false
-        },
-        KeySystem = {
-            Enabled = true,
-            Key = "teste",
-            Title = "Astershun Hub - Autenticação",
-            Subtitle = "Insira sua chave de acesso",
-            Note = "Chave padrão: 'teste'",
-            FileName = "AstershunKey",
-            SaveKey = true,
-            GrabKeyFromSite = false,
-        }
-    })
+    -- Criar janela principal
+    local Window = Kavo.CreateLib("Astershun Hub v2.0", "BloodTheme")
     
     -- Abas
-    local HomeTab = Window:CreateTab("🏠  Home", 13337258670) -- Ícone de coroa
-    local HitboxTab = Window:CreateTab("🎯  Hitbox", 13337258670)
-    local ESPTab = Window:CreateTab("👁️  ESP", 13337258670)
-    local ConfigTab = Window:CreateTab("⚙️  Configurações", 13337258670)
-    local InfoTab = Window:CreateTab("ℹ️  Informações", 13337258670)
+    local HomeTab = Window:NewTab("🏠 Home")
+    local HitboxTab = Window:NewTab("🎯 Hitbox")
+    local ESPTab = Window:NewTab("👁️ ESP")
+    local ConfigTab = Window:NewTab("⚙️ Configurações")
+    local InfoTab = Window:NewTab("ℹ️ Informações")
     
     -- Seção Home
-    HomeTab:CreateSection("Bem-vindo ao Astershun Hub!")
+    local HomeSection = HomeTab:NewSection("Bem-vindo ao Astershun Hub!")
+    HomeSection:NewLabel("Sistema profissional desenvolvido por Astershun com foco em performance e usabilidade.")
     
-    local Description = HomeTab:CreateLabel("Sistema profissional desenvolvido por Astershun com foco em performance e usabilidade.")
-    Description:SetTextSize(14)
+    local StatusSection = HomeTab:NewSection("Status do Sistema")
     
-    HomeTab:CreateSection("Status do Sistema")
+    local hitboxStatusText = "Hitbox: " .. (Settings.HitboxEnabled and "ATIVADO" or "DESATIVADO")
+    local HitboxStatus = StatusSection:NewLabel(hitboxStatusText)
+    HitboxStatus.TextColor3 = Settings.HitboxEnabled and Color3.fromRGB(50, 255, 100) or Color3.fromRGB(255, 50, 50)
     
-    local HitboxStatus = HomeTab:CreateLabel("Hitbox: " .. (Settings.HitboxEnabled and "ATIVADO" or "DESATIVADO"))
-    HitboxStatus:SetTextColor(Settings.HitboxEnabled and Color3.fromRGB(50, 255, 100) or Color3.fromRGB(255, 50, 50))
+    local espStatusText = "ESP: " .. (Settings.ESPEnabled and "ATIVADO" or "DESATIVADO")
+    local ESPStatus = StatusSection:NewLabel(espStatusText)
+    ESPStatus.TextColor3 = Settings.ESPEnabled and Color3.fromRGB(50, 255, 100) or Color3.fromRGB(255, 50, 50)
     
-    local ESPStatus = HomeTab:CreateLabel("ESP: " .. (Settings.ESPEnabled and "ATIVADO" or "DESATIVADO"))
-    ESPStatus:SetTextColor(Settings.ESPEnabled and Color3.fromRGB(50, 255, 100) or Color3.fromRGB(255, 50, 50))
+    local ControlSection = HomeTab:NewSection("Controles Rápidos")
     
-    HomeTab:CreateSection("Controles Rápidos")
+    ControlSection:NewButton("Abrir Configurações de Hitbox", "", function()
+        Window:ChangeTab(HitboxTab)
+    end)
     
-    HomeTab:CreateButton({
-        Name = "Abrir Configurações de Hitbox",
-        Callback = function()
-            Window:SelectTab(HitboxTab)
-        end
-    })
-    
-    HomeTab:CreateButton({
-        Name = "Abrir Configurações de ESP",
-        Callback = function()
-            Window:SelectTab(ESPTab)
-        end
-    })
+    ControlSection:NewButton("Abrir Configurações de ESP", "", function()
+        Window:ChangeTab(ESPTab)
+    end)
     
     -- Seção Hitbox
-    HitboxTab:CreateSection("Configurações de Hitbox")
+    local HitboxMainSection = HitboxTab:NewSection("Configurações de Hitbox")
     
-    local HitboxToggle = HitboxTab:CreateToggle({
-        Name = "Ativar Hitbox Expansível",
-        CurrentValue = Settings.HitboxEnabled,
-        Flag = "HitboxToggle",
-        Callback = function(value)
-            Settings.HitboxEnabled = value
-            HitboxStatus:Set("Hitbox: " .. (value and "ATIVADO" or "DESATIVADO"))
-            HitboxStatus:SetTextColor(value and Color3.fromRGB(50, 255, 100) or Color3.fromRGB(255, 50, 50))
-            
-            if not value then
-                restoreAll()
-            end
-        end,
-    })
-    
-    local SizeSlider = HitboxTab:CreateSlider({
-        Name = "Tamanho da Hitbox",
-        Range = {1, 15},
-        Increment = 0.5,
-        Suffix = "Estudos",
-        CurrentValue = Settings.HeadSize,
-        Flag = "HeadSize",
-        Callback = function(value)
-            Settings.HeadSize = value
-        end,
-    })
-    
-    local TransparencySlider = HitboxTab:CreateSlider({
-        Name = "Transparência",
-        Range = {0, 1},
-        Increment = 0.05,
-        Suffix = "%",
-        CurrentValue = Settings.Transparency,
-        Flag = "Transparency",
-        Callback = function(value)
-            Settings.Transparency = value
-        end,
-    })
-    
-    local ColorPicker = HitboxTab:CreateColorPicker({
-        Name = "Cor da Hitbox",
-        Color = Settings.HitboxColor,
-        Flag = "HitboxColor",
-        Callback = function(value)
-            Settings.HitboxColor = value
-        end
-    })
-    
-    HitboxTab:CreateButton({
-        Name = "Restaurar Todas as Hitboxes",
-        Callback = function()
+    local HitboxToggle = HitboxMainSection:NewToggle("Ativar Hitbox Expansível", "", function(value)
+        Settings.HitboxEnabled = value
+        HitboxStatus:Update("Hitbox: " .. (value and "ATIVADO" or "DESATIVADO"))
+        HitboxStatus.TextColor3 = value and Color3.fromRGB(50, 255, 100) or Color3.fromRGB(255, 50, 50)
+        
+        if not value then
             restoreAll()
-            Rayfield:Notify({
-                Title = "Hitboxes Restauradas",
-                Content = "Todas as hitboxes foram resetadas para o estado original",
-                Duration = 3,
-                Image = 13337258670,
-            })
         end
-    })
+    end)
+    HitboxToggle:Set(Settings.HitboxEnabled)
+    
+    local SizeSlider = HitboxMainSection:NewSlider("Tamanho da Hitbox", "Estudos", 150, Settings.HeadSize, function(value)
+        Settings.HeadSize = value
+    end)
+    
+    local TransparencySlider = HitboxMainSection:NewSlider("Transparência", "%", 100, Settings.Transparency * 100, function(value)
+        Settings.Transparency = value / 100
+    end)
+    
+    HitboxMainSection:NewColorPicker("Cor da Hitbox", Settings.HitboxColor, function(color)
+        Settings.HitboxColor = color
+    end)
+    
+    HitboxMainSection:NewButton("Restaurar Todas as Hitboxes", "", function()
+        restoreAll()
+        Notify("Hitboxes Restauradas", "Todas as hitboxes foram resetadas para o estado original", 3)
+    end)
     
     -- Seção ESP
-    ESPTab:CreateSection("Configurações de ESP")
+    local ESPMainSection = ESPTab:NewSection("Configurações de ESP")
     
-    local ESPToggle = ESPTab:CreateToggle({
-        Name = "Ativar Sistema de ESP",
-        CurrentValue = Settings.ESPEnabled,
-        Flag = "ESPToggle",
-        Callback = function(value)
-            Settings.ESPEnabled = value
-            ESPStatus:Set("ESP: " .. (value and "ATIVADO" or "DESATIVADO"))
-            ESPStatus:SetTextColor(value and Color3.fromRGB(50, 255, 100) or Color3.fromRGB(255, 50, 50))
-            
-            if not value then
-                clearESP()
-            end
-        end,
-    })
-    
-    ESPTab:CreateColorPicker({
-        Name = "Cor para Inimigos",
-        Color = Color3.fromRGB(255, 50, 50),
-        Flag = "ESPEnemyColor",
-        Callback = function(value)
-            -- Implementar na função updateESP
+    local ESPToggle = ESPMainSection:NewToggle("Ativar Sistema de ESP", "", function(value)
+        Settings.ESPEnabled = value
+        ESPStatus:Update("ESP: " .. (value and "ATIVADO" or "DESATIVADO"))
+        ESPStatus.TextColor3 = value and Color3.fromRGB(50, 255, 100) or Color3.fromRGB(255, 50, 50)
+        
+        if not value then
+            clearESP()
         end
-    })
+    end)
+    ESPToggle:Set(Settings.ESPEnabled)
     
-    ESPTab:CreateColorPicker({
-        Name = "Cor para Aliados",
-        Color = Color3.fromRGB(50, 255, 100),
-        Flag = "ESPAllyColor",
-        Callback = function(value)
-            -- Implementar na função updateESP
-        end
-    })
+    ESPMainSection:NewColorPicker("Cor para Inimigos", Color3.fromRGB(255, 50, 50), function(color)
+        -- Implementar na função updateESP
+    end)
+    
+    ESPMainSection:NewColorPicker("Cor para Aliados", Color3.fromRGB(50, 255, 100), function(color)
+        -- Implementar na função updateESP
+    end)
     
     -- Seção Configurações
-    ConfigTab:CreateSection("Configurações de Alvos")
+    local TargetSection = ConfigTab:NewSection("Configurações de Alvos")
     
-    ConfigTab:CreateToggle({
-        Name = "Ativar para Players",
-        CurrentValue = Settings.TargetPlayers,
-        Flag = "TargetPlayers",
-        Callback = function(value)
-            Settings.TargetPlayers = value
-        end,
-    })
+    local PlayersToggle = TargetSection:NewToggle("Ativar para Players", "", function(value)
+        Settings.TargetPlayers = value
+    end)
+    PlayersToggle:Set(Settings.TargetPlayers)
     
-    ConfigTab:CreateToggle({
-        Name = "Ativar para NPCs",
-        CurrentValue = Settings.TargetNPCs,
-        Flag = "TargetNPCs",
-        Callback = function(value)
-            Settings.TargetNPCs = value
-        end,
-    })
+    local NPCsToggle = TargetSection:NewToggle("Ativar para NPCs", "", function(value)
+        Settings.TargetNPCs = value
+    end)
+    NPCsToggle:Set(Settings.TargetNPCs)
     
-    ConfigTab:CreateSection("Filtros Avançados")
+    local FilterSection = ConfigTab:NewSection("Filtros Avançados")
     
-    ConfigTab:CreateToggle({
-        Name = "Verificar Equipe",
-        CurrentValue = Settings.TeamCheck,
-        Flag = "TeamCheck",
-        Callback = function(value)
-            Settings.TeamCheck = value
-        end,
-    })
+    local TeamCheckToggle = FilterSection:NewToggle("Verificar Equipe", "", function(value)
+        Settings.TeamCheck = value
+    end)
+    TeamCheckToggle:Set(Settings.TeamCheck)
     
-    ConfigTab:CreateToggle({
-        Name = "Ignorar Amigos",
-        CurrentValue = Settings.FriendsCheck,
-        Flag = "FriendsCheck",
-        Callback = function(value)
-            Settings.FriendsCheck = value
-            updateFriendList()
-        end,
-    })
+    local FriendsToggle = FilterSection:NewToggle("Ignorar Amigos", "", function(value)
+        Settings.FriendsCheck = value
+        updateFriendList()
+    end)
+    FriendsToggle:Set(Settings.FriendsCheck)
     
     -- Seção Informações
-    InfoTab:CreateSection("Sobre o Desenvolvedor")
+    local DevSection = InfoTab:NewSection("Sobre o Desenvolvedor")
+    DevSection:NewLabel("Nome: " .. DeveloperInfo.Name)
+    DevSection:NewLabel("Experiência: " .. DeveloperInfo.Experience)
     
-    InfoTab:CreateLabel("Nome: " .. DeveloperInfo.Name)
-    InfoTab:CreateLabel("Experiência: " .. DeveloperInfo.Experience)
+    local MessageSection = InfoTab:NewSection("Mensagem do Desenvolvedor")
+    MessageSection:NewLabel(DeveloperInfo.Message)
     
-    InfoTab:CreateSection("Mensagem do Desenvolvedor")
+    local PlansSection = InfoTab:NewSection("Planos Futuros")
+    PlansSection:NewLabel(DeveloperInfo.FuturePlans)
     
-    local DevMessage = InfoTab:CreateLabel(DeveloperInfo.Message)
-    DevMessage:SetTextSize(14)
-    
-    InfoTab:CreateSection("Planos Futuros")
-    
-    local FuturePlans = InfoTab:CreateLabel(DeveloperInfo.FuturePlans)
-    FuturePlans:SetTextSize(14)
-    
-    InfoTab:CreateButton({
-        Name = "Mostrar Créditos",
-        Callback = function()
-            Rayfield:Notify({
-                Title = "Créditos",
-                Content = "Astershun Hub v2.0\n\nDesenvolvido por: Astershun\nDev Oficial\n\nTodos os direitos reservados",
-                Duration = 8,
-                Image = 13337258670,
-            })
-        end
-    })
+    InfoTab:NewButton("Mostrar Créditos", "", function()
+        Notify("Créditos", "Astershun Hub v2.0\n\nDesenvolvido por: Astershun\nDev Oficial\n\nTodos os direitos reservados", 8)
+    end)
     
     -- Notificação de inicialização
-    Rayfield:Notify({
-        Title = "Astershun Hub Carregado",
-        Content = "Bem-vindo ao sistema profissional!\nDesenvolvido por Astershun com muito esforço",
-        Duration = 6,
-        Image = 13337258670,
-    })
+    Notify("Astershun Hub Carregado", "Bem-vindo ao sistema profissional!\nDesenvolvido por Astershun com muito esforço", 6)
 end
 
 -- Loop principal
@@ -517,4 +409,4 @@ end)
 updateFriendList()
 createUI()
 
-print("Astershun Hub carregado com sucesso!")
+print("Astershun Hub carregado com sucesso usando Kavo UI!")
